@@ -1,0 +1,133 @@
+export interface Category {
+    slug: string;
+    name: string;
+    description: string;
+    image: string;
+    badgeText: string;
+    villaCount: number;
+    filterParam: string;
+    tags: string[];
+}
+
+export const categories: Category[] = [
+    {
+        slug: "ekonomik-villalar",
+        name: "Ekonomik Villalar",
+        description: "Uygun fiyatlı tatil villaları",
+        image: "/images/econo.jpg",
+        badgeText: "Ekonomik Villalar",
+        villaCount: 227,
+        filterParam: "affordableVillas",
+        tags: ["Özel Havuzlu", "Deniz Manzaralı", "Plaja Yakın ve Uygun Fiyatlı Villalar"],
+    },
+    {
+        slug: "muhafazakar-villalar",
+        name: "Muhafazakar Villalar",
+        description: "Dışarıdan görünmeyen tatil villaları",
+        image: "/images/muhafazakar.jpg",
+        badgeText: "Muhafazakar Villalar",
+        villaCount: 143,
+        filterParam: "isolatedVillas",
+        tags: ["Özel Havuzlu", "Deniz Manzaralı", "Plaja Yakın ve Uygun Fiyatlı Villalar"],
+    },
+    {
+        slug: "balayi-villalari",
+        name: "Balayı Villaları",
+        description: "Çift kişilik lüks balayı villaları",
+        image: "/images/bala.jpg",
+        badgeText: "Balayı Villaları",
+        villaCount: 155,
+        filterParam: "honeyMoon",
+        tags: ["Özel Havuzlu", "Deniz Manzaralı", "Plaja Yakın ve Uygun Fiyatlı Villalar"],
+    },
+    {
+        slug: "ultralux-villalar",
+        name: "Ultralüks Villalar",
+        description: "Ultralüks villalar",
+        image: "/images/ulux.jpeg",
+        badgeText: "Ultralüks Villalar",
+        villaCount: 49,
+        filterParam: "ultraLux",
+        tags: ["Özel Havuzlu", "Deniz Manzaralı", "Plaja Yakın ve Uygun Fiyatlı Villalar"],
+    },
+    {
+        slug: "merkezi-konumda-villalar",
+        name: "Merkezi Konumda Bulunan Villalar",
+        description: "Canlı merkeze ve denize yakın villalar",
+        image: "/images/central.jpg",
+        badgeText: "Merkezi Konumda Bulunanlar",
+        villaCount: 174,
+        filterParam: "centralVillas",
+        tags: ["Özel Havuzlu", "Deniz Manzaralı", "Plaja Yakın ve Uygun Fiyatlı Villalar"],
+    },
+    {
+        slug: "denize-yakin-villalar",
+        name: "Denize Yakın Konumda Bulunan Villalar",
+        description: "Denize yakın villalar",
+        image: "/images/deniz.webp",
+        badgeText: "Denize Yakın Villalar",
+        villaCount: 152,
+        filterParam: "beachVillas",
+        tags: ["Özel Havuzlu", "Deniz Manzaralı", "Plaja Yakın ve Uygun Fiyatlı Villalar"],
+    },
+    {
+        slug: "deniz-manzarali-villalar",
+        name: "Deniz Manzaralı Villalar",
+        description: "Deniz manzaralı villalar",
+        image: "/images/denman.jpeg",
+        badgeText: "Deniz Manzaralı Villalar",
+        villaCount: 233,
+        filterParam: "seaview",
+        tags: ["Özel Havuzlu", "Deniz Manzaralı", "Plaja Yakın ve Uygun Fiyatlı Villalar"],
+    },
+    {
+        slug: "doga-manzarali-villalar",
+        name: "Doğa Manzaralı Villalar",
+        description: "Doğa manzaralı villalar",
+        image: "/images/natureview.jpg",
+        badgeText: "Doğa Manzaralı Villalar",
+        villaCount: 292,
+        filterParam: "natureview",
+        tags: ["Özel Havuzlu", "Deniz Manzaralı", "Plaja Yakın ve Uygun Fiyatlı Villalar"],
+    },
+    {
+        slug: "muhafazakar-havuzlu-villalar",
+        name: "Muhafazakar Havuzlu Villalar",
+        description: "Muhafazakar havuzlu villalar",
+        image: "/images/muhhav.jpg",
+        badgeText: "Muhafazakar Havuzlu Villalar",
+        villaCount: 89,
+        filterParam: "isolatedPoolVillas",
+        tags: ["Özel Havuzlu", "Deniz Manzaralı", "Plaja Yakın ve Uygun Fiyatlı Villalar"],
+    },
+    {
+        slug: "jakuzili-villalar",
+        name: "Jakuzili Villalar",
+        description: "Bir veya daha fazla jakuzi bulunan villalar",
+        image: "/images/jacuzzi.jpg",
+        badgeText: "Jakuzili Villalar",
+        villaCount: 67,
+        filterParam: "jacuzziVillas",
+        tags: ["Özel Havuzlu", "Deniz Manzaralı", "Plaja Yakın ve Uygun Fiyatlı Villalar"],
+    },
+    {
+        slug: "cocuk-havuzlu-villalar",
+        name: "Çocuk Havuzlu Villalar",
+        description: "Çocuk havuzu bulunan villalar",
+        image: "/images/kidpool.jpg",
+        badgeText: "Çocuk Havuzlu Villalar",
+        villaCount: 75,
+        filterParam: "kidPoolVillas",
+        tags: ["Özel Havuzlu", "Deniz Manzaralı", "Plaja Yakın ve Uygun Fiyatlı Villalar"],
+    },
+    {
+        slug: "yeni-villalar",
+        name: "Yeni Villalar",
+        description: "Yeni yapılmış villalar",
+        image: "/images/new.jpg",
+        badgeText: "Yeni Villalar",
+        villaCount: 38,
+        filterParam: "newVillas",
+        tags: ["Özel Havuzlu", "Deniz Manzaralı", "Plaja Yakın ve Uygun Fiyatlı Villalar"],
+    },
+];
