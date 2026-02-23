@@ -1,0 +1,743 @@
+"use client";
+
+import { useState, useMemo, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { mockVillas, Villa } from "@/data/mockVillas";
+import SearchFilterBar from "@/components/SearchFilterBar";
+import styles from "./sonuclar.module.css";
+
+/* ──────────────── Mapping Objects ──────────────── */
+const featuresList: Record<string, string> = {
+    affordableVillas: "Ekonomik",
+    isolatedVillas: "Muhafazakar",
+    honeyMoon: "Balayı",
+    ultraLux: "Ultra Lüx",
+    centralVillas: "Merkezi",
+    beachVillas: "Denize Yakın",
+    seaview: "Deniz Manzaralı",
+    natureview: "Doğa Manzaralı",
+    isolatedPoolVillas: "Havuzu Korunaklı",
+    jacuzziVillas: "Jakuzili",
+    kidPoolVillas: "Çocuk Havuzlu",
+    newVillas: "Yeni Villalar",
+    privatePool: "Özel Havuz",
+    sharedPool: "Paylaşımlı Havuz",
+    infinityPool: "Sonsuzluk Havuzu",
+    indoorPool: "Kapalı Havuz",
+    heatedPool: "Sıcak Havuz",
+    shallowPool: "Sığ Havuz",
+    gymRoom: "Spor Odası",
+    sauna: "Sauna",
+    hamam: "Hamam",
+    cinemaRoom: "Sinema Odası",
+    winterGarden: "Kış Bahçesi",
+    tennisTable: "Tenis Masası",
+    poolTable: "Bilardo Masası",
+    floorHeating: "Yerden Isıtma",
+};
+
+const locationsList: Record<string, string> = {
+    "kalkan-merkez": "Kalkan Merkez",
+    "kalkan-kalamar": "Kalkan Kalamar",
+    "kalkan-komurluk": "Kalkan Kömürlük",
+    "kalkan-kisla": "Kalkan Kışla",
+    "kalkan-ortaalan": "Kalkan Ortaalan",
+    "kalkan-kiziltas": "Kalkan Kızıltaş",
+    "kalkan-kaputas": "Kalkan Kaputaş",
+    "kalkan-bezirgan": "Kalkan Bezirgan",
+    "kalkan-islamlar": "Kalkan İslamlar",
+    "kalkan-kordere": "Kalkan Kördere",
+    "kas-merkez": "Kaş Merkez",
+    fethiye: "Fethiye",
+    belek: "Belek",
+};
+
+const locationToFilter: Record<string, string> = {
+    "Kalkan Merkez": "kalkan-merkez",
+    "Kalkan Kalamar": "kalkan-kalamar",
+    "Kalkan Kömürlük": "kalkan-komurluk",
+    "Kalkan Kışla": "kalkan-kisla",
+    "Kalkan Ortaalan": "kalkan-ortaalan",
+    "Kalkan Kızıltaş": "kalkan-kiziltas",
+    "Kalkan Kaputaş": "kalkan-kaputas",
+    "Kalkan Bezirgan": "kalkan-bezirgan",
+    "Kalkan İslamlar": "kalkan-islamlar",
+    "Kalkan Kördere": "kalkan-kordere",
+    "Kaş Merkez": "kas-merkez",
+    Fethiye: "fethiye",
+    Belek: "belek",
+};
+
+const priceRanges: { key: string; label: string; min: number; max: number }[] = [
+    { key: "3", label: "₺1.000 - ₺3.000", min: 1000, max: 3000 },
+    { key: "10", label: "₺3.000 - ₺10.000", min: 3000, max: 10000 },
+    { key: "30", label: "₺10.000 - ₺30.000", min: 10000, max: 30000 },
+    { key: "50", label: "₺30.000 - ₺50.000", min: 30000, max: 50000 },
+    { key: "51", label: "₺50.000+", min: 50000, max: Infinity },
+];
+
+const categoryToFeature: Record<string, string> = {
+    ekonomik: "affordableVillas",
+    muhafazakar: "isolatedVillas",
+    balayi: "honeyMoon",
+    "ultra-luks": "ultraLux",
+    merkezi: "centralVillas",
+    "denize-yakin": "beachVillas",
+    jakuzili: "jacuzziVillas",
+    "cocuk-havuzlu": "kidPoolVillas",
+};
+
+/* Feature key → Hero title (with "Villalar" suffix) */
+const featuresList2: Record<string, string> = {
+    affordableVillas: "Ekonomik Villalar",
+    isolatedVillas: "Muhafazakar Villalar",
+    honeyMoon: "Balayı Villaları",
+    ultraLux: "Ultra Lüx Villalar",
+    centralVillas: "Merkezi Villalar",
+    beachVillas: "Denize Yakın Villalar",
+    seaview: "Deniz Manzaralı Villalar",
+    natureview: "Doğa Manzaralı Villalar",
+    isolatedPoolVillas: "Havuzu Korunaklı Villalar",
+    jacuzziVillas: "Jakuzili Villalar",
+    kidPoolVillas: "Çocuk Havuzlu Villalar",
+    newVillas: "Yeni Villalar",
+    privatePool: "Özel Havuzlu Villalar",
+    sharedPool: "Paylaşımlı Havuzlu Villalar",
+    infinityPool: "Sonsuzluk Havuzlu Villalar",
+    indoorPool: "Kapalı Havuzlu Villalar",
+    heatedPool: "Sıcak Havuzlu Villalar",
+    shallowPool: "Sığ Havuzlu Villalar",
+};
+
+const sortOptions: { key: string; label: string }[] = [
+    { key: "order", label: "Standart" },
+    { key: "total", label: "Fiyat Artan" },
+    { key: "totalrev", label: "Fiyat Azalan" },
+    { key: "guest", label: "Kapasite Artan" },
+    { key: "guestrev", label: "Kapasite Azalan" },
+    { key: "score", label: "Misafir Puanı" },
+];
+
+/* ──────── Filter Groups ──────── */
+const villaTypeInitial = ["affordableVillas", "isolatedVillas", "honeyMoon", "ultraLux", "centralVillas", "beachVillas"];
+const villaTypeExtra = ["seaview", "natureview", "isolatedPoolVillas", "jacuzziVillas", "kidPoolVillas", "newVillas"];
+const poolFeatures = ["privatePool", "sharedPool", "infinityPool", "isolatedPoolVillas", "indoorPool", "heatedPool", "shallowPool", "kidPoolVillas"];
+const featuredFeatures = ["jacuzziVillas", "gymRoom", "sauna", "cinemaRoom", "winterGarden", "tennisTable", "poolTable", "floorHeating"];
+const kalkanLocationsInitial = ["kalkan-merkez", "kalkan-kalamar", "kalkan-komurluk", "kalkan-kisla", "kalkan-ortaalan", "kalkan-kiziltas", "kalkan-kaputas"];
+const kalkanLocationsExtra = ["kalkan-bezirgan", "kalkan-islamlar", "kalkan-kordere"];
+const otherLocations = ["kas-merkez", "fethiye", "belek"];
+
+/* ──────────────── Checkbox Component ──────────────── */
+function Checkbox({ checked, onChange, label }: { checked: boolean; onChange: () => void; label: string }) {
+    return (
+        <label className={styles.checkboxLabel}>
+            <input type="checkbox" checked={checked} onChange={onChange} style={{ display: "none" }} />
+            <div className={`${styles.checkboxBox} ${checked ? styles.checkboxBoxChecked : ""}`}>
+                {checked && (
+                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                        <path d="M1 4L3.5 6.5L9 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                )}
+            </div>
+            <span className="dm-sans" style={{ fontSize: "14px", color: "#747579" }}>{label}</span>
+        </label>
+    );
+}
+
+/* ──────────────── Villa Card Component ──────────────── */
+function VillaCard({
+    villa,
+    slideIndex,
+    onSlidePrev,
+    onSlideNext,
+}: {
+    villa: Villa;
+    slideIndex: number;
+    onSlidePrev: () => void;
+    onSlideNext: () => void;
+}) {
+    const maxPrice = villa.priceBlocks.length ? Math.max(...villa.priceBlocks.map((p) => p.nightlyPrice)) : villa.minEver;
+    const hasDiscount = villa.priceBlocks.some((p) => p.discount && p.discount > 0);
+    const maxDiscount = hasDiscount ? Math.max(...villa.priceBlocks.filter((p) => p.discount).map((p) => p.discount!)) : 0;
+
+    return (
+        <div className={styles.villaCard}>
+            {/* Slider Arrows */}
+            {villa.images.length > 1 && (
+                <>
+                    <div
+                        className={`${styles.sliderArrow} ${styles.sliderArrowLeft}`}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSlidePrev(); }}
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="15 18 9 12 15 6" />
+                        </svg>
+                    </div>
+                    <div
+                        className={`${styles.sliderArrow} ${styles.sliderArrowRight}`}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSlideNext(); }}
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                    </div>
+                </>
+            )}
+
+            <Link href={`/tatilvillasi/${villa.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
+                <div className={styles.cardRow}>
+                    {/* Image */}
+                    <div className={styles.imageContainer}>
+                        {hasDiscount && (
+                            <div className={`${styles.discountBadge} dm-sans`}>%{maxDiscount} e varan indirim</div>
+                        )}
+                        <Image
+                            src={villa.images[slideIndex] || villa.coverImage}
+                            alt={villa.name}
+                            width={600}
+                            height={400}
+                            style={{ width: "100%", height: "100%", objectFit: "cover", transition: "opacity 0.3s" }}
+                        />
+                        {/* Image Dots */}
+                        {villa.images.length > 1 && (
+                            <div className={styles.imageDots}>
+                                {villa.images.slice(0, 5).map((_, i) => (
+                                    <div key={i} className={`${styles.dot} ${i === slideIndex ? styles.dotActive : ""}`} />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Text */}
+                    <div className={styles.textContainer}>
+                        <div className="dm-sans" style={{ padding: "16px 12px 16px 24px" }}>
+                            {/* Score */}
+                            {villa.score > 0 && (
+                                <div style={{ display: "flex", alignItems: "center", marginBottom: "4px" }}>
+                                    <div style={{ display: "flex", alignItems: "center" }}>
+                                        {[...Array(5)].map((_, i) => (
+                                            <span key={i} style={{ color: i < Math.floor(villa.score) ? "#f9a825" : "#ddd", fontSize: "14px", marginRight: "1px" }}>★</span>
+                                        ))}
+                                    </div>
+                                    <div style={{ marginLeft: "6px", fontSize: "13px", fontWeight: 600, color: "#747579" }}>
+                                        ( {villa.score} )
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Name & Location */}
+                            <div className="poppins" style={{ fontSize: "20px", fontWeight: 600, marginBottom: "2px" }}>
+                                {villa.name},{" "}
+                                <span className="dm-sans" style={{ fontSize: "16px", fontWeight: 600 }}>{villa.location}</span>
+                            </div>
+
+                            {/* Features preview */}
+                            <div className="dm-sans" style={{ fontSize: "13px", color: "#747579", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: "4px" }}>
+                                {villa.features.slice(0, 4).map((f) => featuresList[f] || f).join(" • ")}
+                            </div>
+
+                            {/* Cancellation */}
+                            <div style={{ color: "#0cbc87", fontSize: "13.5px", marginTop: "8px" }}>
+                                <div className="dm-sans" style={{ display: "flex", alignItems: "center" }}>
+                                    Ücretsiz İptal - 90 gün öncesine kadar
+                                </div>
+                                <div className="dm-sans" style={{ display: "flex", alignItems: "center" }}>
+                                    %50 İade - 60 gün öncesine kadar
+                                </div>
+                                <div className="dm-sans" style={{ display: "flex", alignItems: "center", marginTop: "8px" }}>
+                                    Kısmi Ön Ödeme, Kalanı Girişte Ödeme
+                                </div>
+                            </div>
+
+                            {/* Price */}
+                            <div style={{ marginTop: "12px" }}>
+                                <div style={{ display: "flex", alignItems: "center", fontSize: "15px" }}>
+                                    <span className="poppins" style={{ fontWeight: 700, fontSize: "18px" }}>
+                                        ₺{villa.minEver.toLocaleString("tr-TR")}-₺{maxPrice.toLocaleString("tr-TR")}
+                                    </span>
+                                    &nbsp;/ Gece
+                                </div>
+                                <div style={{ color: "#433544", fontSize: "14px", fontWeight: 500, marginTop: "16px" }}>
+                                    {villa.name}&apos;yı en iyi fiyat garantisiyle kiralayın →
+                                </div>
+                            </div>
+
+                            {/* Beds & Guests */}
+                            <div style={{ borderTop: "1px solid #eee", paddingTop: "10px", marginTop: "12px", fontSize: "13px", fontWeight: 500, display: "flex", alignItems: "center" }}>
+                                🛏️ {villa.bedrooms}
+                                <span style={{ marginLeft: "20px" }}>👤 {villa.guests} Kişi</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Link>
+        </div>
+    );
+}
+
+/* ──────────────── Inner Component (uses useSearchParams) ──────────────── */
+function SonuclarInner() {
+    const searchParams = useSearchParams();
+
+    /* Initialize from URL params */
+    const initialFeatures: string[] = [];
+    const initialLocations: string[] = [];
+
+    const locParam = searchParams.get("location");
+    if (locParam && locationsList[locParam]) initialLocations.push(locParam);
+
+    const catParam = searchParams.get("category");
+    if (catParam && categoryToFeature[catParam]) initialFeatures.push(categoryToFeature[catParam]);
+
+    const featParam = searchParams.get("feature");
+    if (featParam && featuresList[featParam]) initialFeatures.push(featParam);
+
+    const peopleParam = searchParams.get("people");
+    const initialPeople = peopleParam ? parseInt(peopleParam, 10) || 0 : 0;
+
+    /* Compute hero title based on params (like the Vue reference) */
+    const isResulted = initialFeatures.length > 0 || initialLocations.length > 0;
+    let heroTitle = "Tüm Villalar";
+    if (isResulted && initialFeatures.length === 1) {
+        heroTitle = featuresList2[initialFeatures[0]] || "Sonuçlar";
+    } else if (isResulted) {
+        heroTitle = "Sonuçlar";
+    } else if (initialPeople > 0) {
+        heroTitle = `${initialPeople} - ${initialPeople + 1} Kişilik Villalar`;
+    }
+
+    /* State */
+    const [selectedFeatures, setSelectedFeatures] = useState<string[]>(initialFeatures);
+    const [selectedLocations, setSelectedLocations] = useState<string[]>(initialLocations);
+    const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
+    const [people, setPeople] = useState(initialPeople);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [sortBy, setSortBy] = useState("order");
+    const [sortOpen, setSortOpen] = useState(false);
+    const [showMoreCat, setShowMoreCat] = useState(false);
+    const [showMoreLoc, setShowMoreLoc] = useState(false);
+    const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+    const [slideIndices, setSlideIndices] = useState<Record<string, number>>({});
+
+    /* Toggles */
+    const toggleFeature = useCallback((f: string) => {
+        setSelectedFeatures((prev) => prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]);
+    }, []);
+
+    const toggleLocation = useCallback((l: string) => {
+        setSelectedLocations((prev) => prev.includes(l) ? prev.filter((x) => x !== l) : [...prev, l]);
+    }, []);
+
+    const togglePriceRange = useCallback((p: string) => {
+        setSelectedPriceRanges((prev) => prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]);
+    }, []);
+
+    /* Filtering */
+    const filteredVillas = useMemo(() => {
+        let result = [...mockVillas];
+
+        if (searchTerm.trim()) {
+            const term = searchTerm.toLowerCase();
+            result = result.filter((v) => v.name.toLowerCase().includes(term));
+        }
+
+        if (selectedFeatures.length > 0) {
+            result = result.filter((v) => selectedFeatures.every((f) => v.features.includes(f)));
+        }
+
+        if (selectedLocations.length > 0) {
+            result = result.filter((v) => {
+                const villaLocKey = locationToFilter[v.location];
+                return villaLocKey && selectedLocations.includes(villaLocKey);
+            });
+        }
+
+        if (selectedPriceRanges.length > 0) {
+            result = result.filter((v) => {
+                return selectedPriceRanges.some((prKey) => {
+                    const pr = priceRanges.find((p) => p.key === prKey);
+                    if (!pr) return false;
+                    return v.minEver >= pr.min && v.minEver < pr.max;
+                });
+            });
+        }
+
+        if (people > 0) {
+            result = result.filter((v) => v.guests >= people && v.guests <= people + 1);
+        }
+
+        if (sortBy === "total") result.sort((a, b) => a.minEver - b.minEver);
+        else if (sortBy === "totalrev") result.sort((a, b) => b.minEver - a.minEver);
+        else if (sortBy === "guest") result.sort((a, b) => a.guests - b.guests);
+        else if (sortBy === "guestrev") result.sort((a, b) => b.guests - a.guests);
+        else if (sortBy === "score") result.sort((a, b) => b.score - a.score);
+
+        return result;
+    }, [searchTerm, selectedFeatures, selectedLocations, selectedPriceRanges, people, sortBy]);
+
+    const hasFilters = selectedFeatures.length > 0 || selectedLocations.length > 0 || selectedPriceRanges.length > 0 || people > 0;
+
+    const clearAllFilters = () => {
+        setSelectedFeatures([]);
+        setSelectedLocations([]);
+        setSelectedPriceRanges([]);
+        setPeople(0);
+        setSearchTerm("");
+        setSortBy("order");
+    };
+
+    /* Image slider */
+    const getSlideIndex = (slug: string) => slideIndices[slug] || 0;
+    const slidePrev = (slug: string, totalImages: number) => {
+        setSlideIndices((prev) => ({ ...prev, [slug]: (prev[slug] || 0) === 0 ? totalImages - 1 : (prev[slug] || 0) - 1 }));
+    };
+    const slideNext = (slug: string, totalImages: number) => {
+        setSlideIndices((prev) => ({ ...prev, [slug]: ((prev[slug] || 0) + 1) % totalImages }));
+    };
+
+    const sortLabel = sortOptions.find((s) => s.key === sortBy)?.label || "Sırala";
+
+    /* ──────────── Filter Sidebar JSX ──────────── */
+    const filterSidebar = (
+        <div style={{ background: "#fff", borderRadius: "8px", boxShadow: "0px 0px 40px rgba(29, 58, 83, 0.1)", width: "100%" }}>
+            <div style={{ padding: "26px" }}>
+                {/* Villa Türü */}
+                <div className="poppins" style={{ fontWeight: 700, fontSize: "16px" }}>Villa Türü</div>
+                <div style={{ marginTop: "10px" }}>
+                    {villaTypeInitial.map((f) => (
+                        <div key={f} style={{ marginTop: "6px" }}>
+                            <Checkbox checked={selectedFeatures.includes(f)} onChange={() => toggleFeature(f)} label={featuresList[f]} />
+                        </div>
+                    ))}
+                    {showMoreCat && villaTypeExtra.map((f) => (
+                        <div key={f} style={{ marginTop: "6px" }}>
+                            <Checkbox checked={selectedFeatures.includes(f)} onChange={() => toggleFeature(f)} label={featuresList[f]} />
+                        </div>
+                    ))}
+                    <div onClick={() => setShowMoreCat(!showMoreCat)} className={`${styles.moreToggle} dm-sans`}>
+                        Daha {showMoreCat ? "Az ▲" : "Fazla ▼"}
+                    </div>
+                </div>
+
+                {/* Fiyat Aralığı */}
+                <div className={`${styles.sectionTitle} poppins`}>
+                    Fiyat Aralığı <span className="dm-sans" style={{ fontSize: "12px", color: "#6a6a6a", fontWeight: 400 }}>/ Gece</span>
+                </div>
+                <div style={{ marginTop: "10px" }}>
+                    {priceRanges.map((pr) => (
+                        <div key={pr.key} style={{ marginTop: "6px" }}>
+                            <Checkbox checked={selectedPriceRanges.includes(pr.key)} onChange={() => togglePriceRange(pr.key)} label={pr.label} />
+                        </div>
+                    ))}
+                </div>
+
+                {/* Konum */}
+                <div className={`${styles.sectionTitle} poppins`}>Konum</div>
+                <div style={{ marginTop: "16px" }}>
+                    {kalkanLocationsInitial.map((loc) => (
+                        <div key={loc} style={{ marginTop: "6px" }}>
+                            <Checkbox checked={selectedLocations.includes(loc)} onChange={() => toggleLocation(loc)} label={locationsList[loc]} />
+                        </div>
+                    ))}
+                    {showMoreLoc && kalkanLocationsExtra.map((loc) => (
+                        <div key={loc} style={{ marginTop: "6px" }}>
+                            <Checkbox checked={selectedLocations.includes(loc)} onChange={() => toggleLocation(loc)} label={locationsList[loc]} />
+                        </div>
+                    ))}
+                    {otherLocations.map((loc) => (
+                        <div key={loc} style={{ marginTop: "6px" }}>
+                            <Checkbox checked={selectedLocations.includes(loc)} onChange={() => toggleLocation(loc)} label={locationsList[loc]} />
+                        </div>
+                    ))}
+                    <div onClick={() => setShowMoreLoc(!showMoreLoc)} className={`${styles.moreToggle} dm-sans`}>
+                        Daha {showMoreLoc ? "Az ▲" : "Fazla ▼"}
+                    </div>
+                </div>
+
+                {/* Havuz */}
+                <div className={`${styles.sectionTitle} poppins`}>Havuz</div>
+                <div style={{ marginTop: "10px" }}>
+                    {poolFeatures.map((f) => (
+                        <div key={f} style={{ marginTop: "6px" }}>
+                            <Checkbox checked={selectedFeatures.includes(f)} onChange={() => toggleFeature(f)} label={featuresList[f]} />
+                        </div>
+                    ))}
+                </div>
+
+                {/* Öne Çıkan Özellikler */}
+                <div className={`${styles.sectionTitle} poppins`}>Öne Çıkan Özellikler</div>
+                <div style={{ marginTop: "10px" }}>
+                    {featuredFeatures.map((f) => (
+                        <div key={f} style={{ marginTop: 0 }}>
+                            <Checkbox checked={selectedFeatures.includes(f)} onChange={() => toggleFeature(f)} label={featuresList[f]} />
+                        </div>
+                    ))}
+                </div>
+
+                {/* Villa Ara */}
+                <div className={`${styles.sectionTitle} poppins`}>Villa Ara</div>
+                <div style={{ marginTop: "10px" }}>
+                    <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Villa adı girin..."
+                        className={`${styles.searchInput} dm-sans`}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+
+    /* ──────────── RENDER ──────────── */
+    return (
+        <div className={styles.pageWrapper}>
+            {/* ═══════ HERO SECTION ═══════ */}
+            <div className="paddingMobile no1023" style={{ paddingTop: 32 }}>
+                <div className="dm-sans">
+                    {/* Hero Banner */}
+                    <div
+                        className="middletp"
+                        style={{
+                            borderRadius: 16,
+                            background: "url('/images/032.jpg')",
+                            backgroundPosition: "left",
+                            backgroundSize: "cover",
+                            height: 400,
+                            padding: "40px 48px 88px",
+                        }}
+                    >
+                        <div style={{ width: "100%" }}>
+                            <div style={{ paddingTop: 12 }}>
+                                <h1
+                                    className="poppins"
+                                    style={{
+                                        textAlign: "center",
+                                        fontWeight: 700,
+                                        fontSize: 56,
+                                        color: "#fff",
+                                    }}
+                                >
+                                    {heroTitle}
+                                </h1>
+                            </div>
+
+                            {/* Filter Bar */}
+                            <div className="middle" style={{ paddingBottom: 32 }}>
+                                <SearchFilterBar
+                                    initialPeople={initialPeople}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ═══════ RESULTS AREA ═══════ */}
+            <div className="paddingMobile" style={{ marginTop: 12 }}>
+
+                {/* ── Header Row ── */}
+                <div style={{ width: "100%", display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between" }}>
+                    <div>
+                        {selectedFeatures.length === 1 && !isResulted ? (
+                            <div style={{ fontSize: "24px", fontWeight: 600 }}>
+                                {featuresList2[selectedFeatures[0]] || "Sonuçlar"}
+                                <span style={{ marginLeft: "6px", color: "#6a6a6a", fontWeight: 500, fontSize: "12px" }}>( {filteredVillas.length} )</span>
+                            </div>
+                        ) : hasFilters ? (
+                            <div style={{ fontSize: "24px", fontWeight: 600, lineHeight: 1.2 }}>
+                                Arama Sonuçları
+                                <span style={{ marginLeft: "6px", color: "#6a6a6a", fontWeight: 500, fontSize: "12px" }}>( {filteredVillas.length} )</span>
+                            </div>
+                        ) : (
+                            <div style={{ fontSize: "24px", fontWeight: 600 }}>
+                                {heroTitle}
+                                <span style={{ marginLeft: "6px", color: "#6a6a6a", fontWeight: 500, fontSize: "12px" }}>( {filteredVillas.length} )</span>
+                            </div>
+                        )}
+                        {people > 0 && (
+                            <div style={{ fontSize: "16px", fontWeight: 300, color: "#747579", marginBottom: "8px" }}>
+                                {people} - {people + 1} Kişilik Villalar Gösteriliyor
+                            </div>
+                        )}
+                    </div>
+
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                        {/* Sort */}
+                        <div style={{ position: "relative" }}>
+                            <div onClick={() => setSortOpen(!sortOpen)} style={{ padding: "3px 8px", borderRadius: "12px", cursor: "pointer" }}>
+                                <div style={{ display: "flex", alignItems: "center" }}>
+                                    <div style={{ marginRight: "4px", fontSize: "18px", fontWeight: 700 }}>{sortLabel}</div>
+                                    <span style={{ fontSize: "12px", opacity: 0.6 }}>▼</span>
+                                </div>
+                            </div>
+                            {sortOpen && (
+                                <div className={styles.sortDropdown}>
+                                    {sortOptions.map((opt) => (
+                                        <div key={opt.key} className={`${styles.sortItem} ${sortBy === opt.key ? styles.sortItemActive : ""}`}
+                                            onClick={() => { setSortBy(opt.key); setSortOpen(false); }}>
+                                            {opt.label}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Mobile filter toggle */}
+                        <div className={styles.mobileFilterBtn} onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}>
+                            ☰ Filtrele
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── Active Filter Tags ── */}
+                <div style={{ marginTop: "4px", display: "flex", flexWrap: "wrap" }}>
+                    {hasFilters && (
+                        <div className={`${styles.filterTag} ${styles.filterTagClear}`} onClick={clearAllFilters}>
+                            ✕ Tüm Filtreleri Kaldır
+                        </div>
+                    )}
+                    {selectedLocations.map((loc) => (
+                        <div key={loc} className={styles.filterTag} onClick={() => toggleLocation(loc)}>
+                            • {locationsList[loc]}
+                        </div>
+                    ))}
+                    {selectedFeatures.map((feat) => (
+                        <div key={feat} className={styles.filterTag} onClick={() => toggleFeature(feat)}>
+                            • {featuresList[feat]}
+                        </div>
+                    ))}
+                    {selectedPriceRanges.map((pr) => {
+                        const range = priceRanges.find((p) => p.key === pr);
+                        return (
+                            <div key={pr} className={styles.filterTag} onClick={() => togglePriceRange(pr)}>
+                                • {range?.label}
+                            </div>
+                        );
+                    })}
+                    {people > 0 && (
+                        <div className={styles.filterTag} onClick={() => setPeople(0)}>
+                            • Kişi Sayısı {people} - {people + 1}
+                        </div>
+                    )}
+                </div>
+
+                {/* ── Main Layout ── */}
+                <div className={styles.mainLayout}>
+                    {/* Filter Sidebar - Desktop */}
+                    <div className={`${styles.filterSidebar} ${mobileFiltersOpen ? styles.filterSidebarOpen : ""}`}>
+                        {filterSidebar}
+                        <div className={styles.filterActions}>
+                            <div className={styles.clearBtn} onClick={clearAllFilters}>Temizle</div>
+                            <div className={styles.applyBtn} onClick={() => setMobileFiltersOpen(false)}>Filtreleri Uygula</div>
+                        </div>
+                    </div>
+
+                    {/* Villa Cards */}
+                    <div className={styles.villasContainer}>
+                        {filteredVillas.map((villa) => (
+                            <VillaCard
+                                key={villa.slug}
+                                villa={villa}
+                                slideIndex={getSlideIndex(villa.slug)}
+                                onSlidePrev={() => slidePrev(villa.slug, villa.images.length)}
+                                onSlideNext={() => slideNext(villa.slug, villa.images.length)}
+                            />
+                        ))}
+
+                        {/* No Results */}
+                        {filteredVillas.length === 0 && (
+                            <div className={styles.noResults}>
+                                <div className={styles.noResultsInner}>
+                                    <div style={{ color: "#e83e8c", fontSize: "16px", fontWeight: 500 }}>
+                                        Arama kriterlerinize uygun villa bulunamadı
+                                    </div>
+                                    <div style={{ marginTop: "22px", paddingTop: "20px", borderTop: "1px solid #ddd" }}>
+                                        <div style={{ fontSize: "17px", fontWeight: 500, color: "#333" }}>
+                                            <Link href="/sonuclar">Filtreleri kaldırmak için tıklayın</Link>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* ── Bottom Promo Section ── */}
+                <div style={{ display: "flex", justifyContent: "center", marginTop: "48px" }}>
+                    <div style={{ width: "100%", maxWidth: "500px" }}>
+                        {/* Promo 1 */}
+                        <div className={styles.promoRow}>
+                            <Image src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=200" alt="Promosyonlu Villalar" width={68} height={68} className={styles.promoImage} />
+                            <div className={styles.promoContent}>
+                                <h2 style={{ fontSize: "22px", marginBottom: "4px", marginTop: "8px" }}>Promosyonlu Villalar</h2>
+                                <div style={{ maxWidth: "90%", fontSize: "15px", color: "#747579", fontWeight: 400 }}>
+                                    Önceden belirlenmiş indirimli tarihler arasından seçim yapın
+                                </div>
+                            </div>
+                            <Link href="/promosyonlar"><div className={styles.promoInspect}>İncele ›</div></Link>
+                        </div>
+
+                        {/* Promo 2 */}
+                        <div className={styles.promoRow} style={{ marginTop: "32px" }}>
+                            <Image src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=200" alt="İndirimli Villalar" width={68} height={68} className={styles.promoImage} />
+                            <div className={styles.promoContent}>
+                                <h2 style={{ fontSize: "19px", marginBottom: "4px", marginTop: "8px" }}>İndirimli Villalar</h2>
+                                <div style={{ maxWidth: "90%", fontSize: "15px", color: "#747579", fontWeight: 400 }}>
+                                    Sadece Villa Tatilinde&apos;ye özel indirimler içeren villalar
+                                </div>
+                            </div>
+                            <Link href="/sonuclar"><div className={styles.promoInspect}>İncele ›</div></Link>
+                        </div>
+
+                        {/* Promo 3 */}
+                        <div className={styles.promoRow} style={{ marginTop: "32px" }}>
+                            <Image src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=200" alt="Kısa Süreli Villalar" width={68} height={68} className={styles.promoImage} />
+                            <div className={styles.promoContent}>
+                                <h2 style={{ fontSize: "19px", marginBottom: "4px", marginTop: "8px" }}>Kısa Süreli Kiralık Villalar</h2>
+                                <div style={{ maxWidth: "90%", fontSize: "15px", color: "#747579", fontWeight: 400 }}>
+                                    2-3 veya 4 gecelik kısa kiralamalara uygun villalar
+                                </div>
+                            </div>
+                            <Link href="/sonuclar"><div className={styles.promoInspect}>İncele ›</div></Link>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── CTA Section ── */}
+                <div style={{ display: "flex", justifyContent: "center", width: "100%", marginTop: "74px", marginBottom: "32px" }}>
+                    <div className={styles.ctaCard}>
+                        <Link href="/kategoriler">
+                            <div style={{ fontSize: "16px", fontWeight: 400, color: "#222" }}>
+                                Daha fazla villa görüntülemek için <strong>tıklayın</strong>
+                            </div>
+                        </Link>
+                        <div style={{ marginTop: "22px", paddingTop: "20px", borderTop: "1px solid #ddd" }}>
+                            <div style={{ fontSize: "17px", fontWeight: 500, color: "#333" }}>
+                                Aradığınız Villa için En Uygun Teklifi Alın<br />Bize Ulaşın
+                            </div>
+                            <div style={{ marginTop: "16px", paddingBottom: "40px", display: "flex", justifyContent: "center" }}>
+                                <Link href="/iletisim"><div className={styles.contactBtn}>İletişim</div></Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/* ──────────────── Main Export ──────────────── */
+export default function SonuclarContent() {
+    return (
+        <Suspense fallback={
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px", fontSize: "18px", color: "#747579" }}>
+                Yükleniyor...
+            </div>
+        }>
+            <SonuclarInner />
+        </Suspense>
+    );
+}

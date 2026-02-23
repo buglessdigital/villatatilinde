@@ -108,6 +108,21 @@ export default function ReservationCalendar({
         [reservations]
     );
 
+    // Reservation position: is this date the start, end, or middle of a reservation?
+    const getReservationPosition = useCallback(
+        (dateStr: string): "start" | "end" | "mid" | null => {
+            for (const res of reservations) {
+                if (isBetween(dateStr, res.startDate, res.endDate)) {
+                    if (dateStr === res.startDate) return "start";
+                    if (dateStr === res.endDate) return "end";
+                    return "mid";
+                }
+            }
+            return null;
+        },
+        [reservations]
+    );
+
     // Is a date in the selected range?
     const isSelected = useCallback(
         (dateStr: string): boolean => {
@@ -249,6 +264,7 @@ export default function ReservationCalendar({
                         month={month}
                         getPrice={getPrice}
                         getReservationStatus={getReservationStatus}
+                        getReservationPosition={getReservationPosition}
                         isSelected={isSelected}
                         isCheckIn={isCheckIn}
                         isCheckOut={isCheckOut}
@@ -276,6 +292,7 @@ interface MonthGridProps {
     month: number;
     getPrice: (dateStr: string) => number | null;
     getReservationStatus: (dateStr: string) => "reserved" | "option" | null;
+    getReservationPosition: (dateStr: string) => "start" | "end" | "mid" | null;
     isSelected: (dateStr: string) => boolean;
     isCheckIn: (dateStr: string) => boolean;
     isCheckOut: (dateStr: string) => boolean;
@@ -289,6 +306,7 @@ function MonthGrid({
     month,
     getPrice,
     getReservationStatus,
+    getReservationPosition,
     isSelected,
     isCheckIn,
     isCheckOut,
@@ -323,6 +341,7 @@ function MonthGrid({
                     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                     const price = getPrice(dateStr);
                     const resStatus = getReservationStatus(dateStr);
+                    const resPosition = getReservationPosition(dateStr);
                     const selected = isSelected(dateStr);
                     const past = isPast(dateStr);
                     const checkIn = isCheckIn(dateStr);
@@ -330,7 +349,11 @@ function MonthGrid({
 
                     let cellClass = "vd-cal-cell";
                     if (past) cellClass += " vd-cal-past";
-                    if (resStatus === "reserved") cellClass += " vd-cal-reserved";
+                    if (resStatus === "reserved") {
+                        if (resPosition === "start") cellClass += " vd-cal-res-start";
+                        else if (resPosition === "end") cellClass += " vd-cal-res-end";
+                        else cellClass += " vd-cal-res-mid";
+                    }
                     if (resStatus === "option") cellClass += " vd-cal-option";
                     if (selected) cellClass += " vd-cal-selected";
                     if (checkIn) cellClass += " vd-cal-checkin";

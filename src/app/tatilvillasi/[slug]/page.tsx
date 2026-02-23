@@ -80,6 +80,9 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
     // Wishlist
     const [wished, setWished] = useState(false);
 
+    // Discounts modal
+    const [showDiscountsModal, setShowDiscountsModal] = useState(false);
+
     const reservationRef = useRef<HTMLDivElement>(null);
 
     // Currency context
@@ -329,6 +332,13 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                         {/* Reservation Box */}
                         <div className="vd-reservation-box" ref={reservationRef}>
                             <div className="vd-res-title">Rezervasyon</div>
+                            <div className="vd-res-clear">
+                                {(checkInDate || checkOutDate) && (
+                                    <button className="vd-res-clear-btn" onClick={() => { setCheckInDate(""); setCheckOutDate(""); clearCalendarRef.current?.(); }}>
+                                        temizle
+                                    </button>
+                                )}
+                            </div>
                             <div className="vd-res-dates">
                                 <div className="vd-res-date-input">
                                     <input
@@ -337,7 +347,6 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                         onChange={(e) => setCheckInDate(e.target.value)}
                                         placeholder="Giriş Tarihi"
                                     />
-                                    <span className="vd-res-date-label">Giriş Tarihi</span>
                                 </div>
                                 <div className="vd-res-date-input">
                                     <input
@@ -346,7 +355,6 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                         onChange={(e) => setCheckOutDate(e.target.value)}
                                         placeholder="Çıkış Tarihi"
                                     />
-                                    <span className="vd-res-date-label">Çıkış Tarihi</span>
                                 </div>
                             </div>
 
@@ -374,7 +382,7 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                         </div>
 
                         {/* Discount / Short-term */}
-                        <div className="vd-promo-btn" style={{ background: "#e83e8c1a", color: "#e83e8c" }}>
+                        <div className="vd-promo-btn" style={{ background: "#e83e8c1a", color: "#e83e8c", cursor: "pointer" }} onClick={() => setShowDiscountsModal(true)}>
                             <img src="/images/discount.png" alt="" style={{ height: 20, marginRight: 6 }} />
                             Villa İndirim ve Promosyonları için <strong>&nbsp;tıklayın</strong>
                         </div>
@@ -633,6 +641,63 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                     onClose={handleBottomSheetClose}
                 />
             )}
+            {/* Discounts Modal */}
+            {showDiscountsModal && (
+                <>
+                    <div className="vd-modal-overlay" onClick={() => setShowDiscountsModal(false)} />
+                    <div className="vd-modal-discounts">
+                        <div className="vd-modal-header">
+                            <div style={{ fontWeight: 600 }}>İndirimleri</div>
+                            <div className="vd-modal-close" onClick={() => setShowDiscountsModal(false)}>Kapat</div>
+                        </div>
+                        <div className="vd-modal-table-wrap">
+                            <div className="vd-modal-table">
+                                <div className="vd-modal-table-head">
+                                    <div style={{ width: '30%', padding: '16px 8px', fontWeight: 600, borderRight: '1px solid #a6b5cc' }}>İndirim Detayı</div>
+                                    <div style={{ width: '20%', padding: '16px 8px', fontWeight: 600, borderRight: '1px solid #a6b5cc' }}>İndirim Oranı</div>
+                                    <div style={{ width: '50%', padding: '16px 8px', fontWeight: 600 }}>Geçerli olduğu süre</div>
+                                </div>
+                                {villa.priceBlocks
+                                    .filter(pb => pb.discount > 0)
+                                    .map((pb, i) => (
+                                        <div key={i} className="vd-modal-table-row">
+                                            <div style={{ width: '30%', padding: '16px 8px', fontWeight: 600, borderRight: '1px solid #dfdfe3' }}>Özel İndirim</div>
+                                            <div style={{ width: '20%', padding: '16px 8px', fontWeight: 500, borderRight: '1px solid #dfdfe3' }}>{pb.discount}%</div>
+                                            <div style={{ width: '50%', padding: '16px 8px', fontWeight: 500 }}>{pb.period}</div>
+                                        </div>
+                                    ))
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* Mobile Sticky Bottom Bar */}
+            <div className="vd-mobile-sticky-bar">
+                <div className="vd-mobile-sticky-inner">
+                    <button
+                        className="vd-mobile-loc-btn"
+                        onClick={() => {
+                            const mapEl = document.getElementById('villaMap');
+                            if (mapEl) mapEl.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                    >
+                        <img src="/images/locationdotsolid.svg" alt="" style={{ height: 11 }} />
+                        Villa <br /> Konumu
+                    </button>
+                    <button
+                        className="vd-mobile-date-btn"
+                        onClick={() => {
+                            const calEl = document.getElementById('parsedyCal');
+                            if (calEl) calEl.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                    >
+                        <div style={{ fontWeight: 600, fontSize: 18 }}>Tarih Seçin</div>
+                        <div style={{ fontSize: 16, marginTop: 2, color: '#ffffffa6', fontWeight: 300 }}>fiyatlar tarihlerin üzerindedir</div>
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }
