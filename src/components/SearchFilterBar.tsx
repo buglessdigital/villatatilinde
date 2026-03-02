@@ -75,6 +75,31 @@ const LOCATION_GROUPS: LocationGroup[] = [
     },
 ];
 
+/* ─── Map SearchFilterBar keys → SonuclarContent keys ─── */
+const LOCATION_KEY_TO_FILTER: Record<string, string> = {
+    kalkanAll: "kalkan-merkez",
+    kalkanMerkez: "kalkan-merkez",
+    kalkanKalamar: "kalkan-kalamar",
+    kalkanKomurluk: "kalkan-komurluk",
+    kalkanKisla: "kalkan-kisla",
+    kalkanOrtaalan: "kalkan-ortaalan",
+    kalkanKiziltas: "kalkan-kiziltas",
+    kalkanKaputas: "kalkan-kaputas",
+    kalkanPatara: "kalkan-patara",
+    kalkanOrdu: "kalkan-ordu",
+    kalkanUlugol: "kalkan-ulugol",
+    kalkanKordere: "kalkan-kordere",
+    kalkanIslamlar: "kalkan-islamlar",
+    kalkanUzumlu: "kalkan-uzumlu",
+    kalkanBezirgan: "kalkan-bezirgan",
+    kalkanSaribelen: "kalkan-saribelen",
+    kalkanYesilkoy: "kalkan-yesilkoy",
+    kalkanCavdir: "kalkan-cavdir",
+    kasMerkez: "kas-merkez",
+    fethiyeMerkez: "fethiye",
+    belekMerkez: "belek",
+};
+
 interface SearchFilterBarProps {
     /** Initial location key (e.g. from URL params) */
     initialLocation?: string;
@@ -142,7 +167,8 @@ export default function SearchFilterBar({
 
         const params = new URLSearchParams();
         if (toLocation && toLocation !== "Hepsi") {
-            params.set("location", toLocation);
+            const filterKey = LOCATION_KEY_TO_FILTER[toLocation] || toLocation;
+            params.set("location", filterKey);
         }
         if (toAdult > 0) {
             params.set("people", String(toAdult));

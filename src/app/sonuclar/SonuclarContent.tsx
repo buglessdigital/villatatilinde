@@ -1,12 +1,61 @@
 "use client";
 
-import { useState, useMemo, useCallback, Suspense } from "react";
+import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { mockVillas, Villa } from "@/data/mockVillas";
+import { getAllVillasForSearch } from "@/lib/queries";
+import type { VillaDetail, DbFeature, DbVillaPricePeriod } from "@/lib/types";
 import SearchFilterBar from "@/components/SearchFilterBar";
 import styles from "./sonuclar.module.css";
+
+/* ─── Local Villa interface (matches template expectations) ─── */
+interface PriceBlock {
+    period: string;
+    nightlyPrice: number;
+    weeklyPrice: number;
+    discount: number;
+    minNights: number;
+    originalPrice?: number;
+}
+interface Villa {
+    slug: string;
+    name: string;
+    location: string;
+    coverImage: string;
+    images: string[];
+    guests: number;
+    bedrooms: number;
+    minEver: number;
+    priceBlocks: PriceBlock[];
+    features: string[];
+    score: number;
+}
+
+function mapVillaDetail(v: VillaDetail): Villa {
+    return {
+        slug: v.slug,
+        name: v.name,
+        location: v.location_label || '',
+        coverImage: v.cover_image_url || '/images/natureview.jpg',
+        images: v.images?.length > 0
+            ? v.images.map((img: { url: string }) => img.url || v.cover_image_url)
+            : [v.cover_image_url || '/images/natureview.jpg'],
+        guests: v.max_guests,
+        bedrooms: v.bedrooms,
+        minEver: v.min_price || 0,
+        priceBlocks: (v.price_periods || []).map((pp: DbVillaPricePeriod) => ({
+            period: pp.label,
+            nightlyPrice: pp.nightly_price,
+            weeklyPrice: pp.weekly_price || pp.nightly_price * 7,
+            discount: pp.discount_pct || 0,
+            minNights: pp.min_nights,
+            originalPrice: pp.original_price || undefined,
+        })),
+        features: (v.features || []).map((f: DbFeature) => f.key || f.label_tr),
+        score: v.avg_rating || 0,
+    };
+}
 
 /* ──────────────── Mapping Objects ──────────────── */
 const featuresList: Record<string, string> = {
@@ -46,9 +95,16 @@ const locationsList: Record<string, string> = {
     "kalkan-ortaalan": "Kalkan Ortaalan",
     "kalkan-kiziltas": "Kalkan Kızıltaş",
     "kalkan-kaputas": "Kalkan Kaputaş",
+    "kalkan-patara": "Kalkan Patara",
+    "kalkan-ordu": "Kalkan Ordu",
+    "kalkan-ulugol": "Kalkan Ulugöl",
     "kalkan-bezirgan": "Kalkan Bezirgan",
     "kalkan-islamlar": "Kalkan İslamlar",
     "kalkan-kordere": "Kalkan Kördere",
+    "kalkan-uzumlu": "Kalkan Üzümlü",
+    "kalkan-saribelen": "Kalkan Sarıbelen",
+    "kalkan-yesilkoy": "Kalkan Yeşilköy",
+    "kalkan-cavdir": "Kalkan Çavdır",
     "kas-merkez": "Kaş Merkez",
     fethiye: "Fethiye",
     belek: "Belek",
@@ -62,9 +118,16 @@ const locationToFilter: Record<string, string> = {
     "Kalkan Ortaalan": "kalkan-ortaalan",
     "Kalkan Kızıltaş": "kalkan-kiziltas",
     "Kalkan Kaputaş": "kalkan-kaputas",
+    "Kalkan Patara": "kalkan-patara",
+    "Kalkan Ordu": "kalkan-ordu",
+    "Kalkan Ulugöl": "kalkan-ulugol",
     "Kalkan Bezirgan": "kalkan-bezirgan",
     "Kalkan İslamlar": "kalkan-islamlar",
     "Kalkan Kördere": "kalkan-kordere",
+    "Kalkan Üzümlü": "kalkan-uzumlu",
+    "Kalkan Sarıbelen": "kalkan-saribelen",
+    "Kalkan Yeşilköy": "kalkan-yesilkoy",
+    "Kalkan Çavdır": "kalkan-cavdir",
     "Kaş Merkez": "kas-merkez",
     Fethiye: "fethiye",
     Belek: "belek",
@@ -126,7 +189,7 @@ const villaTypeExtra = ["seaview", "natureview", "isolatedPoolVillas", "jacuzziV
 const poolFeatures = ["privatePool", "sharedPool", "infinityPool", "isolatedPoolVillas", "indoorPool", "heatedPool", "shallowPool", "kidPoolVillas"];
 const featuredFeatures = ["jacuzziVillas", "gymRoom", "sauna", "cinemaRoom", "winterGarden", "tennisTable", "poolTable", "floorHeating"];
 const kalkanLocationsInitial = ["kalkan-merkez", "kalkan-kalamar", "kalkan-komurluk", "kalkan-kisla", "kalkan-ortaalan", "kalkan-kiziltas", "kalkan-kaputas"];
-const kalkanLocationsExtra = ["kalkan-bezirgan", "kalkan-islamlar", "kalkan-kordere"];
+const kalkanLocationsExtra = ["kalkan-patara", "kalkan-ordu", "kalkan-ulugol", "kalkan-bezirgan", "kalkan-islamlar", "kalkan-kordere", "kalkan-uzumlu", "kalkan-saribelen", "kalkan-yesilkoy", "kalkan-cavdir"];
 const otherLocations = ["kas-merkez", "fethiye", "belek"];
 
 /* ──────────────── Checkbox Component ──────────────── */
@@ -291,7 +354,7 @@ function SonuclarInner() {
     const catParam = searchParams.get("category");
     if (catParam && categoryToFeature[catParam]) initialFeatures.push(categoryToFeature[catParam]);
 
-    const featParam = searchParams.get("feature");
+    const featParam = searchParams.get("features");
     if (featParam && featuresList[featParam]) initialFeatures.push(featParam);
 
     const peopleParam = searchParams.get("people");
@@ -334,9 +397,27 @@ function SonuclarInner() {
         setSelectedPriceRanges((prev) => prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]);
     }, []);
 
+    /* Load villas from Supabase */
+    const [allVillas, setAllVillas] = useState<Villa[]>([]);
+    const [loadingVillas, setLoadingVillas] = useState(true);
+
+    useEffect(() => {
+        async function load() {
+            try {
+                const data = await getAllVillasForSearch();
+                setAllVillas(data.map(mapVillaDetail));
+            } catch (err) {
+                console.error('Villalar yüklenemedi:', err);
+            } finally {
+                setLoadingVillas(false);
+            }
+        }
+        load();
+    }, []);
+
     /* Filtering */
     const filteredVillas = useMemo(() => {
-        let result = [...mockVillas];
+        let result = [...allVillas];
 
         if (searchTerm.trim()) {
             const term = searchTerm.toLowerCase();
@@ -375,7 +456,7 @@ function SonuclarInner() {
         else if (sortBy === "score") result.sort((a, b) => b.score - a.score);
 
         return result;
-    }, [searchTerm, selectedFeatures, selectedLocations, selectedPriceRanges, people, sortBy]);
+    }, [allVillas, searchTerm, selectedFeatures, selectedLocations, selectedPriceRanges, people, sortBy]);
 
     const hasFilters = selectedFeatures.length > 0 || selectedLocations.length > 0 || selectedPriceRanges.length > 0 || people > 0;
 

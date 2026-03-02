@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
     changeLanguage as googleChangeLanguage,
     getInitialLanguageFromCookie,
@@ -10,6 +11,8 @@ import {
 } from "@/lib/useGoogleTranslate";
 import { useCurrency, CURRENCIES } from "@/context/CurrencyContext";
 import type { CurrencyCode } from "@/context/CurrencyContext";
+import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
 /* ─── Language & Currency Data ─── */
 const languages = [
@@ -30,12 +33,45 @@ const currencies = [
 
 export default function Navbar() {
     /* ─── State ─── */
+    const router = useRouter();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [langDropdown, setLangDropdown] = useState(false);
     const [currDropdown, setCurrDropdown] = useState(false);
     const [selectedLang, setSelectedLang] = useState("tr");
     const { currency: selectedCurrency, setCurrency: setGlobalCurrency } = useCurrency();
     const [langLoading, setLangLoading] = useState(false);
+    const [user, setUser] = useState<User | null>(null);
+    const [profileDropdown, setProfileDropdown] = useState(false);
+    const profileRef = useRef<HTMLDivElement>(null);
+
+    /* ─── Auth state listener ─── */
+    useEffect(() => {
+        // Get current session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user ?? null);
+        });
+
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    /* ─── Logout handler ─── */
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        setUser(null);
+        setProfileDropdown(false);
+        setMobileMenuOpen(false);
+        router.push("/");
+    };
+
+    /* ─── User display helpers ─── */
+    const userDisplayName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Kullanıcı";
+    const userEmail = user?.email || "";
+    const userInitial = (userDisplayName.charAt(0) || "K").toUpperCase();
 
     /* ─── Initialise language from cookie on mount ─── */
     useEffect(() => {
@@ -77,6 +113,9 @@ export default function Navbar() {
             }
             if (currRef.current && !currRef.current.contains(e.target as Node)) {
                 setCurrDropdown(false);
+            }
+            if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+                setProfileDropdown(false);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -315,12 +354,41 @@ export default function Navbar() {
                         </div>
                     </div>
 
-                    {/* Login button */}
+                    {/* Login / Profile button */}
                     <div style={{ background: "#f6f9fc", color: "#000", fontSize: 17, padding: "11px 20px", fontWeight: 600 }}>
-                        <Link href="/giris" onClick={() => setMobileMenuOpen(false)} style={{ padding: 10 }} className="middleft">
-                            Giriş Yap
-                            <img src="/images/cfo.svg" style={{ height: 17, marginLeft: 5 }} alt="" />
-                        </Link>
+                        {user ? (
+                            <>
+                                <div className="middleft" style={{ padding: "10px 10px 6px" }}>
+                                    <div style={{
+                                        width: 36, height: 36, borderRadius: "50%",
+                                        background: "linear-gradient(135deg, #6772e5, #50b0f0)",
+                                        color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                                        fontWeight: 700, fontSize: 16, marginRight: 10, flexShrink: 0,
+                                    }}>
+                                        {userInitial}
+                                    </div>
+                                    <div style={{ overflow: "hidden" }}>
+                                        <div style={{ fontSize: 16, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userDisplayName}</div>
+                                        <div style={{ fontSize: 12, fontWeight: 400, color: "#888", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userEmail}</div>
+                                    </div>
+                                </div>
+                                <Link href="/hesabim" onClick={() => setMobileMenuOpen(false)} style={{ padding: "10px 10px", display: "block" }} className="middleft">
+                                    Hesabım
+                                </Link>
+                                <div
+                                    onClick={handleLogout}
+                                    style={{ padding: "10px 10px", cursor: "pointer", color: "#dc2626" }}
+                                    className="middleft"
+                                >
+                                    Çıkış Yap
+                                </div>
+                            </>
+                        ) : (
+                            <Link href="/giris" onClick={() => setMobileMenuOpen(false)} style={{ padding: 10 }} className="middleft">
+                                Giriş Yap
+                                <img src="/images/cfo.svg" style={{ height: 17, marginLeft: 5 }} alt="" />
+                            </Link>
+                        )}
                     </div>
                 </div>
             </div>
@@ -582,15 +650,68 @@ export default function Navbar() {
                                         </div>
                                     </div>
 
-                                    {/* Login */}
-                                    <Link href="/giris">
-                                        <div className="middle" style={{ marginLeft: 6, maxWidth: 160, overflow: "hidden", padding: "12px 10px 12px 12px" }}>
-                                            <img src="/images/accountavatar.svg" alt="Account" />
-                                            <div className="afacad" style={{ marginTop: 3, fontSize: 14, fontWeight: 600, marginLeft: 7 }}>
-                                                Giriş Yap
+                                    {/* Login / Profile */}
+                                    {user ? (
+                                        <div ref={profileRef} style={{ position: "relative", marginLeft: 6 }}>
+                                            <div
+                                                onClick={() => setProfileDropdown(!profileDropdown)}
+                                                className="middle bhs"
+                                                style={{ cursor: "pointer", padding: "8px 10px 8px 12px" }}
+                                            >
+                                                <div style={{
+                                                    width: 32, height: 32, borderRadius: "50%",
+                                                    background: "linear-gradient(135deg, #6772e5, #50b0f0)",
+                                                    color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                                                    fontWeight: 700, fontSize: 14, flexShrink: 0,
+                                                }}>
+                                                    {userInitial}
+                                                </div>
+                                                <div className="afacad" style={{ marginTop: 2, fontSize: 14, fontWeight: 600, marginLeft: 7, maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                                    {userDisplayName}
+                                                </div>
+                                                <img src="/images/cfo.svg" style={{ marginLeft: 4, height: 14, transform: profileDropdown ? "rotate(-90deg)" : "rotate(90deg)", transition: "transform 0.2s" }} alt="" />
                                             </div>
+                                            {profileDropdown && (
+                                                <div style={{
+                                                    position: "absolute", top: 48, right: 0,
+                                                    background: "#fff", border: "1px solid #ecf0ef",
+                                                    borderRadius: 16,
+                                                    boxShadow: "0 0 2px rgba(145,158,171,.2), 0 12px 24px -4px rgba(145,158,171,.12)",
+                                                    padding: "8px", zIndex: 999, minWidth: 220,
+                                                }}>
+                                                    {/* User info header */}
+                                                    <div style={{ padding: "12px 12px 10px", borderBottom: "1px solid #f0f0f0", marginBottom: 4 }}>
+                                                        <div style={{ fontSize: 15, fontWeight: 600, color: "#333" }}>{userDisplayName}</div>
+                                                        <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>{userEmail}</div>
+                                                    </div>
+                                                    {/* Menu items */}
+                                                    <Link href="/hesabim" onClick={() => setProfileDropdown(false)}>
+                                                        <div className="bhbhbg" style={{ padding: "10px 12px", borderRadius: 8, fontSize: 15, fontWeight: 500, color: "#333", display: "flex", alignItems: "center", gap: 8 }}>
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                                                            Hesabım
+                                                        </div>
+                                                    </Link>
+                                                    <div
+                                                        onClick={handleLogout}
+                                                        className="bhbhbg"
+                                                        style={{ padding: "10px 12px", borderRadius: 8, fontSize: 15, fontWeight: 500, color: "#dc2626", cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+                                                        Çıkış Yap
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                    </Link>
+                                    ) : (
+                                        <Link href="/giris">
+                                            <div className="middle" style={{ marginLeft: 6, maxWidth: 160, overflow: "hidden", padding: "12px 10px 12px 12px" }}>
+                                                <img src="/images/accountavatar.svg" alt="Account" />
+                                                <div className="afacad" style={{ marginTop: 3, fontSize: 14, fontWeight: 600, marginLeft: 7 }}>
+                                                    Giriş Yap
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    )}
                                 </div>
                             </div>
                         </div>

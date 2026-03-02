@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import SiteShell from "@/components/SiteShell";
 import { CurrencyProvider } from "@/context/CurrencyContext";
 
 export const metadata: Metadata = {
@@ -16,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr">
+    <html lang="tr" suppressHydrationWarning>
       <head>
         <meta name="color-scheme" content="light" />
         <meta
@@ -25,11 +24,9 @@ export default function RootLayout({
         />
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <CurrencyProvider>
-          <Navbar />
-          {children}
-          <Footer />
+          <SiteShell>{children}</SiteShell>
         </CurrencyProvider>
       </body>
     </html>

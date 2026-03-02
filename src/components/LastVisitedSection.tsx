@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { getRecentVillas } from "@/lib/queries";
+import type { VillaCard as VillaCardType } from "@/lib/types";
 
-/* ─── Mock Last Visited Data ─── */
 interface LastVisitedVilla {
     slug: string;
     name: string;
@@ -17,80 +18,22 @@ interface LastVisitedVilla {
     hasDiscount: boolean;
 }
 
-const MOCK_LAST_VISITED: LastVisitedVilla[] = [
-    {
-        slug: "villa-doga",
-        name: "Villa Doğa",
-        imageSmall: "/images/natureview.jpg",
-        location: "Kalkan Bezirgan",
-        features: ["Özel Havuz", "Çocuk Havuzu", "Doğa Manzaralı"],
+function mapToLastVisited(v: VillaCardType): LastVisitedVilla {
+    return {
+        slug: v.slug,
+        name: v.name,
+        imageSmall: v.cover_image_url || "/images/natureview.jpg",
+        location: v.location_label || "",
+        features: v.features.slice(0, 3),
         score: 0,
-        minPrice: "₺12.000",
-        bedrooms: 3,
-        guests: 6,
-        hasDiscount: true,
-    },
-    {
-        slug: "villa-freya",
-        name: "Villa Freya",
-        imageSmall: "/images/luxury.jpg",
-        location: "Kalkan / Kalamar",
-        features: ["Özel Havuz", "Çocuk Havuzu", "Sonsuzluk Havuzu"],
-        score: 5,
-        minPrice: "₺7.071",
-        bedrooms: 5,
-        guests: 10,
-        hasDiscount: false,
-    },
-    {
-        slug: "villa-oykununevi-2",
-        name: "Villa Öykü'nün Evi 2",
-        imageSmall: "/images/honey.jpg",
-        location: "Kalkan Kızıltaş",
-        features: ["Özel Havuz", "Isıtmalı Havuz", "Balayı Villası"],
-        score: 5,
-        minPrice: "₺8.202",
-        bedrooms: 1,
-        guests: 2,
-        hasDiscount: false,
-    },
-    {
-        slug: "mulberry-collection-1",
-        name: "Mulberry Collection 1",
-        imageSmall: "/images/seaview.jpg",
-        location: "Kalkan Köy",
-        features: ["Özel Havuz", "Sığ Havuz", "Deniz Manzaralı"],
-        score: 0,
-        minPrice: "₺10.715",
-        bedrooms: 3,
-        guests: 6,
-        hasDiscount: false,
-    },
-    {
-        slug: "berk-suit-apart",
-        name: "Berk Suit Apart",
-        imageSmall: "/images/central.jpg",
-        location: "Kalkan Kördere",
-        features: ["Mutfak", "Ebeveyn Banyosu", "Balkon", "Jakuzi"],
-        score: 0,
-        minPrice: "₺2.135",
-        bedrooms: 1,
-        guests: 2,
-        hasDiscount: false,
-    },
-    {
-        slug: "villa-redro",
-        name: "Villa Redro",
-        imageSmall: "/images/kidpool.jpg",
-        location: "Kalkan İslamlar",
-        features: ["Özel Havuz", "Muhafazakar Havuz", "Sığ Havuz"],
-        score: 0,
-        minPrice: "₺7.000",
-        bedrooms: 2,
-        guests: 4,
-        hasDiscount: false,
-    },
-];
+        minPrice: v.min_price
+            ? `₺${Number(v.min_price).toLocaleString("tr-TR")}`
+            : "₺0",
+        bedrooms: v.bedrooms,
+        guests: v.max_guests,
+        hasDiscount: v.has_active_discount || false,
+    };
+}
 
 /* ─── Last Visited Card ─── */
 function LastVisitedCard({ villa }: { villa: LastVisitedVilla }) {
@@ -274,14 +217,27 @@ export default function LastVisitedSection() {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [startX, setStartX] = useState(0);
-    const [scrollLeft, setScrollLeft] = useState(0);
+    const [scrollLeftPos, setScrollLeftPos] = useState(0);
+    const [villas, setVillas] = useState<LastVisitedVilla[]>([]);
+
+    useEffect(() => {
+        async function load() {
+            try {
+                const data = await getRecentVillas();
+                setVillas(data.map(mapToLastVisited));
+            } catch (err) {
+                console.error('Son gezilenler yüklenemedi:', err);
+            }
+        }
+        load();
+    }, []);
 
     const handleMouseDown = useCallback(
         (e: React.MouseEvent) => {
             if (!scrollRef.current) return;
             setIsDragging(true);
             setStartX(e.pageX - scrollRef.current.offsetLeft);
-            setScrollLeft(scrollRef.current.scrollLeft);
+            setScrollLeftPos(scrollRef.current.scrollLeft);
         },
         []
     );
@@ -296,10 +252,12 @@ export default function LastVisitedSection() {
             e.preventDefault();
             const x = e.pageX - scrollRef.current.offsetLeft;
             const walk = (x - startX) * 1.5;
-            scrollRef.current.scrollLeft = scrollLeft - walk;
+            scrollRef.current.scrollLeft = scrollLeftPos - walk;
         },
-        [isDragging, startX, scrollLeft]
+        [isDragging, startX, scrollLeftPos]
     );
+
+    if (villas.length === 0) return null;
 
     return (
         <div className="paddingMobile lastVisitedCont">
@@ -318,7 +276,7 @@ export default function LastVisitedSection() {
                     onMouseLeave={handleMouseUp}
                     onMouseMove={handleMouseMove}
                 >
-                    {MOCK_LAST_VISITED.map((villa) => (
+                    {villas.map((villa) => (
                         <LastVisitedCard key={villa.slug} villa={villa} />
                     ))}
                 </div>

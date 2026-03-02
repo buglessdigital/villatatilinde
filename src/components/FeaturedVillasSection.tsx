@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { getFeaturedVillas } from "@/lib/queries";
+import type { VillaCard as VillaCardType } from "@/lib/types";
 
-/* ─── Mock Villa Data ─── */
-interface Villa {
+interface VillaView {
     slug: string;
     name: string;
     images: string[];
@@ -18,147 +19,30 @@ interface Villa {
     cheapestVilla: boolean;
 }
 
-const MOCK_VILLAS: Villa[] = [
-    {
-        slug: "villa-doga",
-        name: "Villa Doğa",
-        images: [
-            "/images/natureview.jpg",
-            "/images/luxury.jpg",
-            "/images/central.jpg",
-        ],
-        features: ["Özel Havuz", "Çocuk Havuzu", "Doğa Manzaralı"],
-        nightlyPrice: "₺12.000",
-        totalPrice: "₺60.000",
-        dateRange: "01 May - 06 May",
-        beds: 8,
-        guests: 8,
-        maxDiscount: 8,
+function mapVillaToView(v: VillaCardType): VillaView {
+    const nightlyPrice = v.min_price
+        ? `₺${Number(v.min_price).toLocaleString("tr-TR")}`
+        : "₺0";
+    const totalPrice = v.min_price
+        ? `₺${(Number(v.min_price) * 5).toLocaleString("tr-TR")}`
+        : "₺0";
+    return {
+        slug: v.slug,
+        name: v.name,
+        images: v.images.length > 0 ? v.images : [v.cover_image_url || "/images/natureview.jpg"],
+        features: v.features.slice(0, 3),
+        nightlyPrice,
+        totalPrice,
+        dateRange: "5 Gece",
+        beds: v.bedrooms,
+        guests: v.max_guests,
+        maxDiscount: v.max_discount_pct || 0,
         cheapestVilla: true,
-    },
-    {
-        slug: "villa-sea",
-        name: "Villa Sea",
-        images: [
-            "/images/seaview.jpg",
-            "/images/beach.jpg",
-            "/images/affordable.jpg",
-        ],
-        features: ["Özel Havuz", "Mutfak", "Ebeveyn Banyosu"],
-        nightlyPrice: "₺9.000",
-        totalPrice: "₺45.000",
-        dateRange: "14 Şub - 19 Şub",
-        beds: 3,
-        guests: 4,
-        maxDiscount: 9,
-        cheapestVilla: true,
-    },
-    {
-        slug: "villa-akbulut-1",
-        name: "Villa Akbulut 1",
-        images: [
-            "/images/honey.jpg",
-            "/images/central.jpg",
-            "/images/luxury.jpg",
-        ],
-        features: ["Sonsuzluk Havuzu", "Özel Havuz", "Sığ Havuz"],
-        nightlyPrice: "₺7.000",
-        totalPrice: "₺35.000",
-        dateRange: "01 Mar - 06 Mar",
-        beds: 1,
-        guests: 2,
-        maxDiscount: 30,
-        cheapestVilla: true,
-    },
-    {
-        slug: "villa-freya",
-        name: "Villa Freya",
-        images: [
-            "/images/luxury.jpg",
-            "/images/seaview.jpg",
-            "/images/natureview.jpg",
-        ],
-        features: ["Özel Havuz", "Çocuk Havuzu", "Sonsuzluk Havuzu"],
-        nightlyPrice: "₺12.715",
-        totalPrice: "₺63.575",
-        dateRange: "01 May - 06 May",
-        beds: 5,
-        guests: 10,
-        maxDiscount: 10,
-        cheapestVilla: true,
-    },
-    {
-        slug: "villa-kalkan",
-        name: "Villa Kalkan",
-        images: [
-            "/images/beach.jpg",
-            "/images/honey.jpg",
-            "/images/central.jpg",
-        ],
-        features: ["Deniz Manzaralı", "Özel Havuz", "Jakuzi"],
-        nightlyPrice: "₺15.000",
-        totalPrice: "₺75.000",
-        dateRange: "10 Haz - 15 Haz",
-        beds: 6,
-        guests: 12,
-        maxDiscount: 12,
-        cheapestVilla: true,
-    },
-    {
-        slug: "villa-sunset",
-        name: "Villa Sunset",
-        images: [
-            "/images/central.jpg",
-            "/images/affordable.jpg",
-            "/images/seaview.jpg",
-        ],
-        features: ["Merkezi Konum", "Özel Havuz", "Bahçe"],
-        nightlyPrice: "₺8.500",
-        totalPrice: "₺42.500",
-        dateRange: "20 Nis - 25 Nis",
-        beds: 4,
-        guests: 6,
-        maxDiscount: 5,
-        cheapestVilla: true,
-    },
-    {
-        slug: "villa-paradise",
-        name: "Villa Paradise",
-        images: [
-            "/images/kidpool.jpg",
-            "/images/luxury.jpg",
-            "/images/beach.jpg",
-        ],
-        features: ["Çocuk Havuzu", "Özel Havuz", "Bahçe"],
-        nightlyPrice: "₺11.000",
-        totalPrice: "₺55.000",
-        dateRange: "15 Haz - 20 Haz",
-        beds: 5,
-        guests: 8,
-        maxDiscount: 15,
-        cheapestVilla: true,
-    },
-    {
-        slug: "villa-azure",
-        name: "Villa Azure",
-        images: [
-            "/images/affordable.jpg",
-            "/images/natureview.jpg",
-            "/images/honey.jpg",
-        ],
-        features: ["Denize Yakın", "Özel Havuz", "Teras"],
-        nightlyPrice: "₺6.500",
-        totalPrice: "₺32.500",
-        dateRange: "01 Nis - 06 Nis",
-        beds: 3,
-        guests: 4,
-        maxDiscount: 7,
-        cheapestVilla: true,
-    },
-];
+    };
+}
 
 /* ─── Single Villa Card ─── */
-function VillaCard({ villa }: { villa: Villa }) {
+function VillaCard({ villa }: { villa: VillaView }) {
     const [imgIndex, setImgIndex] = useState(0);
     const [imgAnim, setImgAnim] = useState(false);
 
@@ -382,14 +266,37 @@ function VillaCard({ villa }: { villa: Villa }) {
 
 /* ─── Featured Villas Section ─── */
 export default function FeaturedVillasSection() {
+    const [villas, setVillas] = useState<VillaView[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function load() {
+            try {
+                const data = await getFeaturedVillas();
+                setVillas(data.map(mapVillaToView));
+            } catch (err) {
+                console.error('Öne çıkan villalar yüklenemedi:', err);
+            } finally {
+                setLoading(false);
+            }
+        }
+        load();
+    }, []);
+
     return (
         <div className="mainVillasCont">
             <div className="middlebt paddingMobile">
                 <h2 className="titleMain">Öne Çıkan Villalar</h2>
             </div>
 
+            {loading && (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: '#999' }}>
+                    Villalar yükleniyor...
+                </div>
+            )}
+
             <div className="row paddingMobile villaContRow">
-                {MOCK_VILLAS.map((villa) => (
+                {!loading && villas.map((villa) => (
                     <VillaCard key={villa.slug} villa={villa} />
                 ))}
             </div>

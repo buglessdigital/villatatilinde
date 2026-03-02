@@ -420,7 +420,7 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                             <h2 className="vd-section-title poppins vd-center-title">Öne Çıkan Özellikler</h2>
                             <div className="vd-premium-grid">
                                 {premiumFeatures.map((f) => (
-                                    <div key={f} className="vd-premium-card">
+                                    <div key={`premium-${f}`} className="vd-premium-card">
                                         <div className="vd-premium-icon">
                                             <img src={PREMIUM_FEATURES[f].img} alt={PREMIUM_FEATURES[f].label} />
                                         </div>
@@ -447,7 +447,7 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                             <h2 className="vd-section-title poppins vd-center-title">Villa Kategorisi</h2>
                             <div className="vd-premium-grid">
                                 {[...new Set(categoryFeatures)].map((f) => (
-                                    <div key={f} className="vd-premium-card">
+                                    <div key={`category-${f}`} className="vd-premium-card">
                                         <div className="vd-premium-icon">
                                             <img src={CATEGORY_FEATURES[f].img} alt={CATEGORY_FEATURES[f].label} />
                                         </div>

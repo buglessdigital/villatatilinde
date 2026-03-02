@@ -1,58 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { getFaqs } from "@/lib/queries";
+import type { DbFaq } from "@/lib/types";
 
-/* ── Sample FAQ Data ── */
-const faqData = [
-    {
-        question: "Villa nasıl kiralanır?",
-        answer: `<p>Villa kiralama süreci oldukça kolaydır. Sitemizde beğendiğiniz villayı seçtikten sonra, tarih ve kişi sayısı bilgilerini girerek müsaitlik kontrolü yapabilirsiniz. Uygun olan villayı bulduktan sonra <strong>rezervasyon isteği</strong> oluşturabilirsiniz.</p>
-    <p style="margin-top:8px;">Rezervasyon isteğiniz ekibimiz tarafından en kısa sürede değerlendirilir ve size geri dönüş yapılır.</p>`,
-    },
-    {
-        question: "Ödeme yöntemleri nelerdir?",
-        answer: `<p>Visa, Mastercard, American Express ve Troy kartlarınızla güvenli bir şekilde ödeme yapabilirsiniz. Ayrıca <strong>taksit imkanı</strong> da sunulmaktadır.</p>
-    <p style="margin-top:8px;">Tüm ödemeler iyzico güvencesi altında gerçekleştirilmektedir.</p>`,
-    },
-    {
-        question: "İptal ve iade politikası nasıldır?",
-        answer: `<p>İptal ve iade politikamız villa sahibinin belirlediği koşullara göre değişiklik gösterebilir. Genel olarak, giriş tarihinden <strong>30 gün öncesine</strong> kadar yapılan iptallerde tam iade sağlanmaktadır.</p>
-    <p style="margin-top:8px;">Detaylı bilgi için <a href="/iptal-iade-politikalari" style="color:#50b0f0;text-decoration:underline;">İptal ve İade Politikası</a> sayfamızı ziyaret edebilirsiniz.</p>`,
-    },
-    {
-        question: "Villa fiyatları neye göre belirlenir?",
-        answer: `<p>Villa fiyatları; villanın konumu, kapasitesi, özellikleri, sezon dönemi ve konaklama süresine göre belirlenmektedir. <strong>Erken rezervasyon</strong> ve uzun süreli konaklama avantajlarından yararlanabilirsiniz.</p>`,
-    },
-    {
-        question: "Villalarda temizlik ve hijyen nasıl sağlanıyor?",
-        answer: `<p>Tüm villalarımız her misafir değişiminde profesyonel temizlik ekipleri tarafından <strong>titizlikle temizlenmektedir</strong>. Çarşaf, havlu ve temel temizlik malzemeleri villada hazır olarak sunulmaktadır.</p>`,
-    },
-    {
-        question: "Özel havuzlu villa kiralayabilir miyim?",
-        answer: `<p>Evet, portföyümüzde <strong>özel havuzlu</strong> birçok villa bulunmaktadır. Ayrıca havuzu korunaklı (dışarıdan görünmeyen) villalar, çocuk havuzlu villalar gibi özel kategorilerde de villa seçeneklerimiz mevcuttur.</p>`,
-    },
-    {
-        question: "Rezervasyon onayı ne kadar sürede gelir?",
-        answer: `<p>Rezervasyon isteğiniz ekibimiz tarafından genellikle <strong>2 saat içinde</strong> değerlendirilir ve size geri dönüş yapılır. Yoğun dönemlerde bu süre uzayabilir, ancak aynı gün içinde mutlaka dönüş sağlanmaktadır.</p>`,
-    },
-    {
-        question: "Villa Tatilinde güvenilir mi?",
-        answer: `<p>Villa Tatilinde, <strong>TÜRSAB Belge No: 18069</strong> ile tescilli, yasal güvencelere sahip profesyonel bir villa kiralama acentesidir. Tüm ödemeler iyzico güvencesi altında yapılmakta olup, villalarımız ekibimiz tarafından kontrol edilmektedir.</p>`,
-    },
-    {
-        question: "Taksitle ödeme yapabilir miyim?",
-        answer: `<p>Evet, birçok banka kartı ile <strong>taksitli ödeme</strong> imkanı sunmaktayız. Detaylı bilgi için <a href="/odeme-yontemleri" style="color:#50b0f0;text-decoration:underline;">Ödeme Yöntemleri</a> sayfamızı inceleyebilirsiniz.</p>`,
-    },
-    {
-        question: "Check-in ve check-out saatleri nedir?",
-        answer: `<p>Genel olarak check-in saati <strong>16:00</strong>, check-out saati ise <strong>10:00</strong>'dır. Ancak bu saatler villaya göre değişiklik gösterebilir. Detaylı bilgi villa sayfasında belirtilmektedir.</p>`,
-    },
-];
+interface FaqView {
+    question: string;
+    answer: string;
+}
 
 export default function SSSContent() {
+    const [faqData, setFaqData] = useState<FaqView[]>([]);
+    const [loading, setLoading] = useState(true);
     const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+    useEffect(() => {
+        async function loadFaqs() {
+            try {
+                const data = await getFaqs();
+                const mapped: FaqView[] = data.map((f: DbFaq) => ({
+                    question: f.question_tr,
+                    answer: f.answer_html_tr || "",
+                }));
+                setFaqData(mapped);
+            } catch (err) {
+                console.error("SSS yükleme hatası:", err);
+            } finally {
+                setLoading(false);
+            }
+        }
+        loadFaqs();
+    }, []);
 
     const toggleAccordion = (index: number) => {
         setOpenIndex(openIndex === index ? null : index);
@@ -141,8 +121,8 @@ export default function SSSContent() {
                                                 </div>
                                                 <div
                                                     className={`sss-accordion-chevron ${openIndex === i
-                                                            ? "sss-accordion-chevron-open"
-                                                            : ""
+                                                        ? "sss-accordion-chevron-open"
+                                                        : ""
                                                         }`}
                                                 >
                                                     <svg

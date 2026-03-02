@@ -1,11 +1,48 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { destinations } from "@/data/mockDestinations";
+import { getDestinations } from "@/lib/queries";
+import type { DbDestination } from "@/lib/types";
 import MostSearchedSection from "@/components/MostSearchedSection";
 
+interface DestView {
+    slug: string;
+    name: string;
+    image: string;
+    location: string;
+    filterParam: string;
+    villaCount: number;
+    description: string;
+    tags: string[];
+}
+
 export default function TatilYerleriContent() {
+    const [destinations, setDestinations] = useState<DestView[]>([]);
+
+    useEffect(() => {
+        async function load() {
+            try {
+                const data = await getDestinations();
+                const mapped: DestView[] = data.map((d: DbDestination) => ({
+                    slug: d.slug,
+                    name: d.name,
+                    image: d.image_url || "/images/natureview.jpg",
+                    location: d.location_label || d.name,
+                    filterParam: d.filter_param || d.slug,
+                    villaCount: d.villa_count || 0,
+                    description: d.description || "",
+                    tags: d.tags || [],
+                }));
+                setDestinations(mapped);
+            } catch (err) {
+                console.error("Tatil yerleri yüklenemedi:", err);
+            }
+        }
+        load();
+    }, []);
+
     return (
         <>
             <div className="ty-page">
@@ -68,4 +105,3 @@ export default function TatilYerleriContent() {
         </>
     );
 }
-

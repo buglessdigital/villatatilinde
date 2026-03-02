@@ -1,237 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-
-/* ─── Country Code Data ─── */
-const countryCodes = [
-    { country: "Türkiye", code: "+90", iso: "TR" },
-    { country: "United Kingdom", code: "+44", iso: "GB" },
-    { country: "Germany", code: "+49", iso: "DE" },
-    { country: "Russia", code: "+7", iso: "RU" },
-    { country: "United States", code: "+1", iso: "US" },
-    { country: "Afghanistan", code: "+93", iso: "AF" },
-    { country: "Albania", code: "+355", iso: "AL" },
-    { country: "Algeria", code: "+213", iso: "DZ" },
-    { country: "American Samoa", code: "+1-684", iso: "AS" },
-    { country: "Andorra", code: "+376", iso: "AD" },
-    { country: "Angola", code: "+244", iso: "AO" },
-    { country: "Anguilla", code: "+1-264", iso: "AI" },
-    { country: "Antarctica", code: "+672", iso: "AQ" },
-    { country: "Antigua and Barbuda", code: "+1-268", iso: "AG" },
-    { country: "Argentina", code: "+54", iso: "AR" },
-    { country: "Armenia", code: "+374", iso: "AM" },
-    { country: "Aruba", code: "+297", iso: "AW" },
-    { country: "Australia", code: "+61", iso: "AU" },
-    { country: "Austria", code: "+43", iso: "AT" },
-    { country: "Azerbaijan", code: "+994", iso: "AZ" },
-    { country: "Bahamas", code: "+1-242", iso: "BS" },
-    { country: "Bahrain", code: "+973", iso: "BH" },
-    { country: "Bangladesh", code: "+880", iso: "BD" },
-    { country: "Barbados", code: "+1-246", iso: "BB" },
-    { country: "Belarus", code: "+375", iso: "BY" },
-    { country: "Belgium", code: "+32", iso: "BE" },
-    { country: "Belize", code: "+501", iso: "BZ" },
-    { country: "Benin", code: "+229", iso: "BJ" },
-    { country: "Bermuda", code: "+1-441", iso: "BM" },
-    { country: "Bhutan", code: "+975", iso: "BT" },
-    { country: "Bolivia", code: "+591", iso: "BO" },
-    { country: "Bosnia and Herzegovina", code: "+387", iso: "BA" },
-    { country: "Botswana", code: "+267", iso: "BW" },
-    { country: "Brazil", code: "+55", iso: "BR" },
-    { country: "British Indian Ocean Territory", code: "+246", iso: "IO" },
-    { country: "British Virgin Islands", code: "+1-284", iso: "VG" },
-    { country: "Brunei", code: "+673", iso: "BN" },
-    { country: "Bulgaria", code: "+359", iso: "BG" },
-    { country: "Burkina Faso", code: "+226", iso: "BF" },
-    { country: "Burundi", code: "+257", iso: "BI" },
-    { country: "Cambodia", code: "+855", iso: "KH" },
-    { country: "Cameroon", code: "+237", iso: "CM" },
-    { country: "Canada", code: "+1", iso: "CA" },
-    { country: "Cape Verde", code: "+238", iso: "CV" },
-    { country: "Cayman Islands", code: "+1-345", iso: "KY" },
-    { country: "Central African Republic", code: "+236", iso: "CF" },
-    { country: "Chad", code: "+235", iso: "TD" },
-    { country: "Chile", code: "+56", iso: "CL" },
-    { country: "China", code: "+86", iso: "CN" },
-    { country: "Christmas Island", code: "+61", iso: "CX" },
-    { country: "Cocos Islands", code: "+61", iso: "CC" },
-    { country: "Colombia", code: "+57", iso: "CO" },
-    { country: "Comoros", code: "+269", iso: "KM" },
-    { country: "Cook Islands", code: "+682", iso: "CK" },
-    { country: "Costa Rica", code: "+506", iso: "CR" },
-    { country: "Croatia", code: "+385", iso: "HR" },
-    { country: "Cuba", code: "+53", iso: "CU" },
-    { country: "Curacao", code: "+599", iso: "CW" },
-    { country: "Cyprus", code: "+357", iso: "CY" },
-    { country: "Czech Republic", code: "+420", iso: "CZ" },
-    { country: "Democratic Republic of the Congo", code: "+243", iso: "CD" },
-    { country: "Denmark", code: "+45", iso: "DK" },
-    { country: "Djibouti", code: "+253", iso: "DJ" },
-    { country: "Dominica", code: "+1-767", iso: "DM" },
-    { country: "Dominican Republic", code: "+1-809", iso: "DO" },
-    { country: "East Timor", code: "+670", iso: "TL" },
-    { country: "Ecuador", code: "+593", iso: "EC" },
-    { country: "Egypt", code: "+20", iso: "EG" },
-    { country: "El Salvador", code: "+503", iso: "SV" },
-    { country: "Equatorial Guinea", code: "+240", iso: "GQ" },
-    { country: "Eritrea", code: "+291", iso: "ER" },
-    { country: "Estonia", code: "+372", iso: "EE" },
-    { country: "Ethiopia", code: "+251", iso: "ET" },
-    { country: "Falkland Islands", code: "+500", iso: "FK" },
-    { country: "Faroe Islands", code: "+298", iso: "FO" },
-    { country: "Fiji", code: "+679", iso: "FJ" },
-    { country: "Finland", code: "+358", iso: "FI" },
-    { country: "France", code: "+33", iso: "FR" },
-    { country: "French Polynesia", code: "+689", iso: "PF" },
-    { country: "Gabon", code: "+241", iso: "GA" },
-    { country: "Gambia", code: "+220", iso: "GM" },
-    { country: "Georgia", code: "+995", iso: "GE" },
-    { country: "Ghana", code: "+233", iso: "GH" },
-    { country: "Gibraltar", code: "+350", iso: "GI" },
-    { country: "Greece", code: "+30", iso: "GR" },
-    { country: "Greenland", code: "+299", iso: "GL" },
-    { country: "Grenada", code: "+1-473", iso: "GD" },
-    { country: "Guam", code: "+1-671", iso: "GU" },
-    { country: "Guatemala", code: "+502", iso: "GT" },
-    { country: "Guinea", code: "+224", iso: "GN" },
-    { country: "Guinea-Bissau", code: "+245", iso: "GW" },
-    { country: "Guyana", code: "+592", iso: "GY" },
-    { country: "Haiti", code: "+509", iso: "HT" },
-    { country: "Honduras", code: "+504", iso: "HN" },
-    { country: "Hong Kong", code: "+852", iso: "HK" },
-    { country: "Hungary", code: "+36", iso: "HU" },
-    { country: "Iceland", code: "+354", iso: "IS" },
-    { country: "India", code: "+91", iso: "IN" },
-    { country: "Indonesia", code: "+62", iso: "ID" },
-    { country: "Iran", code: "+98", iso: "IR" },
-    { country: "Iraq", code: "+964", iso: "IQ" },
-    { country: "Ireland", code: "+353", iso: "IE" },
-    { country: "Isle of Man", code: "+44-1624", iso: "IM" },
-    { country: "Israel", code: "+972", iso: "IL" },
-    { country: "Italy", code: "+39", iso: "IT" },
-    { country: "Ivory Coast", code: "+225", iso: "CI" },
-    { country: "Jamaica", code: "+1-876", iso: "JM" },
-    { country: "Japan", code: "+81", iso: "JP" },
-    { country: "Jordan", code: "+962", iso: "JO" },
-    { country: "Kazakhstan", code: "+7", iso: "KZ" },
-    { country: "Kenya", code: "+254", iso: "KE" },
-    { country: "Kiribati", code: "+686", iso: "KI" },
-    { country: "Kosovo", code: "+383", iso: "XK" },
-    { country: "Kuwait", code: "+965", iso: "KW" },
-    { country: "Kyrgyzstan", code: "+996", iso: "KG" },
-    { country: "Laos", code: "+856", iso: "LA" },
-    { country: "Latvia", code: "+371", iso: "LV" },
-    { country: "Lebanon", code: "+961", iso: "LB" },
-    { country: "Lesotho", code: "+266", iso: "LS" },
-    { country: "Liberia", code: "+231", iso: "LR" },
-    { country: "Libya", code: "+218", iso: "LY" },
-    { country: "Liechtenstein", code: "+423", iso: "LI" },
-    { country: "Lithuania", code: "+370", iso: "LT" },
-    { country: "Luxembourg", code: "+352", iso: "LU" },
-    { country: "Macao", code: "+853", iso: "MO" },
-    { country: "Macedonia", code: "+389", iso: "MK" },
-    { country: "Madagascar", code: "+261", iso: "MG" },
-    { country: "Malawi", code: "+265", iso: "MW" },
-    { country: "Malaysia", code: "+60", iso: "MY" },
-    { country: "Maldives", code: "+960", iso: "MV" },
-    { country: "Mali", code: "+223", iso: "ML" },
-    { country: "Malta", code: "+356", iso: "MT" },
-    { country: "Marshall Islands", code: "+692", iso: "MH" },
-    { country: "Mauritania", code: "+222", iso: "MR" },
-    { country: "Mauritius", code: "+230", iso: "MU" },
-    { country: "Mexico", code: "+52", iso: "MX" },
-    { country: "Micronesia", code: "+691", iso: "FM" },
-    { country: "Moldova", code: "+373", iso: "MD" },
-    { country: "Monaco", code: "+377", iso: "MC" },
-    { country: "Mongolia", code: "+976", iso: "MN" },
-    { country: "Montenegro", code: "+382", iso: "ME" },
-    { country: "Montserrat", code: "+1-664", iso: "MS" },
-    { country: "Morocco", code: "+212", iso: "MA" },
-    { country: "Mozambique", code: "+258", iso: "MZ" },
-    { country: "Myanmar", code: "+95", iso: "MM" },
-    { country: "Namibia", code: "+264", iso: "NA" },
-    { country: "Nauru", code: "+674", iso: "NR" },
-    { country: "Nepal", code: "+977", iso: "NP" },
-    { country: "Netherlands", code: "+31", iso: "NL" },
-    { country: "New Caledonia", code: "+687", iso: "NC" },
-    { country: "New Zealand", code: "+64", iso: "NZ" },
-    { country: "Nicaragua", code: "+505", iso: "NI" },
-    { country: "Niger", code: "+227", iso: "NE" },
-    { country: "Nigeria", code: "+234", iso: "NG" },
-    { country: "North Korea", code: "+850", iso: "KP" },
-    { country: "Norway", code: "+47", iso: "NO" },
-    { country: "Oman", code: "+968", iso: "OM" },
-    { country: "Pakistan", code: "+92", iso: "PK" },
-    { country: "Palau", code: "+680", iso: "PW" },
-    { country: "Palestine", code: "+970", iso: "PS" },
-    { country: "Panama", code: "+507", iso: "PA" },
-    { country: "Papua New Guinea", code: "+675", iso: "PG" },
-    { country: "Paraguay", code: "+595", iso: "PY" },
-    { country: "Peru", code: "+51", iso: "PE" },
-    { country: "Philippines", code: "+63", iso: "PH" },
-    { country: "Poland", code: "+48", iso: "PL" },
-    { country: "Portugal", code: "+351", iso: "PT" },
-    { country: "Puerto Rico", code: "+1-787", iso: "PR" },
-    { country: "Qatar", code: "+974", iso: "QA" },
-    { country: "Republic of the Congo", code: "+242", iso: "CG" },
-    { country: "Romania", code: "+40", iso: "RO" },
-    { country: "Rwanda", code: "+250", iso: "RW" },
-    { country: "Saint Kitts and Nevis", code: "+1-869", iso: "KN" },
-    { country: "Saint Lucia", code: "+1-758", iso: "LC" },
-    { country: "Samoa", code: "+685", iso: "WS" },
-    { country: "San Marino", code: "+378", iso: "SM" },
-    { country: "Saudi Arabia", code: "+966", iso: "SA" },
-    { country: "Senegal", code: "+221", iso: "SN" },
-    { country: "Serbia", code: "+381", iso: "RS" },
-    { country: "Seychelles", code: "+248", iso: "SC" },
-    { country: "Sierra Leone", code: "+232", iso: "SL" },
-    { country: "Singapore", code: "+65", iso: "SG" },
-    { country: "Slovakia", code: "+421", iso: "SK" },
-    { country: "Slovenia", code: "+386", iso: "SI" },
-    { country: "Solomon Islands", code: "+677", iso: "SB" },
-    { country: "Somalia", code: "+252", iso: "SO" },
-    { country: "South Africa", code: "+27", iso: "ZA" },
-    { country: "South Korea", code: "+82", iso: "KR" },
-    { country: "South Sudan", code: "+211", iso: "SS" },
-    { country: "Spain", code: "+34", iso: "ES" },
-    { country: "Sri Lanka", code: "+94", iso: "LK" },
-    { country: "Sudan", code: "+249", iso: "SD" },
-    { country: "Suriname", code: "+597", iso: "SR" },
-    { country: "Swaziland", code: "+268", iso: "SZ" },
-    { country: "Sweden", code: "+46", iso: "SE" },
-    { country: "Switzerland", code: "+41", iso: "CH" },
-    { country: "Syria", code: "+963", iso: "SY" },
-    { country: "Taiwan", code: "+886", iso: "TW" },
-    { country: "Tajikistan", code: "+992", iso: "TJ" },
-    { country: "Tanzania", code: "+255", iso: "TZ" },
-    { country: "Thailand", code: "+66", iso: "TH" },
-    { country: "Togo", code: "+228", iso: "TG" },
-    { country: "Tonga", code: "+676", iso: "TO" },
-    { country: "Trinidad and Tobago", code: "+1-868", iso: "TT" },
-    { country: "Tunisia", code: "+216", iso: "TN" },
-    { country: "Turkmenistan", code: "+993", iso: "TM" },
-    { country: "Turks and Caicos Islands", code: "+1-649", iso: "TC" },
-    { country: "Tuvalu", code: "+688", iso: "TV" },
-    { country: "U.S. Virgin Islands", code: "+1-340", iso: "VI" },
-    { country: "Uganda", code: "+256", iso: "UG" },
-    { country: "Ukraine", code: "+380", iso: "UA" },
-    { country: "United Arab Emirates", code: "+971", iso: "AE" },
-    { country: "Uruguay", code: "+598", iso: "UY" },
-    { country: "Uzbekistan", code: "+998", iso: "UZ" },
-    { country: "Vanuatu", code: "+678", iso: "VU" },
-    { country: "Vatican", code: "+379", iso: "VA" },
-    { country: "Venezuela", code: "+58", iso: "VE" },
-    { country: "Vietnam", code: "+84", iso: "VN" },
-    { country: "Yemen", code: "+967", iso: "YE" },
-    { country: "Zambia", code: "+260", iso: "ZM" },
-    { country: "Zimbabwe", code: "+263", iso: "ZW" },
-];
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function GirisPage() {
-    const [selectedCode, setSelectedCode] = useState("+90 - Türkiye");
-    const [phoneNumber, setPhoneNumber] = useState("");
+    const router = useRouter();
+    const [loading, setLoading] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [isSignUp, setIsSignUp] = useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
 
     // Hide the main site footer on this page
     useEffect(() => {
@@ -242,10 +24,64 @@ export default function GirisPage() {
         };
     }, []);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Firebase authentication will be integrated later
-        console.log("Login attempt:", selectedCode, phoneNumber);
+        setLoading(true);
+        setError("");
+        setSuccess("");
+
+        try {
+            if (isSignUp) {
+                const { error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        emailRedirectTo: `${window.location.origin}/`,
+                    },
+                });
+                if (error) {
+                    setError(error.message);
+                } else {
+                    setSuccess("Kayıt başarılı! Lütfen e-posta adresinizi doğrulayın.");
+                }
+            } else {
+                const { error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+                if (error) {
+                    setError(error.message);
+                } else {
+                    router.push("/");
+                }
+            }
+        } catch (err) {
+            setError("Bir hata oluştu. Lütfen tekrar deneyin.");
+            console.error("Auth error:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleLogin = async () => {
+        setLoading(true);
+        setError("");
+        try {
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: "google",
+                options: {
+                    redirectTo: `${window.location.origin}/`,
+                },
+            });
+            if (error) {
+                setError(error.message);
+            }
+        } catch (err) {
+            setError("Google ile giriş yapılırken bir hata oluştu.");
+            console.error("Google login error:", err);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -279,7 +115,7 @@ export default function GirisPage() {
 
                         {/* Title */}
                         <h1 className="giris-title afacad">
-                            Giriş Yapın Veya Kaydolun
+                            {isSignUp ? "Üye Ol" : "Giriş Yapın"}
                         </h1>
 
                         {/* Terms text */}
@@ -295,47 +131,148 @@ export default function GirisPage() {
                             onaylamış olursunuz.
                         </div>
 
-                        {/* Form */}
-                        <form onSubmit={handleSubmit}>
-                            <label htmlFor="countrycode" className="giris-label">
-                                Ülke Kodu
-                            </label>
-                            <select
-                                id="countrycode"
-                                name="countrycode"
-                                className="giris-select"
-                                value={selectedCode}
-                                onChange={(e) => setSelectedCode(e.target.value)}
-                            >
-                                {countryCodes.map((c, i) => (
-                                    <option key={`${c.iso}-${i}`} value={`${c.code} - ${c.country}`}>
-                                        {c.code} - {c.country}
-                                    </option>
-                                ))}
-                            </select>
+                        {/* Error / Success Messages */}
+                        {error && (
+                            <div style={{
+                                background: "#fee2e2",
+                                color: "#dc2626",
+                                padding: "10px 14px",
+                                borderRadius: "8px",
+                                fontSize: "14px",
+                                marginTop: "16px",
+                            }}>
+                                {error}
+                            </div>
+                        )}
+                        {success && (
+                            <div style={{
+                                background: "#dcfce7",
+                                color: "#16a34a",
+                                padding: "10px 14px",
+                                borderRadius: "8px",
+                                fontSize: "14px",
+                                marginTop: "16px",
+                            }}>
+                                {success}
+                            </div>
+                        )}
 
+                        {/* Email/Password Form */}
+                        <form onSubmit={handleEmailAuth} style={{ marginTop: "20px" }}>
+                            <label htmlFor="email" className="giris-label">
+                                E-posta
+                            </label>
                             <input
-                                type="text"
-                                id="phonenumber"
-                                name="phonenumber"
-                                placeholder="Telefon Numaranız"
+                                type="email"
+                                id="email"
+                                name="email"
+                                placeholder="E-posta adresiniz"
                                 className="giris-input"
-                                value={phoneNumber}
-                                onChange={(e) => setPhoneNumber(e.target.value)}
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+
+                            <label htmlFor="password" className="giris-label" style={{ marginTop: "12px" }}>
+                                Şifre
+                            </label>
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                placeholder="Şifreniz"
+                                className="giris-input"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                minLength={6}
                             />
 
                             <button
-                                id="sign-in-button"
+                                id="email-sign-in-button"
                                 type="submit"
                                 className="giris-submit-btn"
+                                disabled={loading}
+                                style={{ marginTop: "16px" }}
                             >
-                                GİRİŞ YAP
+                                {loading
+                                    ? "İşleniyor..."
+                                    : isSignUp
+                                        ? "ÜYE OL"
+                                        : "GİRİŞ YAP"}
                             </button>
                         </form>
 
-                        {/* SMS info */}
-                        <div className="giris-sms-info">
-                            Numaranızı doğrulamak için size bir kısa mesaj göndereceğiz.
+                        {/* Divider */}
+                        <div style={{
+                            display: "flex",
+                            alignItems: "center",
+                            margin: "20px 0",
+                            gap: "12px",
+                        }}>
+                            <div style={{ flex: 1, height: "1px", background: "#ddd" }} />
+                            <span style={{ color: "#888", fontSize: "14px" }}>veya</span>
+                            <div style={{ flex: 1, height: "1px", background: "#ddd" }} />
+                        </div>
+
+                        {/* Google Sign In Button */}
+                        <button
+                            id="google-sign-in-button"
+                            type="button"
+                            className="giris-submit-btn"
+                            onClick={handleGoogleLogin}
+                            disabled={loading}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "12px",
+                                background: "#fff",
+                                color: "#222",
+                                border: "1px solid #ddd",
+                            }}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 48 48">
+                                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+                                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+                                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+                            </svg>
+                            Google ile Giriş Yap
+                        </button>
+
+                        {/* Toggle Sign Up / Sign In */}
+                        <div style={{
+                            textAlign: "center",
+                            marginTop: "24px",
+                            paddingTop: "20px",
+                            borderTop: "1px solid #eee",
+                        }}>
+                            <p style={{ color: "#555", fontSize: "15px", marginBottom: "8px" }}>
+                                {isSignUp
+                                    ? "Zaten üye misiniz?"
+                                    : "Henüz üye değil misiniz?"}
+                            </p>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsSignUp(!isSignUp);
+                                    setError("");
+                                    setSuccess("");
+                                }}
+                                style={{
+                                    background: "none",
+                                    border: "none",
+                                    color: "#2563eb",
+                                    fontSize: "15px",
+                                    fontWeight: 600,
+                                    cursor: "pointer",
+                                    textDecoration: "underline",
+                                    padding: 0,
+                                }}
+                            >
+                                {isSignUp ? "Giriş Yap" : "Üye Ol"}
+                            </button>
                         </div>
 
                         {/* Help link */}

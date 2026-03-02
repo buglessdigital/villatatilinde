@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Firebase credentials
+villatatilinde-firebase-adminsdk-fbsvc-3b692259cb.json

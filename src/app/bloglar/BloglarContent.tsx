@@ -2,86 +2,59 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getBlogs } from "@/lib/queries";
+import type { DbBlog } from "@/lib/types";
 
-/* ── Sample blog data (will be replaced with dynamic API data) ── */
-const sampleBlogs = [
-    {
-        id: 1,
-        h: "Kaş'ta Villa Tatili Rehberi",
-        slug: "kasta-villa-tatili-rehberi",
-        type: 1,
-        coverImage: "/images/sailing2.png",
-        dateReadable: "15 Şubat 2026",
-        readTime: "5 dk",
-        descriptionHtmlContent:
-            "Kaş, Türkiye'nin en güzel tatil destinasyonlarından biri olarak bilinir. Muhteşem deniz manzaraları, tarihi kalıntıları ve eşsiz doğasıyla her yıl binlerce turisti ağırlamaktadır. Villa kiralama seçenekleri ile unutulmaz bir tatil deneyimi yaşayabilirsiniz.",
-    },
-    {
-        id: 2,
-        h: "Kalkan'da Yapılacak En İyi Aktiviteler",
-        slug: "kalkanda-yapilacak-en-iyi-aktiviteler",
-        type: 1,
-        coverImage: "/images/sailing2.png",
-        dateReadable: "10 Şubat 2026",
-        readTime: "7 dk",
-        descriptionHtmlContent:
-            "Kalkan, sakin atmosferi ve turkuaz renkli denizi ile Antalya'nın en popüler tatil beldelerinden biridir. Tekne turları, dalış aktiviteleri, yürüyüş parkurları ve çok daha fazlası sizi bekliyor.",
-    },
-    {
-        id: 3,
-        h: "Villa Kiralama İpuçları ve Dikkat Edilmesi Gerekenler",
-        slug: "villa-kiralama-ipuclari",
-        type: 2,
-        coverImage: "/images/sailing2.png",
-        dateReadable: "5 Şubat 2026",
-        readTime: "6 dk",
-        descriptionHtmlContent:
-            "Villa kiralama sürecinde dikkat etmeniz gereken önemli noktalar, doğru villa seçimi, fiyat karşılaştırması ve güvenli ödeme yöntemleri hakkında detaylı rehberimiz.",
-    },
-    {
-        id: 4,
-        h: "Antalya'nın Gizli Cennetleri",
-        slug: "antalyanin-gizli-cennetleri",
-        type: 1,
-        coverImage: "/images/sailing2.png",
-        dateReadable: "1 Şubat 2026",
-        readTime: "8 dk",
-        descriptionHtmlContent:
-            "Antalya'nın keşfedilmemiş koyları, doğal güzellikleri ve saklı cennetleri. Kalabalıktan uzak, huzurlu bir tatil için en güzel rotalar ve öneriler.",
-    },
-    {
-        id: 5,
-        h: "Fethiye'de Ailecek Tatil Planlaması",
-        slug: "fethiyede-ailecek-tatil-planlamasi",
-        type: 2,
-        coverImage: "/images/sailing2.png",
-        dateReadable: "25 Ocak 2026",
-        readTime: "4 dk",
-        descriptionHtmlContent:
-            "Fethiye'de aile dostu villalar, çocuklara uygun aktiviteler ve en güzel plajlar hakkında kapsamlı rehberimiz. Ailenizle birlikte unutulmaz bir tatil geçirin.",
-    },
-    {
-        id: 6,
-        h: "Bodrum Villa Tatili: Nereye, Nasıl?",
-        slug: "bodrum-villa-tatili",
-        type: 3,
-        coverImage: "/images/sailing2.png",
-        dateReadable: "20 Ocak 2026",
-        readTime: "6 dk",
-        descriptionHtmlContent:
-            "Bodrum yarımadasının en güzel villaları, ulaşım seçenekleri, yeme-içme önerileri ve gece hayatı hakkında detaylı bilgiler. Bodrum'da mükemmel bir tatil planlamanız için ihtiyacınız olan her şey.",
-    },
-];
+interface BlogView {
+    id: string;
+    h: string;
+    slug: string;
+    coverImage: string;
+    dateReadable: string;
+    readTime: string;
+    descriptionHtmlContent: string;
+}
 
 const BLOGS_PER_PAGE = 6;
 
 export default function BloglarContent() {
+    const [blogs, setBlogs] = useState<BlogView[]>([]);
+    const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [changingPage, setChangingPage] = useState(false);
 
-    const totalPages = Math.ceil(sampleBlogs.length / BLOGS_PER_PAGE);
-    const pageBlogs = sampleBlogs.slice(
+    useEffect(() => {
+        async function loadBlogs() {
+            try {
+                const data = await getBlogs();
+                const mapped: BlogView[] = data.map((b: DbBlog) => ({
+                    id: b.id,
+                    h: b.title,
+                    slug: b.slug,
+                    coverImage: b.cover_image_url || "/images/sailing2.png",
+                    dateReadable: b.published_at
+                        ? new Date(b.published_at).toLocaleDateString("tr-TR", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                        })
+                        : "",
+                    readTime: b.read_time_min ? `${b.read_time_min} dk` : "5 dk",
+                    descriptionHtmlContent: b.subtitle || b.content_html?.substring(0, 200) || "",
+                }));
+                setBlogs(mapped);
+            } catch (err) {
+                console.error("Blog yükleme hatası:", err);
+            } finally {
+                setLoading(false);
+            }
+        }
+        loadBlogs();
+    }, []);
+
+    const totalPages = Math.ceil(blogs.length / BLOGS_PER_PAGE);
+    const pageBlogs = blogs.slice(
         BLOGS_PER_PAGE * (page - 1),
         BLOGS_PER_PAGE * page
     );
@@ -94,10 +67,8 @@ export default function BloglarContent() {
         }, 400);
     };
 
-    const getBlogLink = (blog: (typeof sampleBlogs)[0]) => {
-        if (blog.type === 1) return `/blog/b1/${blog.slug}`;
-        if (blog.type === 2) return `/blog/b2/${blog.slug}`;
-        return `/blog/b3/${blog.slug}`;
+    const getBlogLink = (blog: BlogView) => {
+        return `/blog/${blog.slug}`;
     };
 
     return (

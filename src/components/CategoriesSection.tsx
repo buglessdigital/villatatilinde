@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { getCategories } from "@/lib/queries";
+import type { DbCategory } from "@/lib/types";
 
-/* ─── Categories Data ─── */
-interface Category {
+interface CategoryView {
     label: string;
     image: string;
     badgeCount: string;
@@ -12,73 +13,31 @@ interface Category {
     isDiscount?: boolean;
 }
 
-const CATEGORIES: Category[] = [
-    {
-        label: "Fırsat İndirimler",
-        image: "/images/discount.png",
-        badgeCount: "24 Villa",
-        href: "/indirimli-villalar",
-        isDiscount: true,
-    },
-    {
-        label: "Uygun Fiyatlı",
-        image: "/images/affordable.jpg",
-        badgeCount: "227 Villa",
-        href: "/sonuclar?features=affordableVillas",
-    },
-    {
-        label: "Muhafazakar",
-        image: "/images/muhafazakar.jpg",
-        badgeCount: "143 Villa",
-        href: "/sonuclar?features=isolatedVillas",
-    },
-    {
-        label: "Balayı",
-        image: "/images/honey.jpg",
-        badgeCount: "155 Villa",
-        href: "/sonuclar?features=honeyMoon",
-    },
-    {
-        label: "Ultra Lüx",
-        image: "/images/luxury.jpg",
-        badgeCount: "49 Villa",
-        href: "/sonuclar?features=ultraLux",
-    },
-    {
-        label: "Merkezi Konumda",
-        image: "/images/central.jpg",
-        badgeCount: "174 Villa",
-        href: "/sonuclar?features=centralVillas",
-    },
-    {
-        label: "Doğa İçinde",
-        image: "/images/natureview.jpg",
-        badgeCount: "292 Villa",
-        href: "/sonuclar?features=natureview",
-    },
-    {
-        label: "Deniz Manzaralı",
-        image: "/images/seaview.jpg",
-        badgeCount: "233 Villa",
-        href: "/sonuclar?features=seaview",
-    },
-    {
-        label: "Denize Yakın",
-        image: "/images/beach.jpg",
-        badgeCount: "152 Villa",
-        href: "/sonuclar?features=beachVillas",
-    },
-    {
-        label: "Çocuk Havuzlu Villalar",
-        image: "/images/kidpool.jpg",
-        badgeCount: "75 Villa",
-        href: "/sonuclar?features=kidPoolVillas",
-    },
-];
-
 export default function CategoriesSection() {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [scrollIndex, setScrollIndex] = useState(0);
+    const [categories, setCategories] = useState<CategoryView[]>([]);
+
+    useEffect(() => {
+        async function load() {
+            try {
+                const data = await getCategories();
+                const mapped: CategoryView[] = data.map((c: DbCategory) => ({
+                    label: c.name,
+                    image: c.image_url || "/images/discount.png",
+                    badgeCount: `${c.villa_count || 0} Villa`,
+                    href: c.filter_param
+                        ? `/sonuclar?features=${c.filter_param}`
+                        : `/villa-kategorileri`,
+                    isDiscount: c.slug === "firsatlar" || c.slug === "indirimli-villalar",
+                }));
+                setCategories(mapped);
+            } catch (err) {
+                console.error("Kategoriler yüklenemedi:", err);
+            }
+        }
+        load();
+    }, []);
 
     const scrollLeft = useCallback(() => {
         if (scrollRef.current) {
@@ -170,7 +129,7 @@ export default function CategoriesSection() {
                     }
                 }}
             >
-                {CATEGORIES.map((cat, i) => (
+                {categories.map((cat, i) => (
                     <div
                         key={i}
                         className="catSlide"
