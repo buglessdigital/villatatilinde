@@ -71,16 +71,27 @@ export default function ReservationCalendar({
     const [selectedCheckIn, setSelectedCheckIn] = useState<string | null>(null);
     const [selectedCheckOut, setSelectedCheckOut] = useState<string | null>(null);
 
+    const [isMobile, setIsMobile] = useState(false);
+    const [currentSlide, setCurrentSlide] = useState(0);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
+
     // Build list of months to display
     const months = useMemo(() => {
         const now = new Date();
         const result: { year: number; month: number }[] = [];
-        for (let i = 0; i < monthCount; i++) {
+        const targetCount = isMobile ? Math.max(monthCount, currentSlide + 1) : monthCount;
+        for (let i = 0; i < targetCount; i++) {
             const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
             result.push({ year: d.getFullYear(), month: d.getMonth() });
         }
         return result;
-    }, [monthCount]);
+    }, [monthCount, isMobile, currentSlide]);
 
     // Price lookup
     const getPrice = useCallback(
@@ -256,8 +267,28 @@ export default function ReservationCalendar({
             </div>
 
             {/* Calendar Grid */}
+            {isMobile && months[currentSlide] && (
+                <div className="vd-cal-mobile-nav">
+                    <div
+                        className="vd-cal-mobile-nav-btn"
+                        onClick={() => setCurrentSlide(s => Math.max(0, s - 1))}
+                        style={{ opacity: currentSlide === 0 ? 0.3 : 1, cursor: currentSlide === 0 ? "default" : "pointer" }}
+                    >
+                        ◀ Geri
+                    </div>
+                    <div className="vd-cal-mobile-nav-title poppins">
+                        {MONTH_NAMES_TR[months[currentSlide].month]} {months[currentSlide].year}
+                    </div>
+                    <div
+                        className="vd-cal-mobile-nav-btn"
+                        onClick={() => setCurrentSlide(s => s + 1)}
+                    >
+                        İleri ▶
+                    </div>
+                </div>
+            )}
             <div className="vd-cal-grid">
-                {months.map(({ year, month }) => (
+                {(isMobile ? [months[currentSlide]] : months).filter(Boolean).map(({ year, month }) => (
                     <MonthGrid
                         key={`${year}-${month}`}
                         year={year}
@@ -275,13 +306,15 @@ export default function ReservationCalendar({
                 ))}
             </div>
 
-            {/* Show More */}
-            <div className="vd-cal-more-row">
-                <button className="vd-cal-more-btn" onClick={showMoreMonths}>
-                    <img src="/images/calO.svg" alt="" style={{ height: 24, marginRight: 8 }} />
-                    Daha Fazla Ay Göster
-                </button>
-            </div>
+            {/* Show More (only on desktop) */}
+            {!isMobile && (
+                <div className="vd-cal-more-row">
+                    <button className="vd-cal-more-btn" onClick={showMoreMonths}>
+                        <img src="/images/calO.svg" alt="" style={{ height: 24, marginRight: 8 }} />
+                        Daha Fazla Ay Göster
+                    </button>
+                </div>
+            )}
         </section>
     );
 }
@@ -353,8 +386,11 @@ function MonthGrid({
                         if (resPosition === "start") cellClass += " vd-cal-res-start";
                         else if (resPosition === "end") cellClass += " vd-cal-res-end";
                         else cellClass += " vd-cal-res-mid";
+                    } else if (resStatus === "option") {
+                        if (resPosition === "start") cellClass += " vd-cal-opt-start";
+                        else if (resPosition === "end") cellClass += " vd-cal-opt-end";
+                        else cellClass += " vd-cal-opt-mid";
                     }
-                    if (resStatus === "option") cellClass += " vd-cal-option";
                     if (selected) cellClass += " vd-cal-selected";
                     if (checkIn) cellClass += " vd-cal-checkin";
                     if (checkOut) cellClass += " vd-cal-checkout";

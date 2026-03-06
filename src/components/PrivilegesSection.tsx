@@ -67,69 +67,81 @@ export default function PrivilegesSection() {
                     fontSize: 24,
                     fontWeight: 600,
                     color: "#000",
-                    margin: "0 0 12px 0",
+                    margin: "0 0 16px 0",
                 }}
             >
-                Vila Tatilinde Ayrıcalıklarınız
+                Villa Tatilinde Ayrıcalıklarınız
             </h3>
 
-            <div
-                ref={scrollRef}
-                style={{
-                    display: "flex",
-                    gap: 0,
-                    overflowX: "auto",
-                    scrollbarWidth: "none",
-                    msOverflowStyle: "none",
-                    WebkitOverflowScrolling: "touch",
-                }}
-                className="hideScrollbar"
-            >
+            <style>{`
+                .privileges-grid {
+                    display: flex;
+                    gap: 16px;
+                    overflow-x: auto;
+                    padding-bottom: 12px;
+                    scrollbar-width: none;
+                    -ms-overflow-style: none;
+                    -webkit-overflow-scrolling: touch;
+                }
+                .privileges-grid::-webkit-scrollbar {
+                    display: none;
+                }
+                .privilege-item {
+                    width: 300px;
+                    flex-shrink: 0;
+                }
+                .privilege-card-inner {
+                    display: flex;
+                    align-items: center;
+                    padding: 8px;
+                    border-radius: 16px;
+                    border: 1px solid #eaeaea;
+                    background: #fff;
+                    height: 100%;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                }
+                .privilege-card-inner:hover {
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                    transform: translateY(-2px);
+                }
+                @media (min-width: 1024px) {
+                    .privileges-grid {
+                        display: grid;
+                        grid-template-columns: repeat(4, 1fr);
+                        gap: 24px;
+                        overflow-x: visible;
+                    }
+                    .privilege-item {
+                        width: 100%;
+                    }
+                }
+            `}</style>
+
+            <div ref={scrollRef} className="privileges-grid">
                 {PRIVILEGE_CARDS.map((card, i) => (
-                    <div
-                        key={i}
-                        style={{
-                            width: 400,
-                            maxWidth: "100%",
-                            background: "#fff",
-                            flexShrink: 0,
-                            paddingRight: 8,
-                        }}
-                    >
-                        <Link href={card.href}>
-                            <div
-                                className="bhs middleft"
-                                style={{
-                                    borderRadius: 16,
-                                    border: "2px solid #f6f6f6",
-                                    overflow: "hidden",
-                                }}
-                            >
-                                <div className="row">
-                                    <img
-                                        src={card.image}
-                                        style={{
-                                            height: 78,
-                                            width: 110,
-                                            borderRadius: 16,
-                                            ...card.imageStyle,
-                                        }}
-                                        alt=""
-                                    />
-                                </div>
-                                <div
+                    <div key={i} className="privilege-item">
+                        <Link href={card.href} style={{ textDecoration: "none" }}>
+                            <div className="privilege-card-inner bhs">
+                                <img
+                                    src={card.image}
                                     style={{
-                                        padding: "12px 0",
-                                        marginLeft: "5%",
-                                        maxWidth: "calc(100% - 100px)",
+                                        height: 72,
+                                        width: 100,
+                                        borderRadius: 12,
+                                        flexShrink: 0,
+                                        ...card.imageStyle,
                                     }}
-                                >
+                                    alt=""
+                                />
+                                <div style={{ marginLeft: 12, flex: 1, overflow: "hidden" }}>
                                     <div
                                         className="oneLine"
                                         style={{
                                             fontSize: 15,
                                             fontWeight: 400,
                                             color: "#111",
+                                            marginBottom: 4
                                         }}
                                     >
                                         {card.title}
@@ -139,7 +151,8 @@ export default function PrivilegesSection() {
                                         style={{
                                             fontSize: 13,
                                             fontWeight: 400,
-                                            color: "#333",
+                                            color: "#555",
+                                            lineHeight: 1.3
                                         }}
                                     >
                                         {card.description}

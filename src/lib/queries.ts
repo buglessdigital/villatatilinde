@@ -303,6 +303,21 @@ export async function getBlogs(): Promise<DbBlog[]> {
     return data;
 }
 
+/**
+ * Slug'a göre tekil blog yazısını getirir
+ */
+export async function getBlogBySlug(slug: string): Promise<DbBlog | null> {
+    const { data, error } = await supabase
+        .from('blogs')
+        .select('*')
+        .eq('slug', slug)
+        .eq('is_published', true)
+        .single();
+
+    if (error || !data) return null;
+    return data;
+}
+
 /* ═══════════════════════════════════════════════════════════
    FAQ QUERIES
    ═══════════════════════════════════════════════════════════ */

@@ -6,13 +6,17 @@ import AllVillasSection from "@/components/AllVillasSection";
 import MapViewButton from "@/components/MapViewButton";
 import LastVisitedSection from "@/components/LastVisitedSection";
 import MostSearchedSection from "@/components/MostSearchedSection";
+import MobileBestPriceBanner from "@/components/MobileBestPriceBanner";
+import MobileSearchBar from "@/components/MobileSearchBar";
 
 export default function Home() {
   return (
     <main>
+      <MobileSearchBar />
       <HeroSection />
-      <PrivilegesSection />
       <CategoriesSection />
+      <MobileBestPriceBanner />
+      <PrivilegesSection />
       <FeaturedVillasSection />
       <AllVillasSection />
       <MapViewButton />

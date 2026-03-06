@@ -9,9 +9,11 @@ interface BlogRow {
     slug: string;
     title: string;
     subtitle: string;
+    summary?: string;
     cover_image_url: string;
     is_published: boolean;
     published_at: string;
+    created_at: string;
 }
 
 export default function AdminBloglar() {
@@ -25,7 +27,7 @@ export default function AdminBloglar() {
     async function loadBlogs() {
         const { data } = await supabase
             .from("blogs")
-            .select("id, slug, title, subtitle, cover_image_url, is_published, published_at")
+            .select("id, slug, title, subtitle, summary, cover_image_url, is_published, published_at, created_at")
             .order("published_at", { ascending: false });
         if (data) setBlogs(data);
         setLoading(false);

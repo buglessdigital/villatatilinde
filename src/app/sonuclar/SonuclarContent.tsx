@@ -355,10 +355,19 @@ function SonuclarInner() {
     if (catParam && categoryToFeature[catParam]) initialFeatures.push(categoryToFeature[catParam]);
 
     const featParam = searchParams.get("features");
-    if (featParam && featuresList[featParam]) initialFeatures.push(featParam);
+    if (featParam) {
+        featParam.split(",").forEach((f) => {
+            if (featuresList[f]) initialFeatures.push(f);
+        });
+    }
 
     const peopleParam = searchParams.get("people");
     const initialPeople = peopleParam ? parseInt(peopleParam, 10) || 0 : 0;
+
+    const initialSearch = searchParams.get("search") || "";
+
+    const scoreParam = searchParams.get("score");
+    const initialScore = scoreParam ? parseFloat(scoreParam) || 0 : 0;
 
     /* Compute hero title based on params (like the Vue reference) */
     const isResulted = initialFeatures.length > 0 || initialLocations.length > 0;
@@ -376,7 +385,8 @@ function SonuclarInner() {
     const [selectedLocations, setSelectedLocations] = useState<string[]>(initialLocations);
     const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
     const [people, setPeople] = useState(initialPeople);
-    const [searchTerm, setSearchTerm] = useState("");
+    const [searchTerm, setSearchTerm] = useState(initialSearch);
+    const [minScore, setMinScore] = useState(initialScore);
     const [sortBy, setSortBy] = useState("order");
     const [sortOpen, setSortOpen] = useState(false);
     const [showMoreCat, setShowMoreCat] = useState(false);
@@ -449,6 +459,10 @@ function SonuclarInner() {
             result = result.filter((v) => v.guests >= people && v.guests <= people + 1);
         }
 
+        if (minScore > 0) {
+            result = result.filter((v) => v.score >= minScore);
+        }
+
         if (sortBy === "total") result.sort((a, b) => a.minEver - b.minEver);
         else if (sortBy === "totalrev") result.sort((a, b) => b.minEver - a.minEver);
         else if (sortBy === "guest") result.sort((a, b) => a.guests - b.guests);
@@ -456,15 +470,16 @@ function SonuclarInner() {
         else if (sortBy === "score") result.sort((a, b) => b.score - a.score);
 
         return result;
-    }, [allVillas, searchTerm, selectedFeatures, selectedLocations, selectedPriceRanges, people, sortBy]);
+    }, [allVillas, searchTerm, selectedFeatures, selectedLocations, selectedPriceRanges, people, minScore, sortBy]);
 
-    const hasFilters = selectedFeatures.length > 0 || selectedLocations.length > 0 || selectedPriceRanges.length > 0 || people > 0;
+    const hasFilters = selectedFeatures.length > 0 || selectedLocations.length > 0 || selectedPriceRanges.length > 0 || people > 0 || minScore > 0;
 
     const clearAllFilters = () => {
         setSelectedFeatures([]);
         setSelectedLocations([]);
         setSelectedPriceRanges([]);
         setPeople(0);
+        setMinScore(0);
         setSearchTerm("");
         setSortBy("order");
     };

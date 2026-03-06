@@ -96,13 +96,7 @@ export default function MostSearchedSection() {
                 fontFamily: '"DM Sans", serif',
             }}
         >
-            <div
-                style={{
-                    maxWidth: 1320,
-                    margin: "0 auto",
-                    padding: "32px 24px 48px",
-                }}
-            >
+            <div className="section-container">
                 {/* ── Title ── */}
                 <h2
                     style={{
@@ -116,32 +110,12 @@ export default function MostSearchedSection() {
                 </h2>
 
                 {/* ── Tabs ── */}
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 0,
-                        marginTop: 12,
-                        fontSize: 16,
-                        fontWeight: 500,
-                    }}
-                >
+                <div className="tabs-container">
                     {TABS.map((tab) => (
                         <button
                             key={tab.key}
+                            className={`tab-button ${activeTab === tab.key ? "active" : ""}`}
                             onClick={() => setActiveTab(tab.key)}
-                            style={{
-                                padding: "8px 16px",
-                                borderRadius: 20,
-                                border: "none",
-                                cursor: "pointer",
-                                fontSize: 14,
-                                fontWeight: 500,
-                                fontFamily: '"DM Sans", serif',
-                                transition: "all .2s",
-                                background: activeTab === tab.key ? "#3aa8b8" : "transparent",
-                                color: activeTab === tab.key ? "#fff" : "#555",
-                            }}
                         >
                             {tab.label}
                         </button>
@@ -159,12 +133,9 @@ export default function MostSearchedSection() {
                 >
                     <div
                         key={activeTab}
+                        className="grid-container"
                         style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(5, 1fr)",
-                            gap: "0",
                             color: "#333",
-                            fontSize: 15,
                             animation: "fadeInUp .3s ease",
                         }}
                     >
@@ -172,48 +143,24 @@ export default function MostSearchedSection() {
                             <Link
                                 key={idx}
                                 href={item.href}
-                                style={{
-                                    textDecoration: "none",
-                                    color: "inherit",
-                                    padding: "10px 4px",
-                                    borderRadius: 8,
-                                    transition: "background .2s",
-                                }}
                                 className="most-searched-item"
                             >
-                                <h6
-                                    style={{
-                                        margin: 0,
-                                        fontSize: 13,
-                                        fontWeight: 600,
-                                        color: "#333",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 6,
-                                    }}
-                                >
+                                <h6 className="item-title">
                                     <span
                                         style={{
                                             color: item.dotColor,
                                             fontSize: 8,
                                             lineHeight: 1,
+                                            flexShrink: 0,
                                         }}
                                     >
                                         ⏺
                                     </span>
-                                    {item.title}
+                                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                        {item.title}
+                                    </span>
                                 </h6>
-                                <div
-                                    style={{
-                                        marginTop: 2,
-                                        fontSize: 12,
-                                        fontWeight: 400,
-                                        color: "#999",
-                                        whiteSpace: "nowrap",
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                    }}
-                                >
+                                <div className="item-desc">
                                     {item.description}
                                 </div>
                             </Link>
@@ -222,7 +169,7 @@ export default function MostSearchedSection() {
                 </div>
             </div>
 
-            {/* ── Keyframe animation ── */}
+            {/* ── Keyframe animation & Styles ── */}
             <style jsx>{`
                 @keyframes fadeInUp {
                     from {
@@ -234,8 +181,106 @@ export default function MostSearchedSection() {
                         transform: translateY(0);
                     }
                 }
+                .section-container {
+                    max-width: 1320px;
+                    margin: 0 auto;
+                    padding: 32px 24px 48px;
+                }
+                .most-searched-item {
+                    text-decoration: none;
+                    color: inherit;
+                    padding: 10px 4px;
+                    border-radius: 8px;
+                    transition: background .2s;
+                    min-width: 0; /* Prevents CSS Grid blow-out */
+                    overflow: hidden;
+                }
                 .most-searched-item:hover {
                     background: #f8f9fa !important;
+                }
+                .tabs-container {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-top: 12px;
+                    overflow-x: auto;
+                    scrollbar-width: none; /* Firefox */
+                    -ms-overflow-style: none;  /* IE and Edge */
+                }
+                .tabs-container::-webkit-scrollbar {
+                    display: none;
+                }
+                .tab-button {
+                    padding: 8px 16px;
+                    border-radius: 20px;
+                    border: none;
+                    cursor: pointer;
+                    font-size: 14px;
+                    font-weight: 500;
+                    font-family: inherit;
+                    transition: all .2s;
+                    background: transparent;
+                    color: #555;
+                    white-space: nowrap;
+                }
+                .tab-button.active {
+                    background: #50b0f0;
+                    color: #fff;
+                }
+                .grid-container {
+                    display: grid;
+                    grid-template-columns: repeat(5, minmax(0, 1fr));
+                    gap: 12px;
+                }
+                .item-title {
+                    margin: 0;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #333;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                }
+                .item-desc {
+                    margin-top: 4px;
+                    font-size: 12px;
+                    font-weight: 400;
+                    color: #999;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                @media (max-width: 1024px) {
+                    .grid-container {
+                        grid-template-columns: repeat(3, minmax(0, 1fr));
+                    }
+                }
+
+                @media (max-width: 768px) {
+                    .section-container {
+                        padding: 24px 16px 32px;
+                        overflow: hidden;
+                        width: 100%;
+                    }
+                    .grid-container {
+                        grid-template-columns: repeat(2, minmax(0, 1fr));
+                        gap: 8px;
+                    }
+                    .tab-button {
+                        padding: 6px 14px;
+                        font-size: 13px;
+                    }
+                    .item-title {
+                        font-size: 11px;
+                        gap: 4px;
+                    }
+                    .item-desc {
+                        font-size: 10px;
+                    }
                 }
             `}</style>
         </section>

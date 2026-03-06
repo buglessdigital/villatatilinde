@@ -4,146 +4,87 @@ import Link from "next/link";
 import Image from "next/image";
 
 export default function Footer() {
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
     return (
         <footer className="site-footer">
-            {/* ═══════════════ TOP GRID ═══════════════ */}
-            <div className="footer-container">
+            {/* ═══════════════ DESKTOP FOOTER ═══════════════ */}
+            <div className="footer-desktop footer-container">
+                <div style={{ textAlign: "right", marginBottom: -24, position: "relative", zIndex: 10 }}>
+                    <button
+                        onClick={scrollToTop}
+                        style={{
+                            background: "transparent",
+                            border: "1px solid #ffffff44",
+                            cursor: "pointer",
+                            width: 32,
+                            height: 32,
+                            borderRadius: 4,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#fff",
+                        }}
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                    </button>
+                </div>
+
                 <div className="footer-row">
-                    {/* ─── Column 1: Logos & Trust (Desktop >1200px) ─── */}
+                    {/* ─── Column 1: Logos & Trust ─── */}
                     <div className="f1c">
                         <div style={{ color: "#282f39", fontWeight: 300 }}>
-                            <Image
+                            <img
                                 src="/images/vtlo.png"
                                 alt="Villa Tatilinde"
-                                width={200}
-                                height={62}
                                 style={{ height: 62, width: "auto" }}
-                                className="dsg2"
                             />
-                            <div style={{ color: "#ffffffaa", marginTop: 4, lineHeight: 1, fontSize: "calc(12px + .4vw)", fontWeight: 300 }}>
-                                <Image
+                            <div style={{ marginTop: 4 }}>
+                                <img
                                     src="/images/prl2.jpeg"
                                     alt="Praedium Group"
-                                    width={200}
-                                    height={62}
                                     style={{
                                         height: 62,
                                         width: "auto",
                                         border: "1px solid #dfdfe3aa",
                                     }}
-                                    className="dsg2"
                                 />
                             </div>
                         </div>
-                        <div>
-                            <div style={{ marginTop: 12, fontWeight: 300, fontSize: 18 }}>
-                                <div style={{ marginTop: 2, fontWeight: 500 }}>
-                                    <div>
-                                        <a
-                                            href="https://www.tursab.org.tr/tr/ddsv"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            <Image
-                                                src="/images/tursab-dds-18069.png"
-                                                alt="TURSAB DDS 18069"
-                                                width={280}
-                                                height={90}
-                                                style={{ width: "auto", maxHeight: 90 }}
-                                            />
-                                        </a>
-                                    </div>
-                                    <div className="middleft">
-                                        <div id="ETBIS">
-                                            <a
-                                                href="https://etbis.eticaret.gov.tr/sitedogrulama/5073561215243103"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                <Image
-                                                    src="/images/etbis.jpeg"
-                                                    alt="ETBİS'e Kayıtlıdır"
-                                                    width={105}
-                                                    height={126}
-                                                    style={{ width: 105, height: "auto" }}
-                                                />
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div style={{ maxWidth: "85%", marginTop: 12 }}>
-                                    <div style={{ color: "#c5c5c7", fontWeight: 400 }}>
-                                        Villa Tatilinde ile güvenle kirala
-                                    </div>
-                                    <div style={{ color: "#c5c5c7", fontWeight: 400 }}>
-                                        Sitemizde listelenen tüm villalar kontrol edilmiştir
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* ─── Column 1 Alternative: (Mobile/Tablet ≤1200px) ─── */}
-                    <div className="f1c2">
-                        <div style={{ color: "#282f39", fontWeight: 300 }}>
-                            <Image
-                                src="/images/vtlo.png"
-                                alt="Villa Tatilinde"
-                                width={200}
-                                height={62}
-                                style={{ height: 62, width: "auto" }}
-                                className="dsg2"
-                            />
-                            <div style={{ color: "#ffffffaa", marginTop: -9, lineHeight: 1, fontSize: "calc(12px + .4vw)", fontWeight: 300 }}>
-                                <Image
-                                    src="/images/prl2.jpeg"
-                                    alt="Praedium Group"
-                                    width={200}
-                                    height={62}
-                                    style={{
-                                        height: 62,
-                                        width: "auto",
-                                    }}
-                                    className="dsg2"
+                        <div style={{ marginTop: 24 }}>
+                            <a
+                                href="https://www.tursab.org.tr/tr/ddsv"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ display: "block", marginBottom: 12 }}
+                            >
+                                <img
+                                    src="/images/tursab-dds-18069.png"
+                                    alt="TURSAB DDS 18069"
+                                    style={{ width: 200, height: "auto", borderRadius: 8 }}
                                 />
-                            </div>
+                            </a>
+                            <a
+                                href="https://etbis.eticaret.gov.tr/sitedogrulama/5073561215243103"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ display: "block", marginBottom: 20 }}
+                            >
+                                <img
+                                    src="/images/etbis.jpeg"
+                                    alt="ETBİS'e Kayıtlıdır"
+                                    style={{ width: 80, height: "auto" }}
+                                />
+                            </a>
                         </div>
-                        <div>
-                            <div className="f1c2Text footer-row">
-                                <div style={{ marginTop: 2, fontWeight: 600 }}>
-                                    <a
-                                        href="https://www.tursab.org.tr/pl/qr/AHTKE25120134462dc964be3dd2438b"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        <div style={{ marginBottom: 8 }}>
-                                            Belge No: 18069 <br /> PRAEDIUM GROUP TRAVEL AGENCY
-                                        </div>
-                                    </a>
-                                    <div id="ETBIS">
-                                        <a
-                                            href="https://etbis.eticaret.gov.tr/sitedogrulama/5073561215243103"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            <Image
-                                                src="/images/etbis.jpeg"
-                                                alt="ETBİS'e Kayıtlıdır"
-                                                width={55}
-                                                height={66}
-                                                style={{ width: 55, height: 66 }}
-                                            />
-                                        </a>
-                                    </div>
-                                </div>
-                                <div style={{ marginLeft: 32, maxWidth: "75%", marginTop: 20 }}>
-                                    <div style={{ color: "#c5c5c7", fontWeight: 400 }}>
-                                        Villa Tatilinde ile güvenle kirala
-                                    </div>
-                                    <div style={{ color: "#c5c5c7", fontWeight: 400 }}>
-                                        Sitemizde listelenen tüm villalar kontrol edilmiştir
-                                    </div>
-                                </div>
+                        <div style={{ maxWidth: "85%" }}>
+                            <div style={{ color: "#c5c5c7", fontWeight: 400, fontSize: 13, marginBottom: 4 }}>
+                                Villa Tatilinde ile güvenle kirala
+                            </div>
+                            <div style={{ color: "#c5c5c7", fontWeight: 400, fontSize: 13, lineHeight: 1.4 }}>
+                                Sitemizde listelenen tüm villalar kontrol edilmiştir
                             </div>
                         </div>
                     </div>
@@ -151,205 +92,89 @@ export default function Footer() {
                     {/* ─── Column 2: Sayfalar ─── */}
                     <div className="f2c">
                         <div className="fhead poppins">Sayfalar</div>
-                        <div className="middleft">
-                            <Link href="/hakkimizda">
-                                <div className="linkType1 footer-link">Hakkımızda</div>
-                            </Link>
-                        </div>
-                        <div className="middleft">
-                            <Link href="/harita">
-                                <div className="linkType2 footer-link">Villalar Harita Görünümü</div>
-                            </Link>
-                        </div>
-                        <div className="middleft">
-                            <div className="linkType2 footer-link" style={{ cursor: "pointer" }}>
-                                Referans Kodu İle Villa Arama
-                            </div>
-                        </div>
-                        <div className="middleft">
-                            <Link href="/tatil-yerleri">
-                                <div className="linkType2 footer-link">Tatil Yerleri</div>
-                            </Link>
-                        </div>
-                        <div className="middleft">
-                            <Link href="/villa-kategorileri">
-                                <div className="linkType2 footer-link">Villa Kategorileri</div>
-                            </Link>
-                        </div>
-                        <div className="middleft">
-                            <Link href="/bloglar">
-                                <div className="footer-link" style={{ marginTop: 15, color: "#c5c5c7", fontSize: 16, fontWeight: 400 }}>
-                                    Bloglar
-                                </div>
-                            </Link>
-                        </div>
+                        <Link href="/hakkimizda"><div className="linkType1 footer-link">Hakkımızda</div></Link>
+                        <Link href="/harita"><div className="linkType2 footer-link">Villalar Harita Görünümü</div></Link>
+                        <div className="linkType2 footer-link" style={{ cursor: "pointer" }}>Referans Kodu İle Villa Arama</div>
+                        <Link href="/tatil-yerleri"><div className="linkType2 footer-link">Tatil Yerleri</div></Link>
+                        <Link href="/villa-kategorileri"><div className="linkType2 footer-link">Villa Kategorileri</div></Link>
+                        <Link href="/bloglar"><div className="linkType2 footer-link" style={{ marginTop: 20 }}>Bloglar</div></Link>
                     </div>
 
                     {/* ─── Column 3: Fırsatlar ─── */}
                     <div className="f3c">
                         <div className="fhead poppins">Fırsatlar</div>
-                        <div className="middleft">
-                            <Link href="/indirimli-villalar">
-                                <div className="linkType1 footer-link">İndirimli Villalar</div>
-                            </Link>
-                        </div>
-                        <div className="middleft">
-                            <Link href="/promosyonlar">
-                                <div className="linkType2 footer-link">Güncel Promosyonlar</div>
-                            </Link>
-                        </div>
-                        <div className="middleft">
-                            <Link href="/kisa-sureli-kiralik-villalar">
-                                <div className="linkType2 footer-link">Kısa Süreli Kiralık Villalar</div>
-                            </Link>
-                        </div>
-                        <div className="middleft">
-                            <Link href="/qr-indirim-kodu">
-                                <div className="linkType2 footer-link">QR Kodu İndirim Avantajları</div>
-                            </Link>
-                        </div>
+                        <Link href="/indirimli-villalar"><div className="linkType1 footer-link">İndirimli Villalar</div></Link>
+                        <Link href="/promosyonlar"><div className="linkType2 footer-link">Güncel Promosyonlar</div></Link>
+                        <Link href="/kisa-sureli-kiralik-villalar"><div className="linkType2 footer-link">Kısa Süreli Kiralık Villalar</div></Link>
+                        <Link href="/qr-indirim-kodu"><div className="linkType2 footer-link">QR Kodu İndirim Avantajları</div></Link>
                     </div>
 
                     {/* ─── Column 4: Destek & Yardım ─── */}
                     <div className="f4c">
                         <div className="fhead poppins">Destek &amp; Yardım</div>
-                        <div className="middleft">
-                            <Link href="/bildirim?chat=true">
-                                <div className="linkType1 footer-link" style={{ position: "relative" }}>
-                                    Canlı Destek
-                                    <span
-                                        style={{
-                                            position: "absolute",
-                                            top: 0,
-                                            left: 94,
-                                            width: 6,
-                                            height: 6,
-                                            borderRadius: "50%",
-                                            background: "#e83e8c",
-                                        }}
-                                    />
-                                </div>
-                            </Link>
-                        </div>
-                        <div className="middleft">
-                            <Link href="/iletisim">
-                                <div className="linkType2 footer-link">İletişim - Bize Ulaşın</div>
-                            </Link>
-                        </div>
-                        <div className="middleft">
-                            <Link href="/sikca-sorulan-sorular">
-                                <div className="linkType2 footer-link">Sıkça Sorulan Sorular  s.s.s</div>
-                            </Link>
-                        </div>
-                        <div className="middleft">
-                            <a href="https://wa.me/905323990748" target="_blank" rel="noopener noreferrer">
-                                <div className="linkType2 footer-link">
-                                    WhatsApp <Image src="/images/cfo.svg" alt="" width={10} height={10} style={{ height: 10, width: "auto" }} />
-                                </div>
-                            </a>
-                        </div>
-                        <div className="middleft">
-                            <a href="tel:+90 242 606 0725" target="_blank" rel="noopener noreferrer">
-                                <div className="linkType2 footer-link">
-                                    <Image
-                                        src="/images/phonew.png"
-                                        alt=""
-                                        width={13}
-                                        height={13}
-                                        style={{ marginTop: 1, height: 13, width: "auto", marginRight: 7 }}
-                                    />
-                                    +90 242 606 0725
-                                </div>
-                            </a>
-                        </div>
-                        <div className="middleft">
-                            <a href="mailto:info@villatatilinde.com" target="_blank" rel="noopener noreferrer">
-                                <div className="linkType2 footer-link">
-                                    <Image
-                                        src="/images/mailw.png"
-                                        alt=""
-                                        width={11}
-                                        height={11}
-                                        style={{ marginTop: 1, height: 11, width: "auto", marginRight: 7 }}
-                                    />
-                                    <span>info@villatatilinde.com</span>{" "}
-                                    <Image
-                                        src="/images/cfo.svg"
-                                        alt=""
-                                        width={10}
-                                        height={10}
-                                        style={{ marginLeft: 6, height: 10, width: "auto" }}
-                                    />
-                                </div>
-                            </a>
-                        </div>
+                        <Link href="/bildirim?chat=true">
+                            <div className="linkType1 footer-link" style={{ position: "relative", display: "inline-block" }}>
+                                Canlı Destek
+                                <span style={{ position: "absolute", top: 2, right: -12, width: 6, height: 6, borderRadius: "50%", background: "#e83e8c" }} />
+                            </div>
+                        </Link>
+                        <Link href="/iletisim"><div className="linkType2 footer-link">İletişim - Bize Ulaşın</div></Link>
+                        <Link href="/sikca-sorulan-sorular"><div className="linkType2 footer-link">Sıkça Sorulan Sorular  s.s.s</div></Link>
+                        <a href="https://wa.me/905323990748" target="_blank" rel="noopener noreferrer">
+                            <div className="linkType2 footer-link">WhatsApp</div>
+                        </a>
+                        <a href="tel:+90 242 606 0725" target="_blank" rel="noopener noreferrer">
+                            <div className="linkType2 footer-link" style={{ display: "flex", alignItems: "center" }}>
+                                <img src="/images/phonew.png" alt="" style={{ height: 13, width: "auto", marginRight: 8, opacity: 0.8 }} />
+                                +90 242 606 0725
+                            </div>
+                        </a>
+                        <a href="mailto:info@villatatilinde.com" target="_blank" rel="noopener noreferrer">
+                            <div className="linkType2 footer-link" style={{ display: "flex", alignItems: "center" }}>
+                                <img src="/images/mailw.png" alt="" style={{ height: 11, width: "auto", marginRight: 8, opacity: 0.8 }} />
+                                info@villatatilinde.com
+                            </div>
+                        </a>
                     </div>
                 </div>
 
                 {/* ═══════════════ PAYMENT & SOCIAL ═══════════════ */}
-                <div className="middleft" style={{ marginTop: "3rem" }}>
-                    <div className="poppins fheadBot" style={{ flexGrow: 1 }}>
-                        Ödeme &amp; Güvenlik
-                        <Link href="/odeme-yontemleri">
-                            <div className="paysecsub footer-row" style={{ flexGrow: 1, maxWidth: "80%", marginTop: 12 }}>
-                                <Image src="/images/hc1.svg" className="paysecim" alt="Bonus Card" width={60} height={18} />
-                                <Image src="/images/hc2.svg" className="paysecim" alt="Maximum" width={60} height={18} />
-                                <Image src="/images/hc3.svg" className="paysecim" alt="World" width={60} height={18} />
-                                <Image src="/images/hc4.svg" className="paysecim" alt="BankKart" width={60} height={18} />
-                                <Image src="/images/hc5.svg" className="paysecim" alt="CardFinans" width={60} height={18} />
-                                <Image src="/images/hc6.svg" className="paysecim" alt="Axess" width={60} height={18} />
-                                <Image src="/images/hc9.svg" className="paysecim" alt="Advantage" width={60} height={18} />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: 40, borderBottom: "1px solid #333", paddingBottom: 24 }}>
+                    <div>
+                        <div className="poppins fheadBot" style={{ marginBottom: 12 }}>Ödeme &amp; Güvenlik</div>
+                        <Link href="/odeme-yontemleri" style={{ display: "block", textDecoration: "none" }}>
+                            <div className="paysecsub footer-row" style={{ gap: 8, marginBottom: 12 }}>
+                                <img src="/images/hc1.svg" className="paysecim" alt="Bonus Card" />
+                                <img src="/images/hc2.svg" className="paysecim" alt="Maximum" />
+                                <img src="/images/hc3.svg" className="paysecim" alt="World" />
+                                <img src="/images/hc4.svg" className="paysecim" alt="BankKart" />
+                                <img src="/images/hc5.svg" className="paysecim" alt="CardFinans" />
+                                <img src="/images/hc6.svg" className="paysecim" alt="Axess" />
+                                <img src="/images/hc9.svg" className="paysecim" alt="Advantage" />
                             </div>
-                        </Link>
-                        <Link href="/odeme-yontemleri">
-                            <div style={{ width: "100%", color: "#ffffffaa", fontWeight: 300, fontSize: 13 }} className="dm-sans middle">
-                                <Image src="/images/iyzl.png" className="paysecim" style={{ height: 20, width: "auto" }} alt="iyzico Mastercard Visa Amex Troy" width={200} height={20} />
+                            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 8 }}>
+                                <img src="/images/iyzi_white.svg" alt="iyzico" style={{ height: 18 }} onError={(e) => e.currentTarget.src = "/images/iyzl.png"} />
+                                <img src="/images/visa.svg" alt="Visa" style={{ height: 16 }} onError={(e) => e.currentTarget.src = "/images/iyzl.png"} />
+                                <img src="/images/mastercard.svg" alt="Mastercard" style={{ height: 16 }} onError={(e) => e.currentTarget.src = "/images/iyzl.png"} />
+                                <img src="/images/amex.svg" alt="Amex" style={{ height: 16 }} onError={(e) => e.currentTarget.src = "/images/iyzl.png"} />
+                                <img src="/images/troy.svg" alt="Troy" style={{ height: 16 }} onError={(e) => e.currentTarget.src = "/images/iyzl.png"} />
                             </div>
-                            <div style={{ width: "100%", color: "#ffffffaa", fontWeight: 500, fontSize: 14 }} className="dm-sans middleft">
-                                <Image
-                                    src="/images/sslg.png"
-                                    alt="SSL"
-                                    width={12}
-                                    height={12}
-                                    style={{ height: 12, width: "auto", marginRight: 6, marginBottom: 2 }}
-                                />
+                            <div style={{ display: "flex", alignItems: "center", color: "#ffffffaa", fontWeight: 400, fontSize: 13 }}>
+                                <img src="/images/sslg.png" alt="SSL" style={{ height: 12, marginRight: 6 }} />
                                 İyzico Güvencesi ile Güvenli Ödeme
                             </div>
                         </Link>
                     </div>
-                    <div className="poppins fheadBot" style={{ marginLeft: "auto" }}>
-                        Bizi Takip Edin
-                        <div className="middleft" style={{ color: "#c5c5c7", marginTop: "0.6rem", fontSize: 15, fontWeight: 400 }}>
-                            <a
-                                href="https://instagram.com/villatatilinde"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="footer-link middle"
-                                style={{ display: "flex", alignItems: "center", color: "#c5c5c7", textDecoration: "none" }}
-                            >
-                                <Image
-                                    src="/images/instagramw.svg"
-                                    alt="Instagram"
-                                    width={16}
-                                    height={16}
-                                    style={{ opacity: 0.6, marginRight: 4, height: 16, width: "auto" }}
-                                />
+
+                    <div>
+                        <div className="poppins fheadBot" style={{ marginBottom: 12, textAlign: "right" }}>Bizi Takip Edin</div>
+                        <div style={{ display: "flex", gap: 20 }}>
+                            <a href="https://instagram.com/villatatilinde" target="_blank" rel="noopener noreferrer" className="footer-link" style={{ display: "flex", alignItems: "center", color: "#c5c5c7", fontSize: 15, textDecoration: "none" }}>
+                                <img src="/images/instagramw.svg" alt="Instagram" style={{ height: 16, width: "auto", marginRight: 6, opacity: 0.8 }} />
                                 villatatilinde
                             </a>
-                            <a
-                                href="https://www.facebook.com/share/17PKGdZK2x/?mibextid=wwXIfr"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="footer-link middle"
-                                style={{ display: "flex", alignItems: "center", color: "#c5c5c7", textDecoration: "none", marginLeft: 20 }}
-                            >
-                                <Image
-                                    src="/images/facebookw.svg"
-                                    alt="Facebook"
-                                    width={16}
-                                    height={16}
-                                    style={{ opacity: 0.6, marginRight: 4, height: 16, width: "auto" }}
-                                />
+                            <a href="https://www.facebook.com/share/17PKGdZK2x/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="footer-link" style={{ display: "flex", alignItems: "center", color: "#c5c5c7", fontSize: 15, textDecoration: "none" }}>
+                                <img src="/images/facebookw.svg" alt="Facebook" style={{ height: 16, width: "auto", marginRight: 6, opacity: 0.8 }} />
                                 villatatilinde
                             </a>
                         </div>
@@ -357,18 +182,161 @@ export default function Footer() {
                 </div>
 
                 {/* ═══════════════ BOTTOM BAR ═══════════════ */}
-                <div className="fbot middle" style={{ color: "#c5c5c7" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "#888", fontSize: 13, paddingTop: 16, paddingBottom: 32 }}>
                     <div>©Villatatilinde — Praedium Group</div>
-                    <div className="middle" style={{ marginLeft: "auto" }}>
-                        <div style={{ marginLeft: "1.5rem" }} className="footer-link">
-                            <Link href="/gizlilik-politikasi">Gizlilik Politikası</Link>
+                    <div style={{ display: "flex", gap: 24 }}>
+                        <Link href="/gizlilik-politikasi" className="footer-link">Gizlilik Politikası</Link>
+                        <Link href="/sartlar-kosullar" className="footer-link">Şartlar ve Koşullar</Link>
+                        <Link href="/iptal-iade-politikalari" className="footer-link">İptal ve İade Politikası</Link>
+                    </div>
+                </div>
+            </div>
+
+            {/* ═══════════════ MOBILE FOOTER ═══════════════ */}
+            <div className="footer-mobile" style={{ display: "none", padding: "40px 20px 100px 20px", fontFamily: "'Poppins', sans-serif" }}>
+                <div style={{ textAlign: "right", marginBottom: 16 }}>
+                    <button
+                        onClick={scrollToTop}
+                        style={{
+                            background: "transparent",
+                            border: "1px solid #ffffff44",
+                            cursor: "pointer",
+                            width: 32,
+                            height: 32,
+                            borderRadius: 4,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#fff",
+                        }}
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                    </button>
+                </div>
+
+                <div style={{ textAlign: "center" }}>
+                    <Link href="/">
+                        <img src="/images/vtlo.png" alt="Villa Tatilinde" style={{ height: 62, width: "auto", margin: "0 auto" }} />
+                    </Link>
+                    <img src="/images/prl2.jpeg" alt="Praedium Group" style={{ height: 50, width: "auto", margin: "8px auto 0", display: "block" }} />
+
+                    <div style={{ marginTop: 24, marginBottom: 24 }}>
+                        <Link href="/hakkimizda" style={{ color: "#fff", fontSize: 13, fontWeight: 400, textDecoration: "none" }}>
+                            Hakkımızda &gt;
+                        </Link>
+                    </div>
+
+                    <div style={{ marginTop: 24, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                        <div style={{ color: "#fff", fontSize: 15, fontWeight: 500, marginBottom: 12 }}>İyzico ile güvenli ödeme</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: "center" }}>
+                            <img src="/images/visa.svg" alt="Visa" style={{ height: 16 }} onError={(e) => e.currentTarget.src = "/images/iyzl.png"} />
+                            <img src="/images/mastercard.svg" alt="Mastercard" style={{ height: 16 }} onError={(e) => e.currentTarget.src = "/images/iyzl.png"} />
+                            <img src="/images/amex.svg" alt="Amex" style={{ height: 16 }} onError={(e) => e.currentTarget.src = "/images/iyzl.png"} />
+                            <img src="/images/troy.svg" alt="Troy" style={{ height: 16 }} onError={(e) => e.currentTarget.src = "/images/iyzl.png"} />
                         </div>
-                        <div style={{ marginLeft: "1.5rem" }} className="footer-link">
-                            <Link href="/sartlar-kosullar">Şartlar ve Koşullar</Link>
+                    </div>
+
+                    <div style={{ marginTop: 32, fontSize: 14, color: "#fff", lineHeight: 1.6 }}>
+                        <div style={{ fontWeight: 600 }}>Türsab ve Etbis ile Güvenle Kirala</div>
+                        <div style={{ fontWeight: 600, marginTop: 4 }}>Belge No: 18069</div>
+                        <div style={{ fontWeight: 600 }}>PRAEDIUM GROUP TRAVEL AGENCY</div>
+                    </div>
+
+                    <div style={{ marginTop: 20 }}>
+                        <a href="https://www.tursab.org.tr/tr/ddsv" target="_blank" rel="noopener noreferrer">
+                            <img src="/images/tursab-dds-18069.png" alt="TURSAB" style={{ maxHeight: 75, width: 280, maxWidth: "100%", margin: "0 auto", borderRadius: 8 }} />
+                        </a>
+                    </div>
+
+                    <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-start", marginLeft: "10%" }}>
+                        <a href="https://etbis.eticaret.gov.tr/sitedogrulama/5073561215243103" target="_blank" rel="noopener noreferrer">
+                            <img src="/images/etbis.jpeg" alt="ETBIS" style={{ width: 105, height: "auto" }} />
+                        </a>
+                    </div>
+                </div>
+
+                <div style={{ marginTop: 40, borderTop: "1px solid #ffffff22", paddingTop: 32 }}>
+                    <div style={{ marginBottom: 24 }}>
+                        <div style={{ fontSize: 11, color: "#aaa", paddingBottom: 4 }}>WhatsApp</div>
+                        <a href="https://wa.me/905323990748" style={{ fontSize: 15, color: "#fff", fontWeight: 600, textDecoration: "none", display: "block" }}>+90 532 399 07 48</a>
+                    </div>
+
+                    <div style={{ marginBottom: 24 }}>
+                        <div style={{ fontSize: 11, color: "#aaa", paddingBottom: 4 }}>2 iş saati içinde cevap verilir</div>
+                        <a href="mailto:info@villatatilinde.com" style={{ fontSize: 15, color: "#fff", fontWeight: 600, textDecoration: "none", display: "block" }}>info@villatatilinde.com</a>
+                    </div>
+
+                    <div style={{ marginBottom: 24 }}>
+                        <div style={{ fontSize: 11, color: "#aaa", paddingBottom: 4 }}>09:00 — 22:30 Hafta içi ve Hafta sonu</div>
+                        <a href="tel:+902426060725" style={{ fontSize: 15, color: "#fff", fontWeight: 600, textDecoration: "none", display: "block" }}>+90 242 606 0725</a>
+                    </div>
+
+                    <div style={{ marginBottom: 40 }}>
+                        <div style={{ fontSize: 11, color: "#aaa", paddingBottom: 4 }}>09:00 — 20:00 Hafta içi ve Hafta sonu</div>
+                        <div style={{ fontSize: 15, color: "#fff", fontWeight: 600 }}>KALKAN MAH. ŞEHİTLER CAD. NO: 53 KAŞ(ANTALYA)</div>
+                    </div>
+
+                    <div style={{ textAlign: "center", marginBottom: 32 }}>
+                        <div style={{ fontSize: 16, color: "#fff", fontWeight: 600, marginBottom: 12 }}>Bizi Takip Edin</div>
+                        <div style={{ display: "flex", justifyContent: "center", gap: 20 }}>
+                            <a href="https://instagram.com/villatatilinde" target="_blank" rel="noopener noreferrer">
+                                <img src="/images/instagramw.svg" alt="Instagram" style={{ height: 20, width: "auto" }} />
+                            </a>
+                            <a href="https://www.facebook.com/share/17PKGdZK2x/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer">
+                                <img src="/images/facebookw.svg" alt="Facebook" style={{ height: 20, width: "auto" }} />
+                            </a>
                         </div>
-                        <div style={{ marginLeft: "1.5rem" }} className="footer-link">
-                            <Link href="/iptal-iade-politikalari">İptal ve İade Politikası</Link>
-                        </div>
+                    </div>
+
+                    <div style={{ textAlign: "center", color: "#ccc", fontSize: 13, lineHeight: 1.8, marginBottom: 24 }}>
+                        <div style={{ marginBottom: 12, fontSize: 15 }}>Garantili Villa Kiralama</div>
+                        <div>Sitemizde listelenen tüm villalar villatatilinde ekibi tarafından kontrol edilmiştir ve videoları villa sayfalarında mevcuttur</div>
+                        <div style={{ marginTop: 12 }}>@villatatilinde garantili ve güvenle kirala</div>
+                    </div>
+
+                    <div style={{ borderTop: "1px solid #ffffff22", borderBottom: "1px solid #ffffff22", padding: "24px 0", marginBottom: 24 }}>
+                        <div style={{ fontSize: 18, color: "#fff", fontWeight: 600, marginBottom: 16 }}>Destek</div>
+                        <Link href="/iletisim" style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16, textDecoration: "none" }}>İletişim</Link>
+                        <Link href="/nasil-kiralanir" style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16, textDecoration: "none" }}>Nasıl Kiralanır</Link>
+                        <Link href="/odeme-yontemleri" style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16, textDecoration: "none" }}>Taksit Seçenekleri ve Ödeme Yöntemleri</Link>
+                        <Link href="/sikca-sorulan-sorular" style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16, textDecoration: "none" }}>Sıkça Sorulan Sorular</Link>
+                        <Link href="/iptal-iade-politikalari" style={{ display: "block", color: "#ccc", fontSize: 13, textDecoration: "none" }}>İptal ve İade Politikası</Link>
+                    </div>
+
+                    <div style={{ marginBottom: 32 }}>
+                        <div style={{ fontSize: 18, color: "#fff", fontWeight: 600, marginBottom: 20 }}>Faydalı Linkler</div>
+                        <Link href="/villa-kategorileri" style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16, textDecoration: "none" }}>Uygun Fiyatlı, Ekonomik Villalar</Link>
+                        <Link href="/villa-kategorileri" style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16, textDecoration: "none" }}>Muhafazakar Villalar</Link>
+                        <Link href="/villa-kategorileri" style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16, textDecoration: "none" }}>Denize Yakın Villalar</Link>
+                        <Link href="/villa-kategorileri" style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16, textDecoration: "none" }}>Lüx Balayı Villaları</Link>
+                        <Link href="/tatil-yerleri" style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16, textDecoration: "none" }}>Kalkan Merkez En İyi Villaları</Link>
+                        <Link href="/tatil-yerleri" style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16, textDecoration: "none" }}>Kalkan Tüm Villalar</Link>
+                        <Link href="/tatil-yerleri" style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16, textDecoration: "none" }}>Fethiye Villalar</Link>
+                        <Link href="/tatil-yerleri" style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16, textDecoration: "none" }}>Kaş Merkez En İyi Villaları</Link>
+                        <Link href="/kisa-sureli-kiralik-villalar" style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16, textDecoration: "none" }}>Kısa Süreli Kiralık Villalar</Link>
+                        <Link href="/indirimli-villalar" style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16, textDecoration: "none" }}>İndirimli Villalar</Link>
+                        <Link href="/promosyonlar" style={{ display: "block", color: "#ccc", fontSize: 13, textDecoration: "none" }}>Güncel Promosyonlar</Link>
+                    </div>
+
+                    <div style={{ borderTop: "1px solid #ffffff22", padding: "24px 0", marginBottom: 24 }}>
+                        <div style={{ fontSize: 18, color: "#fff", fontWeight: 600, marginBottom: 20 }}>Partnerlerimiz ( %15 indirim fırsatı )</div>
+                        <div style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16 }}>Vati Ocakbaşı   <span style={{ color: "#fff" }}>Kaş Marina</span></div>
+                        <div style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16 }}>Mussakka Restaurant   <span style={{ color: "#fff" }}>Kalkan Merkez</span></div>
+                        <div style={{ display: "block", color: "#ccc", fontSize: 13 }}>Ergün Kaptan Tekne Turu ve Sailing   <span style={{ color: "#fff" }}>Kaş Limanı</span></div>
+                    </div>
+
+                    <div style={{ borderTop: "1px solid #ffffff22", borderBottom: "1px solid #ffffff22", padding: "24px 0", marginBottom: 24, textAlign: "left" }}>
+                        <div style={{ fontSize: 18, color: "#fff", fontWeight: 600, marginBottom: 16 }}>İyi Bir Tatil - Blog Yazılarımız</div>
+                        <Link href="/bloglar" style={{ display: "block", color: "#ccc", fontSize: 13, textDecoration: "none" }}>Tümü - <span style={{ fontSize: 11 }}>Bloglar</span></Link>
+                    </div>
+
+                    <div style={{ display: "flex", gap: 24, marginBottom: 16 }}>
+                        <Link href="/gizlilik-politikasi" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>Gizlilik</Link>
+                        <Link href="/sartlar-kosullar" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>Koşullar</Link>
+                    </div>
+
+                    <div style={{ color: "#aaa", fontSize: 12, textAlign: "left" }}>
+                        ©villatatilinde Tüm Hakları Saklıdır
                     </div>
                 </div>
             </div>
@@ -376,14 +344,13 @@ export default function Footer() {
             <style jsx global>{`
                 .site-footer {
                     background: #0b0a12;
-                    padding-top: 48px;
                     color: #fafafa;
                     font-family: "DM Sans", serif;
                 }
                 .footer-container {
                     max-width: 1320px;
                     margin: 0 auto;
-                    padding: 0 24px;
+                    padding: 48px 24px 0 24px;
                 }
                 .footer-row {
                     display: flex;
@@ -396,65 +363,15 @@ export default function Footer() {
                 .footer-link:hover {
                     opacity: 0.8;
                 }
-                .site-footer a {
-                    text-decoration: none;
-                    color: inherit;
-                }
                 .poppins {
                     font-family: "Poppins", sans-serif;
                 }
-                .dm-sans {
-                    font-family: "DM Sans", serif;
-                }
-                .middleft {
-                    display: flex;
-                    align-items: center;
-                    flex-wrap: wrap;
-                }
-                .middle {
-                    display: flex;
-                    align-items: center;
-                }
 
-                /* ── Column widths ── */
-                .f1c {
-                    width: 25%;
-                }
-                .f1c2 {
-                    width: 100%;
-                    margin-bottom: 40px;
-                    display: none;
-                }
-                .f2c { width: 24%; }
-                .f3c { width: 24%; }
-                .f4c { width: 24%; }
+                .f1c { width: 25%; padding-right: 20px; }
+                .f2c { width: 25%; }
+                .f3c { width: 25%; }
+                .f4c { width: 25%; }
 
-                @media (max-width: 1200px) {
-                    .f1c { display: none; }
-                    .f1c2 { display: block; }
-                    .f2c { width: 33%; }
-                    .f3c { width: 33%; }
-                    .f4c { width: 33%; }
-                }
-
-                @media (max-width: 767px) {
-                    .f2c, .f3c, .f4c { width: 100%; margin-bottom: 32px; }
-                    .footer-container { padding: 0 16px; }
-                    .fbot {
-                        flex-direction: column !important;
-                        align-items: flex-start !important;
-                        gap: 12px;
-                    }
-                    .fbot .middle {
-                        margin-left: 0 !important;
-                        flex-wrap: wrap;
-                    }
-                    .fbot .middle div:first-child {
-                        margin-left: 0 !important;
-                    }
-                }
-
-                /* ── Headings ── */
                 .fhead {
                     color: #fff;
                     font-size: 21px;
@@ -464,72 +381,26 @@ export default function Footer() {
                     font-weight: 700;
                     font-size: 20px;
                 }
-                @media (max-width: 899px) {
-                    .fhead { font-size: 17px; font-weight: 600; }
-                    .fheadBot { font-size: 17px; font-weight: 600; }
-                }
-
-                /* ── Link styles ── */
                 .linkType1 {
-                    margin-top: 28px;
+                    margin-top: 24px;
                     color: #c5c5c7;
-                    font-size: 16px;
+                    font-size: 14px;
                     font-weight: 400;
                 }
                 .linkType2 {
                     margin-top: 15px;
                     color: #c5c5c7;
-                    font-size: 16px;
+                    font-size: 14px;
                     font-weight: 400;
                 }
-                @media (max-width: 899px) {
-                    .linkType1 { font-size: 14px; margin-top: 20px; }
-                    .linkType2 { font-size: 14px; margin-top: 12px; }
-                }
-
-                /* ── Bottom bar ── */
-                .fbot {
-                    width: 100%;
-                    border-top: 2px solid #bbbbbb44 !important;
-                    font-size: 14px;
-                    padding-bottom: 30px;
-                    padding-top: 16px;
-                    margin-top: 24px;
-                }
-
-                /* ── Payment icons ── */
                 .paysecim {
                     height: 18px;
                     width: auto;
-                    margin-right: 12px;
-                    margin-bottom: 8px;
-                }
-                .paysecsub {
-                    display: flex;
-                    flex-wrap: wrap;
-                    align-items: center;
                 }
 
-                /* ── f1c2 Text ── */
-                .f1c2Text {
-                    margin-top: 12px;
-                    font-weight: 300;
-                    font-size: 20px;
-                }
-                @media (max-width: 768px) {
-                    .f1c2Text { font-size: 17px; }
-                }
-
-                /* ── Mobile footer payment/social ── */
-                @media (max-width: 899px) {
-                    .site-footer .middleft[style*="margin-top: 3rem"] {
-                        flex-direction: column;
-                        align-items: flex-start;
-                    }
-                    .site-footer .middleft[style*="margin-top: 3rem"] > .poppins:last-child {
-                        margin-left: 0 !important;
-                        margin-top: 24px;
-                    }
+                @media (max-width: 900px) {
+                    .footer-desktop { display: none; }
+                    .footer-mobile { display: block !important; }
                 }
             `}</style>
         </footer>

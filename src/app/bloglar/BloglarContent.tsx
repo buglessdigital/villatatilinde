@@ -94,94 +94,133 @@ export default function BloglarContent() {
 
                     {/* ── Blog Grid ── */}
                     {!changingPage && (
-                        <div className="row" style={{ marginTop: "32px" }}>
-                            {pageBlogs.map((blog) => (
-                                <div key={blog.id} className="blogSmall">
-                                    <Link href={getBlogLink(blog)}>
-                                        <div style={{ width: "100%" }} className="hvIm">
-                                            <Image
-                                                className="hvi"
-                                                src={blog.coverImage}
-                                                alt={blog.h}
-                                                width={600}
-                                                height={240}
-                                                style={{
-                                                    borderRadius: "8px",
-                                                    width: "100%",
-                                                    height: "240px",
-                                                    objectFit: "cover",
-                                                }}
-                                            />
+                        <>
+                            {page === 1 && pageBlogs[0] && (
+                                <div style={{ marginTop: "20px", minHeight: "410px" }} className="row">
+                                    <Link href={getBlogLink(pageBlogs[0])} style={{ display: 'flex', flexWrap: 'wrap', width: '100%' }}>
+                                        <div className="bs1">
+                                            <div style={{ width: "100%", height: "410px", borderRadius: "8px", overflow: "hidden" }} className="hvIm">
+                                                <Image
+                                                    className="hvi"
+                                                    src={pageBlogs[0].coverImage}
+                                                    alt={pageBlogs[0].h}
+                                                    width={800}
+                                                    height={410}
+                                                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="bs2">
                                             <div>
-                                                <div>
-                                                    <h2
-                                                        className="inter"
-                                                        style={{
-                                                            fontSize: "32px",
-                                                            marginBottom: 0,
-                                                            fontWeight: 600,
-                                                        }}
-                                                    >
-                                                        {blog.h}
-                                                    </h2>
-                                                    <div
-                                                        className="inter fourLine"
-                                                        style={{
-                                                            color: "#000",
-                                                            fontSize: "16px",
-                                                            lineHeight: 1.6,
-                                                            fontWeight: 500,
-                                                        }}
-                                                    >
-                                                        <div
-                                                            dangerouslySetInnerHTML={{
-                                                                __html: blog.descriptionHtmlContent,
-                                                            }}
-                                                        />
+                                                <div className="inter" style={{ fontSize: "32px", fontWeight: 600 }}>
+                                                    {pageBlogs[0].h}
+                                                </div>
+                                                <div className="inter fourLine" style={{ color: "#000", fontSize: "16px", lineHeight: 1.6, marginTop: "12px", fontWeight: 500 }}>
+                                                    <div dangerouslySetInnerHTML={{ __html: pageBlogs[0].descriptionHtmlContent }} />
+                                                </div>
+                                                <div className="middleft inter" style={{ fontSize: "14px", marginTop: "32px" }}>
+                                                    <div style={{ color: "#5c6c75bf" }}>{pageBlogs[0].dateReadable}</div>
+                                                    <div style={{ marginLeft: "auto", color: "#5c6c75bf" }}>
+                                                        Okuma Süresi <span style={{ color: "#0b0a12", fontWeight: 600 }}>{pageBlogs[0].readTime}</span>
                                                     </div>
-                                                    <div
-                                                        className="middleft inter"
-                                                        style={{ fontSize: "14px", marginTop: "32px" }}
-                                                    >
-                                                        <div style={{ color: "#5c6c75bf" }}>
-                                                            {blog.dateReadable}
-                                                        </div>
-                                                        <div
-                                                            style={{
-                                                                marginLeft: "auto",
-                                                                color: "#5c6c75bf",
-                                                            }}
-                                                        >
-                                                            Okuma Süresi{" "}
-                                                            <span
-                                                                style={{
-                                                                    color: "#0b0a12",
-                                                                    fontWeight: 600,
-                                                                }}
-                                                            >
-                                                                {blog.readTime}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        className="middlert bhs"
-                                                        style={{ marginTop: "6px" }}
-                                                    >
-                                                        <Image
-                                                            src="/images/longright.png"
-                                                            alt=""
-                                                            width={40}
-                                                            height={11}
-                                                            style={{ height: "11px", width: "auto" }}
-                                                        />
-                                                    </div>
+                                                </div>
+                                                <div className="middlert bhs" style={{ marginTop: "6px" }}>
+                                                    <Image src="/images/longright.png" alt="" width={40} height={11} style={{ height: "11px", width: "auto" }} />
                                                 </div>
                                             </div>
                                         </div>
                                     </Link>
                                 </div>
-                            ))}
-                        </div>
+                            )}
+                            <div className="row" style={{ marginTop: "32px" }}>
+                                {pageBlogs.slice(page === 1 ? 1 : 0).map((blog) => (
+                                    <div key={blog.id} className="blogSmall">
+                                        <Link href={getBlogLink(blog)}>
+                                            <div style={{ width: "100%" }} className="hvIm">
+                                                <Image
+                                                    className="hvi"
+                                                    src={blog.coverImage}
+                                                    alt={blog.h}
+                                                    width={600}
+                                                    height={240}
+                                                    style={{
+                                                        borderRadius: "8px",
+                                                        width: "100%",
+                                                        height: "240px",
+                                                        objectFit: "cover",
+                                                    }}
+                                                />
+                                                <div>
+                                                    <div>
+                                                        <h2
+                                                            className="inter"
+                                                            style={{
+                                                                fontSize: "32px",
+                                                                marginBottom: 0,
+                                                                fontWeight: 600,
+                                                            }}
+                                                        >
+                                                            {blog.h}
+                                                        </h2>
+                                                        <div
+                                                            className="inter fourLine"
+                                                            style={{
+                                                                color: "#000",
+                                                                fontSize: "16px",
+                                                                lineHeight: 1.6,
+                                                                fontWeight: 500,
+                                                            }}
+                                                        >
+                                                            <div
+                                                                dangerouslySetInnerHTML={{
+                                                                    __html: blog.descriptionHtmlContent,
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <div
+                                                            className="middleft inter"
+                                                            style={{ fontSize: "14px", marginTop: "32px" }}
+                                                        >
+                                                            <div style={{ color: "#5c6c75bf" }}>
+                                                                {blog.dateReadable}
+                                                            </div>
+                                                            <div
+                                                                style={{
+                                                                    marginLeft: "auto",
+                                                                    color: "#5c6c75bf",
+                                                                }}
+                                                            >
+                                                                Okuma Süresi{" "}
+                                                                <span
+                                                                    style={{
+                                                                        color: "#0b0a12",
+                                                                        fontWeight: 600,
+                                                                    }}
+                                                                >
+                                                                    {blog.readTime}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div
+                                                            className="middlert bhs"
+                                                            style={{ marginTop: "6px" }}
+                                                        >
+                                                            <Image
+                                                                src="/images/longright.png"
+                                                                alt=""
+                                                                width={40}
+                                                                height={11}
+                                                                style={{ height: "11px", width: "auto" }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
                     )}
 
                     {/* ── Loading Skeletons ── */}

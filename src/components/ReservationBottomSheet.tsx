@@ -172,7 +172,7 @@ export default function ReservationBottomSheet({
                                     <span className="rbs-strip-month">{d.monthShort}</span>
                                     <span className="rbs-strip-num">{d.day}</span>
                                     <span className="rbs-strip-price">
-                                        {!isLast ? `${currency}${formatTR(convertPrice(price))}` : ""}
+                                        {!isLast ? `${currency}${formatTR(convertPrice(price))}` : `${currency}0`}
                                     </span>
                                 </div>
                             );
@@ -210,7 +210,7 @@ export default function ReservationBottomSheet({
                     </div>
                     <div className="rbs-summary-row">
                         <span className="rbs-summary-label">
-                            Depozito <span className="rbs-deposit-note">(konaklama tutarı dahildir)</span>
+                            Depozito <span style={{ display: "inline-block", width: 14, height: 14, borderRadius: 7, background: "#e0e6ed", color: "#8e9db5", fontSize: 10, textAlign: "center", lineHeight: "14px", margin: "0 4px" }}>?</span> <span className="rbs-deposit-note">(toplam tutara dahil değildir)</span>
                         </span>
                         <span className="rbs-summary-value">{currency}{formatTR(convertedDeposit)}</span>
                     </div>
@@ -222,7 +222,7 @@ export default function ReservationBottomSheet({
                         href={`/tatilvillasi/${villaSlug}/rezervasyon?checkIn=${checkIn}&checkOut=${checkOut}`}
                         className="rbs-cta-btn"
                     >
-                        Ön İtleme ve Onay &gt;
+                        Ön İzleme ve Onay &gt;
                     </a>
                 </div>
             </div>

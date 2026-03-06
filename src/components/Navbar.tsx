@@ -151,12 +151,13 @@ export default function Navbar() {
             <div
                 className="no1024 paddingMobile"
                 style={{
-                    zIndex: 114,
+                    position: "relative",
+                    zIndex: 112,
                     background: "#fff",
-                    boxShadow: "0 2px 10px rgba(0 0 0/0.1)",
+                    borderBottom: "1px solid #f1f1f1",
                 }}
             >
-                <div className="middleft" style={{ padding: "8px 0" }}>
+                <div className="middleft" style={{ padding: "8px 0", flexWrap: "nowrap", alignItems: "center" }}>
                     {/* Hamburger */}
                     <div style={{ paddingRight: 44 }}>
                         <img
@@ -221,25 +222,24 @@ export default function Navbar() {
                     </div>
 
                     {/* Currency selector (mobile) */}
-                    <div style={{ position: "relative" }} ref={currRef}>
+                    <div style={{ position: "relative", flexShrink: 0 }} ref={currRef}>
                         <div
                             onClick={() => { setCurrDropdown(!currDropdown); setLangDropdown(false); }}
-                            className="bhs"
+                            className="bhs middleft"
                             style={{
-                                textAlign: "right",
-                                paddingRight: 2,
                                 color: "#000",
                                 textTransform: "uppercase",
                                 fontWeight: 500,
                                 fontSize: 13,
-                                width: 34,
-                                marginLeft: 12,
+                                marginLeft: 8,
                                 cursor: "pointer",
+                                whiteSpace: "nowrap",
                             }}
                         >
                             <span>{selectedCurrency.symbol}</span>
-                            <span style={{ marginLeft: 2, color: "#000" }}> {selectedCurrency.code.toLowerCase()}</span>
+                            <span style={{ marginLeft: 2 }}>{selectedCurrency.code.toUpperCase()}</span>
                         </div>
+
 
                         {/* Currency dropdown */}
                         {currDropdown && (

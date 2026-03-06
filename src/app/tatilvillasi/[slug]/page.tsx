@@ -117,10 +117,6 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
 
     const handleBottomSheetClose = useCallback(() => {
         setShowBottomSheet(false);
-        setCheckInDate("");
-        setCheckOutDate("");
-        // Clear calendar selection
-        clearCalendarRef.current?.();
     }, []);
 
     const nextImage = useCallback(() => {
