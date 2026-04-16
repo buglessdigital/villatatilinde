@@ -1,0 +1,497 @@
+/* ── Sonuclar Page - CSS Module ── */
+/* CSS Modules are NOT processed/stripped by Tailwind v4 */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.pageWrapper {
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+/* ── Main Layout ── */
+.mainLayout {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    align-items: flex-start;
+    gap: 0;
+}
+
+/* ── Filter Sidebar ── */
+.filterSidebar {
+    width: 280px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 100px;
+    transition-duration: 0.4s;
+}
+
+@media (max-width: 1023px) {
+    .filterSidebar {
+        display: none;
+    }
+
+    .filterSidebarOpen {
+        display: block;
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 999;
+        background: rgba(0, 0, 0, 0.5);
+        overflow-y: auto;
+        padding: 20px;
+    }
+
+    .filterSidebarOpen>div {
+        max-width: 360px;
+        margin: 0 auto;
+    }
+}
+
+/* ── Villa Cards Container ── */
+.villasContainer {
+    padding-left: 24px;
+    width: calc(100% - 280px);
+    margin-top: 1px;
+    display: flex;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 2;
+}
+
+@media (max-width: 1023px) {
+    .villasContainer {
+        width: 100%;
+        padding-left: 0;
+    }
+}
+
+/* ── Villa Card ── */
+.villaCard {
+    width: 48%;
+    margin: 0 1% 2%;
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: box-shadow 0.3s;
+}
+
+.villaCard:hover {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 1481px) {
+    .villaCard {
+        width: 31.7%;
+        margin: 0 0.8% 1.3%;
+    }
+}
+
+@media (max-width: 767px) {
+    .villaCard {
+        width: 100%;
+        margin: 0 0 2%;
+    }
+}
+
+/* ── Image Container ── */
+.imageContainer {
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    height: 240px;
+    border-radius: 12px 12px 0 0;
+}
+
+@media (max-width: 767px) and (min-width: 560px) {
+    .villaCard .cardRow {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .imageContainer {
+        width: 40%;
+        height: 250px;
+        border-radius: 12px 0 0 12px;
+    }
+
+    .textContainer {
+        width: 60%;
+    }
+}
+
+.textContainer {
+    width: 100%;
+}
+
+/* ── Slider Arrow ── */
+.imageArrow {
+    position: absolute;
+    top: 50%;
+    z-index: 111;
+    height: 80px;
+    padding: 12px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    cursor: pointer;
+}
+
+@media (max-width: 1023px) {
+    .imageArrow {
+        opacity: 1;
+    }
+}
+
+.villaCard:hover .imageArrow {
+    opacity: 1;
+}
+
+.imageArrowLeft {
+    left: 0;
+    transform: translateY(-50%) scaleX(-1);
+}
+
+.imageArrowRight {
+    right: 0;
+    transform: translateY(-50%);
+}
+
+/* ── Sort Dropdown ── */
+.sortDropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    min-width: 180px;
+    z-index: 50;
+    overflow: hidden;
+}
+
+.sortItem {
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.sortItem:hover {
+    background: #f5f6f8;
+}
+
+.sortItemActive {
+    color: #50b0f0;
+}
+
+/* ── Active Filter Tags ── */
+.filterTag {
+    margin-top: 4px;
+    margin-right: 5px;
+    padding: 5px 12px 5px 10px;
+    margin-bottom: 3.5px;
+    border-radius: 8px;
+    background: #ebeef5aa;
+    color: #333;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background 0.15s;
+}
+
+.filterTag:hover {
+    background: #dde0e8;
+}
+
+.filterTagClear {
+    background: #e83e8c1a;
+    color: #e83e8c;
+}
+
+.filterTagClear:hover {
+    background: #e83e8c33;
+}
+
+/* ── Checkbox ── */
+.checkboxLabel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 3px 0;
+}
+
+.checkboxBox {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 2px solid #ccc;
+    background: transparent;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.checkboxBoxChecked {
+    border-color: #50b0f0;
+    background: #50b0f0;
+}
+
+/* ── Mobile Villa Search ── */
+.mobileSearch {
+    display: none;
+    margin-bottom: 12px;
+}
+
+.mobileSearchInput {
+    width: 100%;
+    padding: 11px 40px 11px 16px;
+    border: 1px solid #dfdfe3;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    outline: none;
+    font-family: 'DM Sans', serif;
+    box-sizing: border-box;
+    background: #fff;
+}
+
+@media (max-width: 1023px) {
+    .mobileSearch {
+        display: block;
+    }
+}
+
+/* ── Mobile Filter Button ── */
+.mobileFilterBtn {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 12px;
+    border: 1px solid #dfdfe3;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+@media (max-width: 1023px) {
+    .mobileFilterBtn {
+        display: flex;
+    }
+}
+
+/* ── Apply Button ── */
+.applyBtn {
+    margin-left: auto;
+    background: #50b0f0;
+    color: #fff;
+    padding: 16px 20px;
+    border-radius: 2rem;
+    line-height: 1;
+    font-weight: 600;
+    font-size: 16px;
+    box-shadow: 0 16px 32px -10px rgba(0, 0, 0, 0.2),
+        0 16px 32px -10px rgba(41, 39, 46, 0.5);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.applyBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3),
+        0 20px 40px -10px rgba(41, 39, 46, 0.6);
+}
+
+/* ── CTA Card ── */
+.ctaCard {
+    overflow: hidden;
+    text-align: center;
+    border: 2px solid #ebeef58a;
+    background: #ebeef51a;
+    z-index: 2;
+    position: relative;
+    padding: 48px 48px 0px;
+    border-radius: 40px;
+}
+
+/* ── Contact Button ── */
+.contactBtn {
+    background: linear-gradient(90deg,
+            rgba(105, 146, 254, 1) 0%,
+            rgba(163, 136, 253, 1) 100%);
+    padding: 12px 25px;
+    border-radius: 32px;
+    color: #fff;
+    font-weight: 600;
+    display: inline-block;
+    transition: transform 0.15s;
+}
+
+.contactBtn:hover {
+    transform: translateY(-1px);
+}
+
+/* ── Promo Row ── */
+.promoRow {
+    display: flex;
+    align-items: center;
+}
+
+.promoImage {
+    width: 68px;
+    height: 68px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.promoContent {
+    width: calc(100% - 84px);
+    margin-left: 16px;
+    flex: 1;
+}
+
+.promoInspect {
+    border-radius: 4px;
+    color: #fff;
+    background: #50b0f0;
+    padding: 4px 10px;
+    font-size: 14px;
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+
+.promoInspect:hover {
+    background: #3da0e0;
+}
+
+/* ── No Results ── */
+.noResults {
+    width: 100%;
+    margin-top: 20px;
+    margin-bottom: 32px;
+    display: flex;
+    justify-content: center;
+}
+
+.noResultsInner {
+    overflow: hidden;
+    text-align: center;
+    z-index: 2;
+    position: relative;
+    padding: 34px 24px 24px;
+    border-radius: 4px;
+}
+
+/* ── Search Input ── */
+.searchInput {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #dfdfe3;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.searchInput:focus {
+    border-color: #50b0f0;
+}
+
+/* ── Discount Badge ── */
+.discountBadge {
+    z-index: 10;
+    color: #fff;
+    padding: 5px 9px;
+    border-radius: 8px;
+    position: absolute;
+    left: 16px;
+    top: 16px;
+    background: #50b0f0;
+    font-size: 14px;
+}
+
+/* ── Image Dots ── */
+.imageDots {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+    z-index: 10;
+}
+
+.dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transition: background 0.2s;
+}
+
+.dotActive {
+    background: #fff;
+}
+
+/* ── Section Title ── */
+.sectionTitle {
+    border-top: 1px solid #dfdfe3;
+    padding-top: 26px;
+    margin-top: 26px;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.moreToggle {
+    font-size: 14px;
+    font-weight: 500;
+    color: #50b0f0;
+    margin-top: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.moreToggle:hover {
+    color: #3da0e0;
+}
+
+/* ── Filter action row ── */
+.filterActions {
+    display: flex;
+    align-items: center;
+    margin-top: 12px;
+}
+
+.clearBtn {
+    font-weight: 400;
+    font-size: 18px;
+    color: #50b0f0;
+    cursor: pointer;
+}
+
+.clearBtn:hover {
+    color: #3da0e0;
+}

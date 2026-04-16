@@ -1,0 +1,460 @@
+ 
+All electronic or printed copies of this document obtained from outside the Payten document portal should be considered 
+UNCONTROLLED COPIES. 
+GL-58 (27/02/2025 - 01)                                       Internal Document                                                                       
+Pages  1/12 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Sanal Pos İş Yerleri İçin Entegrasyon 
+Güvenliği Kılavuzu 
+   
+Doküman Kodu Yayınlanma Tarihi Revizyon Numarası 
+GL-58 27/02/2025         03 
+
+. 
+ 
+ PCI DSS Guideline Template 
+ 
+ 
+All electronic or printed copies of this document obtained from outside the Payten document portal should be considered 
+UNCONTROLLED COPIES. 
+ 
+GL-58 (27/02/2025 - 03)                                   Internal Document                                                                         
+Pages 2 / 12 
+İçindekiler 
+Sanal Pos İş Yerleri İçin Entegrasyon Güvenliği Kılavuzu 1 
+1 HESAP KORUMASI 3 
+2 GÜVENLİ ONLINE ÖDEME ENTEGRASYONU 4 
+2.1 BACK-END SİSTEMLERİ 4 
+2.2 ÜÇÜNCÜ TARAF BİLEŞENLERİ 4 
+2.3 GÜVENLİ BAŞLIKLAR 5 
+2.3.1 İçerik Güvenliği Politikası (CSP) 5 
+2.3.2 CORS Politikası 7 
+2.3.3 Ek Güvenlik Katmanları 9 
+3 GÜVENLİ KODLAMA UYGULAMALARI 9 
+4 GÜVENLİ TLS KONFİGÜRASYONU 10 
+4.1 TLS 1.3 Versiyonun Faydaları 10 
+4.2 TLS Versiyonu Nasıl Test Edilir? 10 
+5 GÜVENLİK GÜNCELLEMESİ 11 
+Ödeme Sayfaları Artık Gömülü Olamaz 11 
+6 KAYNAKLAR 11 
+7 REVİZYON GEÇMİŞİ 12 
+ 
+  
+. 
+ 
+ PCI DSS Guideline Template 
+ 
+ 
+All electronic or printed copies of this document obtained from outside the Payten document portal should be considered 
+UNCONTROLLED COPIES. 
+ 
+GL-58 (27/02/2025 - 03)                                   Internal Document                                                                         
+Pages 3 / 12 
+ÖZET 
+Bu doküman, ödeme entegrasyonlarının güvenliğini sağlama, hassas müşteri verilerini koruma ve olası 
+tehditleri azaltma konusunda en iyi uygulamaları özetlemektedir. Güçlü parola politikaları uygulama, 
+hesap kilitleme mekanizmaları oluşturma ve erişim kontrolü için çok faktörlü kimlik doğrulama (MFA) 
+gerektirme gibi temel güvenlik önlemlerini kapsar. Güvenli iletişim, TLS şifrelemesi ile vu rgulanır ve 
+PCI DSS standartlarına uyum sağlanır. API kimlik doğrulaması, API anahtarları veya temel kimlik 
+doğrulama yöntemleriyle zorunlu kılınır ve webhook güvenliği, HMAC imza doğrulaması ile 
+güçlendirilir. Ödeme ortamlarından gelen istekleri doğrulama k için istemci tarafı kimlik doğrulama 
+mekanizmaları önerilir. Bu yönergeleri takip ederek işletmeler, güvenlik duruşlarını güçlendirebilir ve 
+ödeme sistemlerine yetkisiz erişimi önleyebilir. 
+1 HESAP KORUMASI 
+Saldırganlar, sisteminize erişmek için giriş kimlik bilgilerini çalmaya veya sahtecilik yapmaya çalışabilir. 
+Yetkisiz erişimi önlemek için, Müşteri Alanı, web sitesi, sunucular ve kullandığınız üçüncü taraf 
+hizmetler dahil tüm hesapları güvence altına alın.  
+Giriş kimlik bilgileri gerektiren herhangi bir sistem için aşağıdaki önlemleri alabilirsiniz: 
+● Güçlü parolalar kullanın: Parolaların en az 12 karakter uzunluğunda olmasını sağlayarak, 
+saldırganların erişim kazanmak için birden fazla parola kombinasyonu denediği kaba kuvvet 
+saldırılarına karşı koruma sağlayın. 
+● Başarısız giriş denemelerini sınırlayın: Otomatize edilmiş saldırıları önlemek için, tekrarlanan 
+yanlış parola girişlerinden sonra (Örneğin; 5 başarısız denemeden sonra) hesabı kilitleyin 
+veya oturumu bloke edin. 
+● Bireysel hesaplar atayın: Her kullanıcının kendi hesabı olmalı ve paylaşılan kimlik bilgileri 
+kullanılmamalıdır. Bu, kullanıcı eylemlerinin izlenmesini sağlar ve güvenliği artırır.  
+● İki faktörlü kimlik doğrulamayı etkinleştirin (2FA): Kimlik bilgileri ele geçirilse bile yetkisiz 
+girişleri önlemek için ek bir doğrulama adımı gerekir.  
+● Varsayılan kimlik bilgilerini değiştirin: Kurulumdan hemen sonra tedarikçi tarafından 
+sağlanan kullanıcı adlarını ve parolaları değiştirerek yaygın güvenlik risklerini ortadan 
+kaldırın. 
+● Çalışanlarınızı güvenlik tehditleri konusunda eğitin: Personelinize, saldırganların erişim 
+kazanmak için kullandığı kimlik avı ve sosyal mühendislik taktikleri hakkında eğitim 
+verebilirsiniz. 
+ 
+Daha ayrıntılı kimlik doğrulama yönergeleri için bkz. OWASP’s Authentication Cheat Sheet. 
+  
+. 
+ 
+ PCI DSS Guideline Template 
+ 
+ 
+All electronic or printed copies of this document obtained from outside the Payten document portal should be considered 
+UNCONTROLLED COPIES. 
+ 
+GL-58 (27/02/2025 - 03)                                   Internal Document                                                                         
+Pages 4 / 12 
+2 GÜVENLİ ONLINE ÖDEME ENTEGRASYONU 
+Çoğu çevrimiçi saldırı, ödeme veya sonuç sayfalarındaki güvenlik açıkların dan yararlanır . Payten, 
+kontrolü dışındaki ortamları tam olarak koruyamayacağından, kendi web sayfalarınızın ve 
+uygulamalarınızın güvenliğini sağlamak sizin sorumluluğunuzdadır. Hem sizin hem de Payten tarafının 
+uygulaması gereken güvenlik önlemlerini daha iyi anlamak için , PCI DSS uyumluluk kılavuzuna 
+başvurun. 
+2.1 BACK-END SİSTEMLERİ 
+Yazılımı Güncel Tutun: Tüm sistemler ve uygulamalar için önerilen güvenlik güncellemelerini en kısa 
+sürede yükleyin.   
+Platform Güvenlik Yönergelerini Takip Edin: E-ticaret veya web sitesi sağlayıcınız tarafından sunulan 
+güvenlik önerilerine uyun.   
+Sistem Aktivitesini İzleyin: Arka uç sistemlerinizdeki herhangi bir değişikliği veya olağandışı aktiviteyi 
+takip etmek için günlük kaydı alındığından ve izleme sistemleri kurulduğundan emin olun. Ödeme 
+sayfalarınız ve ilgili kaynak kodunda yapılan değişiklikleri düzenli olarak inceleyerek potansiyel 
+güvenlik sorunlarını tespit edin 
+2.2 ÜÇÜNCÜ TARAF BİLEŞENLERİ 
+Eğer web sayfanız savunmasız üçüncü taraf bileşenleri içeriyorsa, saldırganlar web sitenize kendi 
+kötü amaçlı kodlarını çalıştırarak veri çalabilir. 
+Riskleri en aza indirmek için aşağıdaki önlemleri alabilirsiniz: 
+ 
+1. callbackUrl, okUrl, failUrl adreslerinin güvenli veri gönderimini sağlamak için TLS (HTTPS) 
+kullanması gerekmektedir. 
+Web sunucularınızı aşağıdaki istekler için TLS (HTTPS) kabul edecek şekilde yapılandırmanız 
+gerekmektedir: 
+ 
+a. Ödeme sonrası müşterilerin callbackUrl, okUrl veya failUrl adreslerine 
+yönlendirilmesi, 
+b.  Payten sunucularının ödeme sonucunu bildirmek için yaptığı callback isteği. 
+c. TLS sertifikalarının geçerli, güncel ve modern protokolleri (TLS 1.3) kullandığından 
+emin olunuz. 
+2. Müşteri Tarafı Kaynaklar İçin Yetkili Alan Adları Kullanın: JavaScript kitaplıkları, CSS 
+dosyaları, sohbet botları veya analiz araçları gibi müşteri tarafı kaynakların yalnızca güvenilir 
+alan adlarından yüklenmesini sağlayın. 
+3. Alt Kaynak Bütünlüğü Uygulayın (SRI): Web Drop-in/Bileşenler kullanıyorsanız, yüklediğiniz 
+kaynakların bütünlüğünü sağlamak için SRI hash'lerini kullanın. 
+. 
+ 
+ PCI DSS Guideline Template 
+ 
+ 
+All electronic or printed copies of this document obtained from outside the Payten document portal should be considered 
+UNCONTROLLED COPIES. 
+ 
+GL-58 (27/02/2025 - 03)                                   Internal Document                                                                         
+Pages 5 / 12 
+4. İçerik Güvenlik Politikası (CSP) ile Yüklenen Kaynakları Kontrol Edin: Sitenizdeki kaynaklar 
+üzerinde daha iyi kontrol sağlamak için İçerik Güvenlik Politikası’nı (CSP) uygulayın. Bu, 
+Siteler Arası Komut Dosyası Çalıştırma Saldırısı (XSS) ve veri enjeksiyonu gibi saldırıları 
+önlemeye yardımcı olabilir.   
+ 
+2.3 GÜVENLİ BAŞLIKLAR 
+2.3.1 İçerik Güvenliği Politikası (CSP) 
+İçerik Güvenlik Politikası (CSP), web sayfanızda yüklenen kaynakları kontrol etmenizi sağlar. Eğer 
+Payten ödeme sayfasını, web sitenizde bir iframe içine yerleştiriyorsanız, yalnızca güvenilir kaynakları 
+beyaz listeye alarak kötü amaçlı içeriğin yüklenmesini engelleyebilirsiniz. Bu, Siteler Arası Komut 
+Dosyası Çalıştırma Saldırısı (XSS) veya veri enjeksiyonu gibi potansiyel saldırıları hafifletmeye 
+yardımcı olur.  
+Payten Güvenli URL Listesi 
+CSP'nin (İçerik Güvenlik Politikası) doğru çalışmasını sağlamak için, web sitenizde kullanılabilecek 
+Payten URL'lerinin bir listesini talep etmeniz gerekmektedir. Bu liste, CSP başlığınıza güvenle 
+ekleyebileceğiniz güvenilir URL'leri içerecektir. Ödeme sayfasında kullanılabilecek iframe içeriği, 
+JavaScript, CSS ve diğer kaynaklar için Payten ile iletişime geçerek ilgili URL'leri alabilirsiniz.   
+XSS ve Veri Enjeksiyon Koruması İçin CSP 
+CSP yalnızca iframe içeriğini güvence altına almakla kalmaz, aynı zamanda Siteler Arası Komut 
+Dosyası Çalıştırma Saldırısı (XSS) ve veri enjeksiyonu saldırılarına karşı koruma sağlar. JavaScript'in 
+yalnızca güvenilir kaynaklardan yüklenmesine izin vererek, saldırganların kendi kötü amaçlı 
+komutlarını engelleyebilirsiniz.    
+Örnek CSP Başlığı (XSS Koruması): 
+Content-Security-Policy: default-src 'self'; script-src 'self' https://{URL ADDRESS} 'nonce-<rastgele_deger>'; 
+● 'nonce-<rastgele_deger>': Bu, yalnızca önceden tanımlanmış bir nonce değerine (rastgele bir 
+dize) sahip satır içi komutların çalışmasına izin verir. Bu, saldırganların kendi JavaScript'lerini 
+enjekte etmesini engeller.  
+  
+. 
+ 
+ PCI DSS Guideline Template 
+ 
+ 
+All electronic or printed copies of this document obtained from outside the Payten document portal should be considered 
+UNCONTROLLED COPIES. 
+ 
+GL-58 (27/02/2025 - 03)                                   Internal Document                                                                         
+Pages 6 / 12 
+ 
+Dinamik İçerik ve Harici Kaynaklar 
+Eğer sayfanız dinamik içerik (örneğin; kullanıcı verileri, harici API istekleri) bulunduruyorsa, bu 
+kaynakları da CSP'nizde güvence altına almanız gerekir. Bu durumda, bu dinamik kaynakların 
+URL'lerini beyaz listeye eklemeniz gerekecektir.    
+Örnek: 
+Content-Security-Policy: default-src 'self'; connect-src 'self' https://{URL ADRESİ}; img-src 'self' https://{URL 
+ADRESİ}; 
+● connect-src 'self' https://{URL ADRESİ}: Sadece kendi alan adınıza ve Payten API bağlantısına 
+izin verir.   
+● img-src 'self' https://{URL ADRESİ}: Görsellerin sadece kendi alan adınızdan ve Payten'in 
+güvenilir URL'lerinden yüklenmesine izin verir. 
+Bu adımlar, satıcıların ödeme sayfalarını güvence altına almalarına ve XSS ve veri enjeksiyonu gibi 
+saldırıları önlemek için CSP'yi doğru bir şekilde uygulamalarına yardımcı olacaktır. CSP'yi doğru bir 
+şekilde yapılandırmak ve güvenilir alan adlarından kaynakları güvenli bir şekilde yüklemek için 
+Payten'den URL listesini almak büyük önem taşır. 
+Uygulama Örnekleri: 
+ 
+Apache 
+<IfModule mod_headers.c> 
+  Header set Content-Security-Policy "default-src 'self'; script-src 'self' https://{URL ADDRESS}" 
+</IfModule> 
+ 
+Ngnix 
+add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://{URL ADDRESS}" 
+always; 
+ 
+ Express.js or Node.js 
+app.use((req, res, next) => { 
+  res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' https://{URL 
+ADDRESS}"); 
+  next(); 
+}); 
+ 
+. 
+ 
+ PCI DSS Guideline Template 
+ 
+ 
+All electronic or printed copies of this document obtained from outside the Payten document portal should be considered 
+UNCONTROLLED COPIES. 
+ 
+GL-58 (27/02/2025 - 03)                                   Internal Document                                                                         
+Pages 7 / 12 
+2.3.2 CORS Politikası 
+Kökler Arası Kaynak Paylaşımı veya Cross-Origin Resource Sharing (CORS), bir sunucudaki kaynakların 
+başka bir alan adından nasıl istenebileceğini kontrol etmek için web tarayıcıları tarafından uygulanan 
+bir güvenlik özelliğidir. Güvenli ödeme entegrasyonları için, yetkisiz erişimi önlemek ve veri 
+bütünlüğünü sağlamak amacıyla CORS politikalarını doğru bir şekilde yapılandırmak çok önemlidir.   
+CORS Yapılandırma Yönergeleri 
+Güvenli bir CORS politikası uygulamak için satıcılar şu en iyi uygulamaları izlemelidir:   
+1. İzin Verilen Kaynakları Kısıtlayın 
+o Sunucunuza istekte bulunabilecek güvenilir alan adlarının bir beyaz listesini 
+tanımlayın. 
+o Access-Control-Allow-Origin: * kullanmaktan kaçının, çünkü bu herhangi bir web 
+sitesinin kaynaklarınıza erişmesine izin verir.    
+Örnek Güvenli Başlık: 
+Access-Control-Allow-Origin: https://trustedmerchant.com 
+2. İzin Verilen HTTP Metotlarını Sınırlayın 
+o Sadece gerekli HTTP metotlarına (örneğin, GET, POST ve OPTIONS) izin verin.   
+o Gerekli olmadıkça, PUT ve DELETE gibi potansiyel olarak tehlikeli metotları kısıtlayın.   
+Örnek Başlık: 
+Access-Control-Allow-Methods: GET, POST, OPTIONS 
+3. İzin Verilen Başlıkları Kısıtlayın 
+o Sadece kimlik doğrulama ve içerik türü doğrulaması için gereken belirli başlıklara izin 
+verin.   
+Örnek Başlık: 
+Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With 
+4. Kimlik Bilgili İstekleri Güvenli Bir Şekilde Etkinleştirin 
+o Eğer kimlik doğrulama belirteçleri (örneğin, oturum çerezleri, API anahtarları) 
+gerekiyorsa, kimlik bilgilerini açıkça izin verin.   
+o Access-Control-Allow-Credentials: true` kullanıldığında, `Access-Control-Allow-
+Origin` başlığının `*` olarak ayarlanmadığından emin olun.  
+Örnek Başlık: 
+Access-Control-Allow-Credentials: true 
+5. Makul Bir Ön Kontrol (Preflight) Önbellek Süresi Belirleyin 
+. 
+ 
+ PCI DSS Guideline Template 
+ 
+ 
+All electronic or printed copies of this document obtained from outside the Payten document portal should be considered 
+UNCONTROLLED COPIES. 
+ 
+GL-58 (27/02/2025 - 03)                                   Internal Document                                                                         
+Pages 8 / 12 
+o Gereksiz ön kontrol isteklerini azaltmak için CORS yapılandırmalarını belirli bir süre 
+boyunca önbelleğe alın.   
+Örnek Başlık: 
+Access-Control-Max-Age: 3600 
+Uygulama Örneği  
+Bir satıcının çapraz kaynak (cross-origin) isteklerini işleyen API'si için, aşağıdaki Nginx yapılandırması 
+güvenli bir CORS kurulumu sağlar:   
+server { 
+    location /api/ { 
+        add_header 'Access-Control-Allow-Origin' 'https://trustedmerchant.com' always; 
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always; 
+        add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Requested-With' 
+always; 
+        add_header 'Access-Control-Allow-Credentials' 'true' always; 
+    } 
+ 
+Sonuç 
+Doğru CORS yapılandırması, ödeme entegrasyonlarının güvenliğini sağlamak ve yetkisiz çapraz 
+kaynak (cross-origin) isteklerini önlemek için büyük önem taşır. Satıcılar, yalnızca güvenilir 
+kaynakların API'lerine erişebilmesini sağlarken, güvenlik risklerini en aza indirmelidir. CORS'u güçlü 
+kimlik doğrulama mekanizmalarıyla birleştirmek, entegrasyonun genel güvenlik duruşunu önemli 
+ölçüde artırır.   
+  
+. 
+ 
+ PCI DSS Guideline Template 
+ 
+ 
+All electronic or printed copies of this document obtained from outside the Payten document portal should be considered 
+UNCONTROLLED COPIES. 
+ 
+GL-58 (27/02/2025 - 03)                                   Internal Document                                                                         
+Pages 9 / 12 
+2.3.3 Ek Güvenlik Katmanları 
+CSP ve CORS, tam güvenliği sağlamak için yeterli değildir. Diğer güvenlik mekanizmalarıyla 
+desteklenmelidir: 
+● X-Frame-Options: Sitenizin yetkisiz web siteleri tarafından bir iframe içinde gömülmesini 
+önlemek için X-Frame-Options header kullanın. Ancak, iframe'lerin gerekli olduğu 
+durumlarda (Payten gibi), CSP daha fazla esneklik sağlar. 
+● HTTP Katı Taşıma Güvenliği (HSTS): Sitenizin yalnızca HTTPS üzerinden yüklenmesini 
+sağlamak için HSTS uygulayın. 
+● Alt Kaynak Bütünlüğü (SRI): Third-party kaynakların bütünlüğünü doğrulamak ve 
+değiştirilmediklerinden emin olmak için SRI hash’lerini kullanın. 
+ 
+3 GÜVENLİ KODLAMA UYGULAMALARI 
+Sistemlerinizin güvenliğini sağlamak için güvenli kodlama uygulamalarını takip etmek ve OWASP ve 
+NIST gibi köklü kamuya açık framework ve yönergeler doğrultusunda güvenlik değerlendirmesi 
+yapmak önemlidir. 
+Güvenli kodlama uygulamalarını hayata geçirmek için aşağıdaki kaynaklar etkili başlangıç 
+noktalarıdır: 
+1. OWASP En İyi On Güvenlik Riski ve Önlemler 
+OWASP En İyi On Listesi, en kritik web uygulama güvenlik risklerini ve önerilen önlemleri 
+içeren kapsamlı bir listedir. Bu liste, geliştiricilerin SQL enjeksiyonu, çapraz site betikleme 
+(XSS) ve diğer yaygın güvenlik açıklarını anlamalarına ve gidermelerine yardımcı olur. 
+2. OWASP Hile Sayfaları 
+OWASP, web uygulamalarını güvenli hale getirmek için en iyi uygulamaları ve kodlama 
+yönergelerini içeren bir dizi hile sayfası sunar. Bu hile sayfaları, güvenli kimlik doğrulama, veri 
+doğrulama ve kriptografik uygulamalar gibi çeşitli konuları kapsar. 
+3. NIST Güvenli Yazılım Geliştirme Framework'ü (SSDF) 
+NIST SSDF, yazılımın geliştirme yaşam döngüsü boyunca güvenliğini artırmak için bir dizi en 
+iyi uygulama sunar. Güvenli kodlama, güvenli test etme ve risk yönetimi için yönergeler içerir 
+ve geliştiricilerin yazılımı temelden güvenli bir şekilde inşa etmelerine yardımcı olur. 
+Bu framework ve yönergeleri takip ederek, uygulamalarınızın güvenlik duruşunu önemli ölçüde 
+iyileştirebilir ve güvenlik açıklarının kötüye kullanılma olasılığını azaltabilirsiniz. 
+ 
+ 
+. 
+ 
+ PCI DSS Guideline Template 
+ 
+ 
+All electronic or printed copies of this document obtained from outside the Payten document portal should be considered 
+UNCONTROLLED COPIES. 
+ 
+GL-58 (27/02/2025 - 03)                                   Internal Document                                                                         
+Pages 10 / 12 
+4 GÜVENLİ TLS KONFİGÜRASYONU 
+Transport Layer Security (TLS) protokolü, sisteminiz ile Payten arasındaki güvenli iletişimi sağlamak için 
+çok önemlidir. Farklı TLS sürümleri, veri iletimi sırasında veriyi şifreleyen farklı şifreleme algoritmalarını 
+(şifreleme şemaları) destekler. PCI DS S gereksinimlerine uymak için, Payten yalnızca sektör 
+standartlarına uygun güçte olan belirli TLS sürümleri ve şifreleme şemalarını destekler. 
+Bugün güçlü kabul edilen şifreleme şemalarının gelecekte zayıf hale gelebileceğini unutmamak 
+önemlidir. Payten, platformuna bağlantı sağlamak için kullanılan sürümleri ve şifreleme şemalarını 
+sürekli olarak izlemektedir. 
+TLS Version 
+TLS 1.2 
+TLS 1.3 
+ 
+4.1 TLS 1.3 Versiyon Faydaları 
+● Güçlü Şifreleme Algoritmaları: TLS 1.3, saldırılara karşı daha iyi koruma sağlayan AES-GCM 
+ve ChaCha20-Poly1305 gibi modern şifreleme şemalarını destekler. 
+● Daha Hızlı Handshake: TLS 1.3, güvenli bir bağlantı kurmanın ilk aşaması olan handshake 
+sürecini önemli ölçüde hızlandırarak performansı artırır. 
+● İleriye Dönük Gizlilik: İleriye dönük gizlilik (forward secrecy) sayesinde, özel anahtar ele 
+geçirilse bile geçmiş iletişimler çözülemez. Bu, uzun vadeli veri koruması için ek bir güvenlik 
+katmanı sağlar. 
+● Eski Kriptografik Algoritmaların Kaldırılması: TLS 1.3, daha eski ve güvenliği zayıf 
+kriptografik algoritmaları ve özellikleri ortadan kaldırarak veri iletimini daha sağlam hale 
+getirir. 
+Sisteminizin doğru ve güncellenmiş TLS yapılandırmasını kullanmasını sağlayarak, API iletişiminizi 
+güvence altına alır ve hassas verileri etkili bir şekilde korursunuz. 
+4.2 TLS Versiyonu Nasıl Test Edilir? 
+Sisteminizin doğru TLS sürümünü kullandığını doğrulamak için çevrimiçi araçlar veya komut satırı 
+yöntemleriyle kolayca test yapabilirsiniz. İşte TLS yapılandırmanızı kontrol etmenin basit bir yolu: 
+4.2.1 Kolay Yöntem: Çevrimiçi Araçları Kullanın 
+1. Çevrimiçi Bir TLS Test Adersini Ziyaret Edin: SSL Labs'in SSL Testi gibi ücretsiz çevrimiçi 
+hizmetleri kullanın. SSL Labs' SSL Test. 
+2. Alan Adınızı Girin: Açılan alana web sitenizin alan adını veya IP adresini yazın ve "Gönder" 
+butonuna tıklayın. 
+3. Sonuçları Görüntüleyin: Araç, sunucunuzu analiz edecek ve desteklediği TLS sürümünü, 
+şifreleme şemaları ve güvenlik seviyesiyle ilgili ayrıntıları gösterecektir. 
+. 
+ 
+ PCI DSS Guideline Template 
+ 
+ 
+All electronic or printed copies of this document obtained from outside the Payten document portal should be considered 
+UNCONTROLLED COPIES. 
+ 
+GL-58 (27/02/2025 - 03)                                   Internal Document                                                                         
+Pages 11 / 12 
+4.2.2 Komut Satırı Yöntemi: OpenSSL Kullanarak 
+Eğer komut satırını kullanmayı tercih ediyorsanız, TLS sürümünüzü OpenSSL ile test edebilirsiniz: 
+1. Terminalinizi veya komut istemcisini açın. 
+Aşağıdaki komutu çalıştırarak TLS sürümünü test edin: 
+openssl s_client -connect yourdomain.com:443 
+2. Çıktıda TLS sürümünü arayın: Çıktıda şu şekilde bir satır arayın: 
+Protocol  : TLSv1.2 
+3. Bu, sunucunuzun kullandığı TLS sürümünü gösterecektir. 
+Bu yöntemlerden birini kullanarak, sisteminizin hangi TLS sürümünü kullandığını kolayca doğrulayabilir 
+ve en son güvenlik standartlarına uyum sağladığından emin olabilirsiniz. 
+ 
+5 GÜVENLİK GÜNCELLEMESİ 
+Ödeme Sayfaları Artık Gömülü Olamaz 
+Güvenliği artırmak için, ödeme sayfalarımız üçüncü taraf alan adlarından sunulmamalı veya diğer 
+web sitelerine (iframe) yerleştirilmemelidir. 
+Bunun yerine, kart sahipleri her zaman resmi ödeme sayfamıza yönlendirilmelidir. Bazı üye işyerleri, 
+backend istekleri yaparak yönlendirme sayfamızı kendi çerçevelerinde yüklemeye çalışabilir, ancak 
+bu uygulamaya artık izin verilmemektedir. 
+ 
+Sadece kart sahibi tarayıcıları ödeme sayfalarına erişebilmelidir, ödeme sayfalarına yapılan backend 
+veya sunucu-arası çağrılara izin verilmeyecektir. 
+ 
+callbackUrl, okUrl, failUrl adreslerini güvence altına alın. 
+Bu sayfalarda HTTP 3xx kodları veya yönlendirmeler kullanmayın, çünkü CSP form-action kısıtlamaları 
+nedeniyle tarayıcılar tarafından engellenecektir. 
+ 
+6 KAYNAKLAR 
+● NIST Secure Systems and Applications 
+● OWASP Security Verification Standard 
+● SANS resources 
+ 
+ 
+ 
+ 
+. 
+ 
+ PCI DSS Guideline Template 
+ 
+ 
+All electronic or printed copies of this document obtained from outside the Payten document portal should be considered 
+UNCONTROLLED COPIES. 
+ 
+GL-58 (27/02/2025 - 03)                                   Internal Document                                                                         
+Pages 12 / 12 
+ 
+7 REVİZYON GEÇMİŞİ 
+ 
+Numara Revizyon 
+Tarihi Revize Eden Onay Tarihi Onaylayan Değişiklikler 
+01 27.02.2025 Sedat Ozdemir 27.02.2025 Ismail Orhan İlk Yayınlama 
+02 11.03.2025 Sedat Ozdemir 11.03.2025 Ismail Orhan 
+Güvenlik 
+Güncellemesi ve 
+CORS Politikası 
+Adımları eklendi 
+03 12.03.2025 Sedat Ozdemir 12.03.2025 Ismail Orhan 
+“Güvenlik 
+Güncellemesi” alanı 
+güncellendi 
+04 24.04.2025 Sedat Ozdemir 24.04.2025 Ismail Orhan Uygulama Örnekleri 
+eklendi 
+05 29.04.2025 Sedat Ozdemir 29.04.2025 Ismail Orhan 
+“ÜÇÜNCÜ TARAF 
+BİLEŞENLERİ” 1. 
+madde güncellendi. 
+ 
