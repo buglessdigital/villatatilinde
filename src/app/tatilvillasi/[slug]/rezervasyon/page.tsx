@@ -291,7 +291,7 @@ export default function ReservationPage({ params }: { params: Promise<{ slug: st
         }
 
         const total = accommodation - discount + cleaning;
-        const advance = Math.round(total * ((villa.commission_rate ?? 20) / 100));
+        const advance = Math.round(total * ((villa.commission_pct ?? 20) / 100));
         return { nightCount: nights, accommodationPrice: accommodation, cleaningFee: cleaning, couponDiscount: discount, totalPrice: total, advancePayment: advance, remainingPayment: total - advance, hasUnpricedDays: unpriced };
     }, [villa, checkIn, checkOut, appliedCoupon]);
 
@@ -723,7 +723,7 @@ export default function ReservationPage({ params }: { params: Promise<{ slug: st
                         <h2 className="rez-section-title poppins" style={{ marginTop: 32 }}>Ödeme Seçenekleri</h2>
 
                         <p className="rez-payment-info">
-                            <a href="#" className="rez-link">%{(villa.commission_rate ?? 20)} Ön Ödemeyi rezervasyon uygunluğu kesinleştirildikten sonra Kredi Kartıyla veya EFT ile yapabilirsiniz</a> 🛈
+                            <a href="#" className="rez-link">%{(villa.commission_pct ?? 20)} Ön Ödemeyi rezervasyon uygunluğu kesinleştirildikten sonra Kredi Kartıyla veya EFT ile yapabilirsiniz</a> 🛈
                         </p>
 
                         <label className="rez-radio-row">
@@ -830,7 +830,7 @@ export default function ReservationPage({ params }: { params: Promise<{ slug: st
                         <div className="rez-advance-section">
                             <div className="rez-advance-label">Gereken Ön Ödeme</div>
                             <div className="rez-pricing-row">
-                                <span className="rez-advance-pct">%{(villa.commission_rate ?? 20)} Ön Ödeme</span>
+                                <span className="rez-advance-pct">%{(villa.commission_pct ?? 20)} Ön Ödeme</span>
                                 <span className="rez-pricing-val">₺{formatTR(advancePayment)}</span>
                             </div>
                         </div>
@@ -839,7 +839,7 @@ export default function ReservationPage({ params }: { params: Promise<{ slug: st
                         <div className="rez-remaining-section">
                             <div className="rez-remaining-label">Girişte Ödenmesi Gereken</div>
                             <div className="rez-pricing-row">
-                                <span className="rez-advance-pct">%{100 - (villa.commission_rate ?? 20)} Kalan Ödeme</span>
+                                <span className="rez-advance-pct">%{100 - (villa.commission_pct ?? 20)} Kalan Ödeme</span>
                                 <span className="rez-pricing-val">₺{formatTR(remainingPayment)}</span>
                             </div>
                             <div className="rez-pricing-row">
