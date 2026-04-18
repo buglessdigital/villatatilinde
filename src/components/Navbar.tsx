@@ -461,12 +461,12 @@ export default function Navbar() {
                                                     className="middle bhs"
                                                     style={{
                                                         padding: "7px 14px",
-                                                        background: "#f4f5f7",
+                                                        background: "linear-gradient(135deg, #6772e5, #50b0f0)",
                                                         borderRadius: 32,
-                                                        border: "1px solid #dfdfe3aa",
+                                                        border: "none",
                                                         fontSize: 13,
                                                         fontWeight: 600,
-                                                        color: "#333",
+                                                        color: "#fff",
                                                     }}
                                                 >
                                                     Villamı Kiraya Vermek İstiyorum

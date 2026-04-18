@@ -12,6 +12,7 @@ interface BlogView {
     slug: string;
     subtitle: string;
     coverImage: string;
+    mobileCoverImage: string;
     dateReadable: string;
     readTime: string;
     tag: string;
@@ -36,6 +37,7 @@ export default function BloglarContent() {
                     slug: b.slug,
                     subtitle: b.subtitle || "",
                     coverImage: b.cover_image_url || "/images/sailing2.png",
+                    mobileCoverImage: b.mobile_image_url || b.cover_image_url || "/images/sailing2.png",
                     dateReadable: b.published_at
                         ? new Date(b.published_at).toLocaleDateString("tr-TR", {
                             day: "numeric", month: "long", year: "numeric",
@@ -257,7 +259,7 @@ export default function BloglarContent() {
                     gap: 10px;
                 }
 
-                @media (max-width: 768px) {
+                                @media (max-width: 768px) {
                     .blog-featured {
                         flex-direction: column;
                         min-height: auto;
@@ -267,6 +269,17 @@ export default function BloglarContent() {
                         height: 240px;
                         width: 100%;
                     }
+                    /* Mobilde desktop görseli gizle, mobil görseli göster */
+                    .blog-featured-img-desktop { display: none !important; }
+                    .blog-card-img-desktop { display: none !important; }
+                }
+                /* Varsayılan olarak mobil görselleri gizle */
+                .blog-featured-img-mobile,
+                .blog-card-img-mobile { display: none !important; }
+                @media (max-width: 768px) {
+                    /* Mobilde desktop görselleri gizle */
+                    .blog-featured-img-mobile { display: block !important; }
+                    .blog-card-img-mobile { display: block !important; }
                 }
             `}</style>
 
@@ -291,15 +304,38 @@ export default function BloglarContent() {
                             {/* Featured first blog */}
                             {page === 1 && pageBlogs[0] && (
                                 <Link href={`/blog/${pageBlogs[0].slug}`} className="blog-featured" style={{ marginTop: 32 }}>
-                                    <div className="blog-featured-img-wrap">
-                                        <Image
-                                            className="blog-featured-img"
-                                            src={pageBlogs[0].coverImage}
-                                            alt={pageBlogs[0].title}
-                                            fill
-                                            sizes="(max-width: 768px) 100vw, 55vw"
-                                            style={{ objectFit: "cover" }}
-                                        />
+                                                                <div className="blog-featured-img-wrap">
+                                        {pageBlogs[0].mobileCoverImage !== pageBlogs[0].coverImage ? (
+                                            <>
+                                                {/* Mobil görsel */}
+                                                <Image
+                                                    className="blog-featured-img blog-featured-img-mobile"
+                                                    src={pageBlogs[0].mobileCoverImage}
+                                                    alt={pageBlogs[0].title}
+                                                    fill
+                                                    sizes="100vw"
+                                                    style={{ objectFit: "cover" }}
+                                                />
+                                                {/* Web görsel */}
+                                                <Image
+                                                    className="blog-featured-img blog-featured-img-desktop"
+                                                    src={pageBlogs[0].coverImage}
+                                                    alt={pageBlogs[0].title}
+                                                    fill
+                                                    sizes="(max-width: 768px) 100vw, 55vw"
+                                                    style={{ objectFit: "cover" }}
+                                                />
+                                            </>
+                                        ) : (
+                                            <Image
+                                                className="blog-featured-img"
+                                                src={pageBlogs[0].coverImage}
+                                                alt={pageBlogs[0].title}
+                                                fill
+                                                sizes="(max-width: 768px) 100vw, 55vw"
+                                                style={{ objectFit: "cover" }}
+                                            />
+                                        )}
                                         <div style={{ position: "absolute", top: 16, left: 16 }}>
                                             <div style={{ background: "rgba(255,255,255,0.95)", color: "#10b981", fontSize: 11, fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase", padding: "4px 12px", borderRadius: 20 }}>
                                                 {pageBlogs[0].tag}
@@ -336,14 +372,35 @@ export default function BloglarContent() {
                                 {pageBlogs.slice(page === 1 ? 1 : 0).map((blog) => (
                                     <Link key={blog.id} href={`/blog/${blog.slug}`} className="blog-card-item">
                                         <div className="blog-img-wrap">
-                                            <Image
-                                                className="blog-card-img"
-                                                src={blog.coverImage}
-                                                alt={blog.title}
-                                                width={600}
-                                                height={230}
-                                                style={{ width: "100%", height: "230px", objectFit: "cover" }}
-                                            />
+                                            {blog.mobileCoverImage !== blog.coverImage ? (
+                                                <>
+                                                    <Image
+                                                        className="blog-card-img blog-card-img-mobile"
+                                                        src={blog.mobileCoverImage}
+                                                        alt={blog.title}
+                                                        width={600}
+                                                        height={230}
+                                                        style={{ width: "100%", height: "230px", objectFit: "cover" }}
+                                                    />
+                                                    <Image
+                                                        className="blog-card-img blog-card-img-desktop"
+                                                        src={blog.coverImage}
+                                                        alt={blog.title}
+                                                        width={600}
+                                                        height={230}
+                                                        style={{ width: "100%", height: "230px", objectFit: "cover" }}
+                                                    />
+                                                </>
+                                            ) : (
+                                                <Image
+                                                    className="blog-card-img"
+                                                    src={blog.coverImage}
+                                                    alt={blog.title}
+                                                    width={600}
+                                                    height={230}
+                                                    style={{ width: "100%", height: "230px", objectFit: "cover" }}
+                                                />
+                                            )}
                                             <div className="blog-card-tag">{blog.tag}</div>
                                         </div>
                                         <div className="blog-card-body">

@@ -4,101 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import DateRangePicker from "./DateRangePicker";
 
-/* ─── Location Data ─── */
-const LOCATIONS_LIST: Record<string, string> = {
-    Hepsi: "Hepsi",
-    kalkanAll: "Kalkan Tümü",
-    kalkanMerkez: "Kalkan Merkez",
-    kalkanKalamar: "Kalkan / Kalamar",
-    kalkanKomurluk: "Kalkan Kömürlük",
-    kalkanKisla: "Kalkan Kışla",
-    kalkanOrtaalan: "Kalkan Ortaalan",
-    kalkanKiziltas: "Kalkan Kızıltaş",
-    kalkanKaputas: "Kalkan Kaputaş",
-    kalkanPatara: "Kalkan Patara",
-    kalkanOrdu: "Kalkan Ordu",
-    kalkanUlugol: "Kalkan Ulugöl",
-    kalkanKordere: "Kalkan Kördere",
-    kalkanIslamlar: "Kalkan İslamlar",
-    kalkanUzumlu: "Kalkan Üzümlü",
-    kalkanBezirgan: "Kalkan Bezirgan",
-    kalkanSaribelen: "Kalkan Sarıbelen",
-    kalkanYesilkoy: "Kalkan Yeşilköy",
-    kalkanCavdir: "Kalkan Çavdır",
-    kasMerkez: "Kaş Merkez",
-    fethiyeMerkez: "Fethiye",
-    belekMerkez: "Belek",
-};
-
-/* Grouped for the dropdown display */
-interface LocationGroup {
-    header: string;
-    key: string;
-    bold?: boolean;
-    children?: { key: string; label: string }[];
-}
-
-const LOCATION_GROUPS: LocationGroup[] = [
-    { header: "Tüm Konumlar", key: "Hepsi", bold: true },
-    {
-        header: "Kalkan - Hepsi",
-        key: "kalkanAll",
-        bold: true,
-        children: [
-            { key: "kalkanMerkez", label: "Kalkan Merkez" },
-            { key: "kalkanKalamar", label: "Kalkan / Kalamar" },
-            { key: "kalkanKomurluk", label: "Kalkan / Kömürlük" },
-            { key: "kalkanKisla", label: "Kalkan / Kışla" },
-            { key: "kalkanOrtaalan", label: "Kalkan / Ortaalan" },
-            { key: "kalkanKiziltas", label: "Kalkan / Kızıltaş" },
-            { key: "kalkanKaputas", label: "Kalkan / Kaputaş" },
-            { key: "kalkanPatara", label: "Kalkan / Patara" },
-            { key: "kalkanOrdu", label: "Kalkan / Ordu" },
-            { key: "kalkanUlugol", label: "Kalkan / Ulugöl" },
-            { key: "kalkanKordere", label: "Kalkan / Kördere" },
-            { key: "kalkanIslamlar", label: "Kalkan / İslamlar" },
-            { key: "kalkanUzumlu", label: "Kalkan / Üzümlü" },
-            { key: "kalkanBezirgan", label: "Kalkan / Bezirgan" },
-            { key: "kalkanSaribelen", label: "Kalkan / Sarıbelen" },
-            { key: "kalkanYesilkoy", label: "Kalkan / Yeşilköy" },
-            { key: "kalkanCavdir", label: "Kalkan / Çavdır" },
-        ],
-    },
-    {
-        header: "",
-        key: "__divider",
-        children: [
-            { key: "kasMerkez", label: "Kaş Merkez" },
-            { key: "fethiyeMerkez", label: "Fethiye" },
-            { key: "belekMerkez", label: "Belek" },
-        ],
-    },
-];
-
-/* ─── Map SearchFilterBar keys → SonuclarContent keys ─── */
-const LOCATION_KEY_TO_FILTER: Record<string, string> = {
-    kalkanAll: "kalkan-merkez",
-    kalkanMerkez: "kalkan-merkez",
-    kalkanKalamar: "kalkan-kalamar",
-    kalkanKomurluk: "kalkan-komurluk",
-    kalkanKisla: "kalkan-kisla",
-    kalkanOrtaalan: "kalkan-ortaalan",
-    kalkanKiziltas: "kalkan-kiziltas",
-    kalkanKaputas: "kalkan-kaputas",
-    kalkanPatara: "kalkan-patara",
-    kalkanOrdu: "kalkan-ordu",
-    kalkanUlugol: "kalkan-ulugol",
-    kalkanKordere: "kalkan-kordere",
-    kalkanIslamlar: "kalkan-islamlar",
-    kalkanUzumlu: "kalkan-uzumlu",
-    kalkanBezirgan: "kalkan-bezirgan",
-    kalkanSaribelen: "kalkan-saribelen",
-    kalkanYesilkoy: "kalkan-yesilkoy",
-    kalkanCavdir: "kalkan-cavdir",
-    kasMerkez: "kas-merkez",
-    fethiyeMerkez: "fethiye",
-    belekMerkez: "belek",
-};
+import { supabase } from "@/lib/supabase";
 
 function toDateStr(d: Date): string {
     const y = d.getFullYear();
@@ -150,6 +56,43 @@ export default function SearchFilterBar({
         return new Date(y, m - 1, d);
     });
 
+    useEffect(() => {
+        setToLocation(initialLocation);
+    }, [initialLocation]);
+
+    useEffect(() => {
+        setToAdult(initialPeople);
+    }, [initialPeople]);
+
+    useEffect(() => {
+        if (initialCheckIn) {
+            const [y, m, d] = initialCheckIn.split("-").map(Number);
+            setSearchCheckIn(new Date(y, m - 1, d));
+        } else {
+            setSearchCheckIn(null);
+        }
+    }, [initialCheckIn]);
+
+    useEffect(() => {
+        if (initialCheckOut) {
+            const [y, m, d] = initialCheckOut.split("-").map(Number);
+            setSearchCheckOut(new Date(y, m - 1, d));
+        } else {
+            setSearchCheckOut(null);
+        }
+    }, [initialCheckOut]);
+
+    const [dbLocations, setDbLocations] = useState<{key: string, label: string}[]>([]);
+
+    useEffect(() => {
+        supabase.from("destinations").select("name, filter_param").eq("is_active", true).order("sort_order")
+            .then(({ data }) => {
+                if (data) {
+                    setDbLocations(data.map(d => ({ key: d.filter_param, label: d.name })));
+                }
+            });
+    }, []);
+
     /* ─── Refs ─── */
     const drop1Ref = useRef<HTMLDivElement>(null);
     const drop1BtnRef = useRef<HTMLDivElement>(null);
@@ -197,8 +140,7 @@ export default function SearchFilterBar({
 
         const params = new URLSearchParams();
         if (toLocation && toLocation !== "Hepsi") {
-            const filterKey = LOCATION_KEY_TO_FILTER[toLocation] || toLocation;
-            params.set("location", filterKey);
+            params.set("location", toLocation);
         }
         if (adultsChanged && toAdult > 0) {
             params.set("people", String(toAdult));
@@ -373,9 +315,9 @@ export default function SearchFilterBar({
                                 fontWeight: 500,
                             }}
                         >
-                            {toLocation
-                                ? LOCATIONS_LIST[toLocation] || "Konum Seçimi"
-                                : "Konum Seçimi"}
+                            {toLocation === "Hepsi" || !toLocation
+                                ? "Konum Seçimi"
+                                : dbLocations.find((l) => l.key === toLocation)?.label || "Konum Seçimi"}
                         </span>
                     </div>
 
@@ -386,84 +328,26 @@ export default function SearchFilterBar({
                         style={{ maxHeight: 400, overflowY: "auto" }}
                     >
                         <div style={{ paddingRight: 16 }}>
-                            {LOCATION_GROUPS.map((group, gi) => (
-                                <React.Fragment key={gi}>
-                                    {/* Group header */}
-                                    {group.key !== "__divider" && (
-                                        <>
-                                            <div
-                                                onClick={() =>
-                                                    handleLocationSelect(group.key)
-                                                }
-                                                className="bhbhbg middleft"
-                                                style={{
-                                                    padding: 12,
-                                                    borderRadius: 8,
-                                                }}
-                                            >
-                                                <div
-                                                    style={{
-                                                        fontSize: 16,
-                                                        fontWeight: group.bold ? 700 : 500,
-                                                    }}
-                                                >
-                                                    {group.header}
-                                                </div>
-                                            </div>
-                                            {gi === 0 && (
-                                                <div
-                                                    style={{
-                                                        borderBottom: "1px solid #eee",
-                                                        margin: "6px 12px",
-                                                    }}
-                                                />
-                                            )}
-                                        </>
-                                    )}
-
-                                    {/* Children */}
-                                    {group.children && (
-                                        <div
-                                            style={{
-                                                paddingLeft: group.key !== "__divider" ? 12 : 0,
-                                            }}
-                                        >
-                                            {group.children.map((child) => (
-                                                <div
-                                                    key={child.key}
-                                                    onClick={() =>
-                                                        handleLocationSelect(child.key)
-                                                    }
-                                                    className="bhbhbg middleft"
-                                                    style={{
-                                                        padding: 12,
-                                                        borderRadius: 8,
-                                                    }}
-                                                >
-                                                    <div
-                                                        style={{
-                                                            fontSize: 16,
-                                                            fontWeight: 500,
-                                                        }}
-                                                    >
-                                                        {child.label}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    {/* Divider after Kalkan group */}
-                                    {gi === 1 && (
-                                        <div
-                                            style={{
-                                                borderBottom: "1px solid #eee",
-                                                margin: "6px 12px",
-                                            }}
-                                        />
-                                    )}
-                                </React.Fragment>
-                            ))}
+                            <div
+                                onClick={() => handleLocationSelect("Hepsi")}
+                                className="bhbhbg middleft"
+                                style={{ padding: 12, borderRadius: 8 }}
+                            >
+                                <div style={{ fontSize: 16, fontWeight: 700 }}>Tüm Konumlar</div>
+                            </div>
+                            <div style={{ borderBottom: "1px solid #eee", margin: "6px 12px" }} />
+                            <div style={{ paddingLeft: 12 }}>
+                                {dbLocations.map((loc) => (
+                                    <div
+                                        key={loc.key}
+                                        onClick={() => handleLocationSelect(loc.key)}
+                                        className="bhbhbg middleft"
+                                        style={{ padding: 12, borderRadius: 8 }}
+                                    >
+                                        <div style={{ fontSize: 16, fontWeight: 500 }}>{loc.label}</div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>

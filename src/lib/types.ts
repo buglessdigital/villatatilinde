@@ -202,6 +202,7 @@ export interface DbBlog {
     subtitle: string | null;
     author: string;
     cover_image_url: string | null;
+    mobile_image_url: string | null;
     tags: string[];
     content_html: string | null;
     read_time_min: number | null;

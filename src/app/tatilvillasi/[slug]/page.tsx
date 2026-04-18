@@ -938,7 +938,7 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
 
                                 return (
                                     <div className="vd-video-placeholder">
-                                        <img src={villa.coverImage} alt={villa.name} className="vd-video-cover" />
+                                        <img src={villa.coverImage || "/images/natureview.jpg"} alt={villa.name} className="vd-video-cover" />
                                         <div className="vd-video-text">Villa Videosu Hazırlanıyor</div>
                                     </div>
                                 );

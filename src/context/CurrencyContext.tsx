@@ -59,46 +59,45 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
 
         async function fetchRates() {
             try {
-                // Using exchangerate-api.com (free, 1500 requests / month)
-                // Base currency: TRY – get all conversion rates from TRY
+                // Primary: Highly reliable CDN-based currency API
                 const res = await fetch(
-                    "https://open.er-api.com/v6/latest/TRY"
+                    "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/try.json"
                 );
 
-                if (!res.ok) {
-                    // Try alternative free API
-                    const altRes = await fetch(
-                        "https://api.exchangerate.host/latest?base=TRY&symbols=EUR,USD,GBP,RUB"
-                    );
-                    if (altRes.ok) {
-                        const altData = await altRes.json();
-                        if (!cancelled && altData.rates) {
-                            setRates({
-                                TRY: 1,
-                                EUR: altData.rates.EUR || FALLBACK_RATES.EUR,
-                                USD: altData.rates.USD || FALLBACK_RATES.USD,
-                                GBP: altData.rates.GBP || FALLBACK_RATES.GBP,
-                                RUB: altData.rates.RUB || FALLBACK_RATES.RUB,
-                            });
-                        }
+                if (res.ok) {
+                    const data = await res.json();
+                    if (!cancelled && data.try) {
+                        setRates({
+                            TRY: 1,
+                            EUR: data.try.eur || FALLBACK_RATES.EUR,
+                            USD: data.try.usd || FALLBACK_RATES.USD,
+                            GBP: data.try.gbp || FALLBACK_RATES.GBP,
+                            RUB: data.try.rub || FALLBACK_RATES.RUB,
+                        });
+                        return;
                     }
-                    return;
                 }
 
-                const data = await res.json();
-
-                if (!cancelled && data.rates) {
-                    setRates({
-                        TRY: 1,
-                        EUR: data.rates.EUR || FALLBACK_RATES.EUR,
-                        USD: data.rates.USD || FALLBACK_RATES.USD,
-                        GBP: data.rates.GBP || FALLBACK_RATES.GBP,
-                        RUB: data.rates.RUB || FALLBACK_RATES.RUB,
-                    });
+                // Secondary Fallback: open.er-api.com
+                const altRes = await fetch("https://open.er-api.com/v6/latest/TRY");
+                if (altRes.ok) {
+                    const altData = await altRes.json();
+                    if (!cancelled && altData.rates) {
+                        setRates({
+                            TRY: 1,
+                            EUR: altData.rates.EUR || FALLBACK_RATES.EUR,
+                            USD: altData.rates.USD || FALLBACK_RATES.USD,
+                            GBP: altData.rates.GBP || FALLBACK_RATES.GBP,
+                            RUB: altData.rates.RUB || FALLBACK_RATES.RUB,
+                        });
+                        return;
+                    }
                 }
-            } catch {
+
+                throw new Error("Tüm kur API'leri yanıt vermedi.");
+            } catch (error) {
                 // Use fallback rates silently
-                console.warn("Exchange rate API failed, using fallback rates.");
+                console.warn("Exchange rate API failed, using fallback rates:", error);
             } finally {
                 if (!cancelled) setLoading(false);
             }

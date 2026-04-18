@@ -330,14 +330,18 @@ export async function getDestinations(): Promise<DbDestination[]> {
     if (error || !destinations) return [];
 
     try {
-        const { data: activeVillas } = await supabase
+        // Her destination için yayınlanmış villa sayısını UUID ile eşleştir
+        const destinationIds = destinations.map(d => d.id);
+
+        const { data: villaCounts } = await supabase
             .from('villas')
             .select('destination_id')
-            .eq('is_published', true);
+            .eq('is_published', true)
+            .in('destination_id', destinationIds);
 
-        if (activeVillas) {
+        if (villaCounts) {
             const counts: Record<string, number> = {};
-            activeVillas.forEach(v => {
+            villaCounts.forEach(v => {
                 if (v.destination_id) {
                     counts[v.destination_id] = (counts[v.destination_id] || 0) + 1;
                 }
@@ -351,7 +355,7 @@ export async function getDestinations(): Promise<DbDestination[]> {
         console.error("Destinasyon sayıları hesaplanırken hata:", err);
     }
 
-    return destinations;
+    return destinations.map(d => ({ ...d, villa_count: 0 }));
 }
 
 /* ═══════════════════════════════════════════════════════════

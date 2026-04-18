@@ -25,6 +25,7 @@ interface VillaForm {
     pool_depth: number;
     min_price: number;
     cover_image_url: string;
+    destination_id: string | null;
     description_tr: string;
     summary_tr: string;
     deposit_amount: number;
@@ -66,6 +67,7 @@ interface VillaForm {
     map_iframe_url: string;
     video_url: string;
     currency: string;
+    commission_rate: number;
 }
 
 interface PricePeriod {
@@ -106,6 +108,7 @@ const emptyForm: VillaForm = {
     pool_depth: 0,
     min_price: 0,
     cover_image_url: "",
+    destination_id: null,
     description_tr: "",
     summary_tr: "",
     deposit_amount: 0,
@@ -147,6 +150,7 @@ const emptyForm: VillaForm = {
     map_iframe_url: "",
     video_url: "",
     currency: "TRY",
+    commission_rate: 20,
 };
 
 const emptyPeriod = {
@@ -251,6 +255,7 @@ export default function VillaEditPage() {
             pool_depth: data.pool_depth || 0,
             min_price: data.min_price || 0,
             cover_image_url: data.cover_image_url || "",
+            destination_id: data.destination_id || null,
             description_tr: data.description_tr || "",
             summary_tr: data.summary_tr || "",
             deposit_amount: data.deposit_amount || 0,
@@ -292,6 +297,7 @@ export default function VillaEditPage() {
             map_iframe_url: data.map_iframe_url || "",
             video_url: data.video_urls && data.video_urls.length > 0 ? data.video_urls[0] : "",
             currency: data.currency || "TRY",
+            commission_rate: data.commission_rate ?? 20,
         });
 
         setIncludedServices(data.included_services || []);
@@ -349,9 +355,23 @@ export default function VillaEditPage() {
             setError("Bitiş tarihi başlangıç tarihinden önce olamaz.");
             return;
         }
-        setAddingDisabled(true);
         setError("");
-        
+
+        // isNew modunda: DB'ye yazmadan local state'e ekle
+        if (isNew) {
+            const tempId = `temp-${Date.now()}`;
+            setDisabledDates(prev => [...prev, {
+                id: tempId,
+                villa_id: "",
+                start_date: newDisabled.start_date,
+                end_date: newDisabled.end_date,
+                notes: newDisabled.notes || null,
+            }]);
+            setNewDisabled({ start_date: "", end_date: "", notes: "" });
+            return;
+        }
+
+        setAddingDisabled(true);
         const payload: Record<string, any> = {
             villa_id: villaId,
             start_date: newDisabled.start_date,
@@ -375,6 +395,11 @@ export default function VillaEditPage() {
     }
 
     async function deleteDisabledDate(id: string) {
+        // isNew modunda sadece local state'ten kaldır
+        if (isNew || id.startsWith("temp-")) {
+            setDisabledDates(prev => prev.filter(d => d.id !== id));
+            return;
+        }
         if (!confirm("Bu tarih kapatılmasını silmek istediğinizden emin misiniz?")) return;
         await supabase.from("villa_disabled_dates").delete().eq("id", id);
         setDisabledDates(prev => prev.filter(d => d.id !== id));
@@ -485,7 +510,7 @@ export default function VillaEditPage() {
         }
     }
 
-    function updateField(field: keyof VillaForm, value: string | number | boolean) {
+    function updateField(field: keyof VillaForm, value: string | number | boolean | null) {
         setForm((prev) => ({ ...prev, [field]: value }));
     }
 
@@ -573,6 +598,8 @@ export default function VillaEditPage() {
             included_services: includedServices,
             video_urls: form.video_url ? [form.video_url] : [],
             currency: form.currency,
+            commission_rate: safeNumeric52(form.commission_rate),
+            destination_id: form.destination_id || null,
         };
 
         if (isNew) {
@@ -599,6 +626,16 @@ export default function VillaEditPage() {
                     const prices = pricePeriods.map(p => Number(p.nightly_price));
                     const minP = Math.min(...prices);
                     await supabase.from("villas").update({ min_price: minP }).eq("id", newVilla.id);
+                }
+                // Save disabled dates that were added locally
+                if (disabledDates.length > 0) {
+                    const disabledInserts = disabledDates.map(d => ({
+                        villa_id: newVilla.id,
+                        start_date: d.start_date,
+                        end_date: d.end_date,
+                        ...(d.notes ? { notes: d.notes } : {}),
+                    }));
+                    await supabase.from("villa_disabled_dates").insert(disabledInserts);
                 }
                 setSuccess("Villa başarıyla eklendi!");
                 setTimeout(() => router.push("/admin/villalar"), 1000);
@@ -759,12 +796,12 @@ export default function VillaEditPage() {
                     <FormField label="Destinasyon (Tatil Yeri)" width="50%">
                         <select
                             style={inputStyle}
-                            value={form.location_label}
-                            onChange={(e) => updateField("location_label", e.target.value)}
+                            value={form.destination_id || ""}
+                            onChange={(e) => updateField("destination_id", e.target.value || null)}
                         >
                             <option value="">-- Destinasyon Seçin --</option>
                             {allDestinations.map(dest => (
-                                <option key={dest.id} value={dest.name}>
+                                <option key={dest.id} value={dest.id}>
                                     {dest.name}
                                 </option>
                             ))}
@@ -780,7 +817,7 @@ export default function VillaEditPage() {
                     </FormField>
                 </FormRow>
                 <FormRow>
-                    <FormField label="" width="100%">
+                                    <FormField label="" width="100%">
                         <ImageUploader
                             value={form.cover_image_url}
                             onChange={(url) => updateField("cover_image_url", url)}
@@ -788,6 +825,15 @@ export default function VillaEditPage() {
                             folder="villas"
                             label="Kapak Görseli"
                             addWatermark={true}
+                            hint={
+                                <span>
+                                    • <strong>Boyut:</strong> En az <strong>1200 × 800 px</strong> önerilir<br />
+                                    • <strong>Oran:</strong> 3:2 veya 16:9 ideal<br />
+                                    • <strong>Format:</strong> JPG, PNG, WebP<br />
+                                    • <strong>Maks. dosya:</strong> 10 MB<br />
+                                    Bu gürsel arama sonuçları ve liste kartlarında ana fotoğraf olarak çıkar.
+                                </span>
+                            }
                         />
                     </FormField>
                 </FormRow>
@@ -802,7 +848,7 @@ export default function VillaEditPage() {
                     </FormField>
                 </FormRow>
                 <FormRow>
-                    <FormField label="" width="100%">
+                                    <FormField label="" width="100%">
                         <div style={{ marginTop: 24, padding: "16px", background: "#f8fafc", borderRadius: 12, border: "1px dashed #cbd5e1" }}>
                             <MultiImageUploader
                                 images={galleryImages}
@@ -811,6 +857,16 @@ export default function VillaEditPage() {
                                 folder="villas"
                                 label="Diğer Görseller (Galeri)"
                                 addWatermark={true}
+                                hint={
+                                    <span>
+                                        • <strong>Boyut:</strong> En az <strong>1200 × 800 px</strong> önerilir<br />
+                                        • <strong>Oran:</strong> 3:2 veya 16:9 ideal<br />
+                                        • <strong>Format:</strong> JPG, PNG, WebP (otomatik çevrilir)<br />
+                                        • <strong>Maks. dosya:</strong> 10 MB / görsel<br />
+                                        • Birden fazla görsel aynı anda yüklenebilir.<br />
+                                        • Sıralama: sürükleme ile değiştirilebilir.
+                                    </span>
+                                }
                             />
                         </div>
                     </FormField>
@@ -880,6 +936,36 @@ export default function VillaEditPage() {
                     </FormField>
                     <FormField label="Temizlik İçin Min. Gece Sınırı" width="33%">
                         <input type="number" style={inputStyle} value={form.cleaning_fee_min_nights} onChange={(e) => updateField("cleaning_fee_min_nights", +e.target.value)} title="Şu kadar geceden az tutulursa temizlik ücreti alınır" />
+                    </FormField>
+                </FormRow>
+                <FormRow>
+                    <FormField label="Komisyon Oranı (%)" width="50%">
+                        <input
+                            type="number"
+                            style={inputStyle}
+                            value={form.commission_rate}
+                            onChange={(e) => updateField("commission_rate", +e.target.value)}
+                            min={0}
+                            max={100}
+                            step={1}
+                            placeholder="Örn: 30"
+                            title="Bu villanın ön ödeme yüzdesi olarak kullanılır"
+                        />
+                    </FormField>
+                    <FormField label="Ön Ödeme Tutarı (Önizleme)" width="50%">
+                        <div style={{
+                            ...inputStyle,
+                            background: "#f8fafc",
+                            color: form.min_price > 0 ? "#0f766e" : "#94a3b8",
+                            fontWeight: 600,
+                            display: "flex",
+                            alignItems: "center",
+                            cursor: "not-allowed",
+                        }}>
+                            {form.min_price > 0 && form.commission_rate > 0
+                                ? `${(form.min_price * (form.commission_rate / 100)).toLocaleString("tr-TR", { maximumFractionDigits: 2 })} ${form.currency} (%${form.commission_rate} × Min. Fiyat)`
+                                : "—"}
+                        </div>
                     </FormField>
                 </FormRow>
             </Section>
@@ -1261,7 +1347,6 @@ export default function VillaEditPage() {
                 </Section>
 
             {/* ── Kapalı Tarihler ── */}
-            {!isNew && (
             <Section title="🚫 Tarih Kapatma (Uygun Olmayan Günler)">
                 <p style={{ color: "#64748b", fontSize: 13, marginBottom: 16 }}>
                     Rezervasyona kapatılmasını istediğiniz tarih aralıklarını buradan belirleyin. Bu tarihler sitede seçilemez olarak görünecektir.
@@ -1285,14 +1370,14 @@ export default function VillaEditPage() {
                                     const days = Math.ceil((new Date(d.end_date).getTime() - new Date(d.start_date).getTime()) / 86400000) + 1;
                                     return (
                                         <tr key={d.id} style={{ borderBottom: "1px solid #f1f5f9", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
-                                            <td style={{ padding: "10px 12px", color: "#dc2626", fontWeight: 600 }}>{d.start_date}</td>
-                                            <td style={{ padding: "10px 12px", color: "#dc2626", fontWeight: 600 }}>{d.end_date}</td>
+                                            <td style={{ padding: "10px 12px", color: "#1e293b", fontWeight: 500 }}>{d.start_date}</td>
+                                            <td style={{ padding: "10px 12px", color: "#1e293b", fontWeight: 500 }}>{d.end_date}</td>
                                             <td style={{ padding: "10px 12px", color: "#64748b" }}>{d.notes || d.reason || <span style={{ color: "#cbd5e1" }}>—</span>}</td>
                                             <td style={{ padding: "10px 12px", color: "#64748b" }}>{days} gün</td>
                                             <td style={{ padding: "10px 12px", textAlign: "right" }}>
                                                 <button
                                                     onClick={() => deleteDisabledDate(d.id)}
-                                                    style={{ padding: "4px 12px", borderRadius: 6, border: "1px solid #fee2e2", background: "#fff", color: "#dc2626", fontSize: 12, cursor: "pointer" }}
+                                                    style={{ padding: "4px 12px", borderRadius: 6, border: "1px solid #e2e8f0", background: "#fff", color: "#64748b", fontSize: 12, cursor: "pointer" }}
                                                 >
                                                     Sil
                                                 </button>
@@ -1374,7 +1459,6 @@ export default function VillaEditPage() {
                 </div>
 
             </Section>
-            )}
 
             {/* ── Kurallar ── */}
             <Section title="Villa Kuralları">

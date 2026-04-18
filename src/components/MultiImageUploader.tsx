@@ -14,6 +14,7 @@ interface MultiImageUploaderProps {
     bucket?: string;
     folder?: string;
     label?: string;
+    hint?: React.ReactNode;   // optional tooltip content shown next to label
     addWatermark?: boolean;
 }
 
@@ -23,8 +24,10 @@ export default function MultiImageUploader({
     bucket = "images",
     folder = "villas",
     label = "Galeri Görselleri",
+    hint,
     addWatermark = false,
 }: MultiImageUploaderProps) {
+    const [hintVisible, setHintVisible] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [dragOver, setDragOver] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -134,9 +137,46 @@ export default function MultiImageUploader({
 
     return (
         <div>
-            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#475569", marginBottom: 8 }}>
-                {label} (Sıralamak için sürükleyip bırakın)
-            </label>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#475569" }}>
+                    {label} (Sıralamak için sürükleyip bırakın)
+                </label>
+                {hint && (
+                    <div style={{ position: "relative", display: "inline-flex" }}>
+                        <button
+                            type="button"
+                            onMouseEnter={() => setHintVisible(true)}
+                            onMouseLeave={() => setHintVisible(false)}
+                            onClick={() => setHintVisible(v => !v)}
+                            style={{
+                                width: 18, height: 18, borderRadius: "50%",
+                                background: "#3b82f6", border: "none",
+                                color: "white", fontSize: 11, fontWeight: 700,
+                                cursor: "pointer", display: "flex", alignItems: "center",
+                                justifyContent: "center", flexShrink: 0, lineHeight: 1,
+                                padding: 0,
+                            }}
+                            title="Görsel boyut bilgisi"
+                        >
+                            ?
+                        </button>
+                        {hintVisible && (
+                            <div style={{
+                                position: "absolute", top: "calc(100% + 8px)", left: 0,
+                                background: "#1e293b", color: "#f1f5f9",
+                                borderRadius: 8, padding: "10px 14px",
+                                fontSize: 12, lineHeight: 1.6,
+                                width: 270, zIndex: 99999,
+                                boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+                                pointerEvents: "none",
+                            }}>
+                                <div style={{ fontWeight: 700, color: "#60a5fa", marginBottom: 6, fontSize: 12 }}>📐 Önerilen Görsel Boyutları</div>
+                                {hint}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
                 {images.map((img, i) => (

@@ -28,7 +28,22 @@ export default function AdminDestinasyonlar() {
 
     async function loadDestinations() {
         const { data } = await supabase.from("destinations").select("*").order("sort_order");
-        if (data) setDestinations(data);
+        if (!data) { setLoading(false); return; }
+
+        // Villa sayılarını UUID ile eşleştir
+        const destIds = data.map((d: DestinationRow) => d.id);
+        const { data: villaCounts } = await supabase
+            .from("villas")
+            .select("destination_id")
+            .eq("is_published", true)
+            .in("destination_id", destIds);
+
+        const counts: Record<string, number> = {};
+        (villaCounts || []).forEach((v: { destination_id: string | null }) => {
+            if (v.destination_id) counts[v.destination_id] = (counts[v.destination_id] || 0) + 1;
+        });
+
+        setDestinations(data.map((d: DestinationRow) => ({ ...d, villa_count: counts[d.id] || 0 })));
         setLoading(false);
     }
 

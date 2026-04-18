@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 // Calendar Helpers
 const MONTH_NAMES_TR = [
@@ -73,6 +74,16 @@ export default function MobileFilterModal({ isOpen, onClose }: MobileFilterModal
     const [minScore, setMinScore] = useState<number | null>(null);
     const [selectedLocation, setSelectedLocation] = useState<string>("");
     const [isLocationOpen, setIsLocationOpen] = useState(false);
+    const [dbLocations, setDbLocations] = useState<{value: string, label: string}[]>([]);
+
+    React.useEffect(() => {
+        supabase.from("destinations").select("name, filter_param").eq("is_active", true).order("sort_order")
+            .then(({ data }) => {
+                if (data) {
+                    setDbLocations([{ value: "", label: "Tüm Konumlar" }, ...data.map(d => ({ value: d.filter_param, label: d.name }))]);
+                }
+            });
+    }, []);
 
     // Price state
     const [minPrice, setMinPrice] = useState(1000);
@@ -166,27 +177,10 @@ export default function MobileFilterModal({ isOpen, onClose }: MobileFilterModal
         );
     };
 
-    const locationOptions = [
-        { label: "Tüm Konumlar", value: "", isBold: true },
-        { label: "Kalkan - Hepsi", value: "kalkan", isBold: true },
-        { label: "Kalkan Merkez", value: "kalkan-merkez", isBold: false },
-        { label: "Kalkan / Kalamar", value: "kalkan-kalamar", isBold: false },
-        { label: "Kalkan / Kömürlük", value: "kalkan-komurluk", isBold: false },
-        { label: "Kalkan / Kışla", value: "kalkan-kisla", isBold: false },
-        { label: "Kalkan / Ortaalan", value: "kalkan-ortaalan", isBold: false },
-        { label: "Kalkan / Kızıltaş", value: "kalkan-kiziltas", isBold: false },
-        { label: "Kalkan / Kaputaş", value: "kalkan-kaputas", isBold: false },
-        { label: "Kalkan / Patara", value: "kalkan-patara", isBold: false },
-        { label: "Kalkan / Ordu", value: "kalkan-ordu", isBold: false },
-        { label: "Kalkan / Ulugöl", value: "kalkan-ulugol", isBold: false },
-        { label: "Kalkan / Kördere", value: "kalkan-kordere", isBold: false },
-        { label: "Kalkan / İslamlar", value: "kalkan-islamlar", isBold: false },
-    ];
-
     const getLocLabel = (val: string) => {
         if (!val) return "Hepsi";
-        const found = locationOptions.find(o => o.value === val);
-        return found ? found.label.replace(" - Hepsi", "") : "Hepsi";
+        const found = dbLocations.find(o => o.value === val);
+        return found ? found.label : "Hepsi";
     };
 
     const poolTags = [
@@ -348,7 +342,7 @@ export default function MobileFilterModal({ isOpen, onClose }: MobileFilterModal
                             }} />
 
                             <div style={{ position: "relative", zIndex: 12 }}>
-                                {locationOptions.map((loc, idx) => (
+                                {dbLocations.map((loc, idx) => (
                                     <div
                                         key={idx}
                                         onClick={() => {
@@ -358,8 +352,8 @@ export default function MobileFilterModal({ isOpen, onClose }: MobileFilterModal
                                         style={{
                                             padding: "14px 24px",
                                             fontSize: 15,
-                                            fontWeight: loc.isBold ? 700 : 500,
-                                            color: loc.isBold ? "#111" : "#444",
+                                            fontWeight: loc.value === "" ? 700 : 500,
+                                            color: loc.value === "" ? "#111" : "#444",
                                             cursor: "pointer",
                                             background: selectedLocation === loc.value ? "#f8f9fa" : "transparent"
                                         }}

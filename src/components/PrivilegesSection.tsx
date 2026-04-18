@@ -13,6 +13,7 @@ interface Promotion {
     description: string;
     image_url: string;
     external_url: string;
+    category: string;
     is_active: boolean;
     sort_order: number;
 }
@@ -253,50 +254,66 @@ export default function PrivilegesSection() {
                 className="privileges-grid"
                 onScroll={handleScroll}
             >
-                {infiniteCards.map((card, i) => (
-                    <div key={i} className="privilege-item">
-                        <Link href={card.external_url || `/promosyon/${card.slug}`} style={{ textDecoration: "none" }}>
-                            <div className="privilege-card-inner bhs">
-                                <img
-                                    src={card.image_url}
+                {infiniteCards.map((card, i) => {
+                    const href = card.external_url
+                        ? card.external_url
+                        : card.category
+                        ? `/promosyonlar/kategori/${encodeURIComponent(card.category)}`
+                        : null;
+
+                    const cardInner = (
+                        <div className="privilege-card-inner bhs" style={{ cursor: href ? "pointer" : "default" }}>
+                            <img
+                                src={card.image_url}
+                                style={{
+                                    height: 88,
+                                    width: 120,
+                                    borderRadius: 14,
+                                    flexShrink: 0,
+                                    objectFit: "cover" as const,
+                                    padding: "2px 2px 2px 3px",
+                                }}
+                                alt={card.title}
+                            />
+                            <div style={{ marginLeft: 12, flex: 1, overflow: "hidden" }}>
+                                <div
+                                    className="oneLine"
                                     style={{
-                                        height: 88,
-                                        width: 120,
-                                        borderRadius: 14,
-                                        flexShrink: 0,
-                                        objectFit: "cover" as const,
-                                        padding: "2px 2px 2px 3px",
+                                        fontSize: 16,
+                                        fontWeight: 400,
+                                        color: "#111",
+                                        marginBottom: 6
                                     }}
-                                    alt={card.title}
-                                />
-                                <div style={{ marginLeft: 12, flex: 1, overflow: "hidden" }}>
-                                    <div
-                                        className="oneLine"
-                                        style={{
-                                            fontSize: 16,
-                                            fontWeight: 400,
-                                            color: "#111",
-                                            marginBottom: 6
-                                        }}
-                                    >
-                                        <strong>{card.title}</strong> {card.discount_text}
-                                    </div>
-                                    <div
-                                        className="twoLine"
-                                        style={{
-                                            fontSize: 14,
-                                            fontWeight: 400,
-                                            color: "#555",
-                                            lineHeight: 1.4
-                                        }}
-                                    >
-                                        {card.description}
-                                    </div>
+                                >
+                                    <strong>{card.title}</strong> {card.discount_text}
+                                </div>
+                                <div
+                                    className="twoLine"
+                                    style={{
+                                        fontSize: 14,
+                                        fontWeight: 400,
+                                        color: "#555",
+                                        lineHeight: 1.4
+                                    }}
+                                >
+                                    {card.description}
                                 </div>
                             </div>
-                        </Link>
-                    </div>
-                ))}
+                        </div>
+                    );
+
+                    return (
+                        <div key={i} className="privilege-item">
+                            {href ? (
+                                <Link href={href} target={card.external_url ? "_blank" : "_self"} rel={card.external_url ? "noopener noreferrer" : ""} style={{ textDecoration: "none" }}>
+                                    {cardInner}
+                                </Link>
+                            ) : (
+                                cardInner
+                            )}
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

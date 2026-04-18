@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import CookieBanner from "@/components/CookieBanner";
 
 export default function SiteShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -43,6 +44,7 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
             {children}
             <MobileBottomNav />
             <Footer />
+            <CookieBanner />
         </>
     );
 }

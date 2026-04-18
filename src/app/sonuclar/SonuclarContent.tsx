@@ -602,6 +602,18 @@ function SonuclarInner() {
         getUnavailableVillaIds(checkInParam, checkOutParam).then(setUnavailableIds).catch(() => setUnavailableIds(new Set()));
     }, [checkInParam, checkOutParam]);
 
+    const [dbLocations, setDbLocations] = useState<{key: string, label: string}[]>([]);
+    useEffect(() => {
+        import("@/lib/supabase").then(({ supabase }) => {
+            supabase.from("destinations").select("name, filter_param").eq("is_active", true).order("sort_order")
+                .then(({ data }) => {
+                    if (data) {
+                        setDbLocations(data.map(d => ({ key: d.filter_param, label: d.name })));
+                    }
+                });
+        });
+    }, []);
+
     /* Filtering */
     const filteredVillas = useMemo(() => {
         let result = [...allVillas];
@@ -732,25 +744,12 @@ function SonuclarInner() {
 
                 {/* Konum */}
                 <div className={`${styles.sectionTitle} poppins`}>Konum</div>
-                <div style={{ marginTop: "16px" }}>
-                    {kalkanLocationsInitial.map((loc) => (
-                        <div key={loc} style={{ marginTop: "6px" }}>
-                            <Checkbox checked={selectedLocations.includes(loc)} onChange={() => toggleLocation(loc)} label={locationsList[loc]} />
+                <div style={{ marginTop: "16px", maxHeight: "250px", overflowY: "auto" }}>
+                    {dbLocations.map((loc) => (
+                        <div key={loc.key} style={{ marginTop: "6px" }}>
+                            <Checkbox checked={selectedLocations.includes(loc.key)} onChange={() => toggleLocation(loc.key)} label={loc.label} />
                         </div>
                     ))}
-                    {showMoreLoc && kalkanLocationsExtra.map((loc) => (
-                        <div key={loc} style={{ marginTop: "6px" }}>
-                            <Checkbox checked={selectedLocations.includes(loc)} onChange={() => toggleLocation(loc)} label={locationsList[loc]} />
-                        </div>
-                    ))}
-                    {otherLocations.map((loc) => (
-                        <div key={loc} style={{ marginTop: "6px" }}>
-                            <Checkbox checked={selectedLocations.includes(loc)} onChange={() => toggleLocation(loc)} label={locationsList[loc]} />
-                        </div>
-                    ))}
-                    <div onClick={() => setShowMoreLoc(!showMoreLoc)} className={`${styles.moreToggle} dm-sans`}>
-                        Daha {showMoreLoc ? "Az ▲" : "Fazla ▼"}
-                    </div>
                 </div>
 
                 {/* Havuz */}
@@ -824,33 +823,7 @@ function SonuclarInner() {
                             {/* Filter Bar */}
                             <div className="middle" style={{ paddingBottom: 32 }}>
                                 <SearchFilterBar
-                                    initialLocation={(() => {
-                                        // Reverse map filter slug back to SearchFilterBar key
-                                        const reverseMap: Record<string, string> = {
-                                            "kalkan-merkez": "kalkanMerkez",
-                                            "kalkan-kalamar": "kalkanKalamar",
-                                            "kalkan-komurluk": "kalkanKomurluk",
-                                            "kalkan-kisla": "kalkanKisla",
-                                            "kalkan-ortaalan": "kalkanOrtaalan",
-                                            "kalkan-kiziltas": "kalkanKiziltas",
-                                            "kalkan-kaputas": "kalkanKaputas",
-                                            "kalkan-patara": "kalkanPatara",
-                                            "kalkan-ordu": "kalkanOrdu",
-                                            "kalkan-ulugol": "kalkanUlugol",
-                                            "kalkan-kordere": "kalkanKordere",
-                                            "kalkan-islamlar": "kalkanIslamlar",
-                                            "kalkan-uzumlu": "kalkanUzumlu",
-                                            "kalkan-bezirgan": "kalkanBezirgan",
-                                            "kalkan-saribelen": "kalkanSaribelen",
-                                            "kalkan-yesilkoy": "kalkanYesilkoy",
-                                            "kalkan-cavdir": "kalkanCavdir",
-                                            "kas-merkez": "kasMerkez",
-                                            "fethiye": "fethiyeMerkez",
-                                            "belek": "belekMerkez",
-                                        };
-                                        const firstLoc = initialLocations[0] || "";
-                                        return reverseMap[firstLoc] || firstLoc;
-                                    })()}
+                                    initialLocation={initialLocations[0] || ""}
                                     initialPeople={initialPeople}
                                     initialCheckIn={checkInParam || undefined}
                                     initialCheckOut={checkOutParam || undefined}

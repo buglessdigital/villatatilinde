@@ -67,12 +67,12 @@ export default function Footer() {
                             </Link>
                             <div style={{ marginTop: 4 }}>
                                 <img
-                                    src="/images/prl2.jpeg"
+                                    src="/images/prl2.png"
                                     alt="Praedium Group"
                                     style={{
                                         width: 250,
                                         height: "auto",
-                                        border: "1px solid #dfdfe3aa",
+                                        mixBlendMode: "lighten",
                                     }}
                                 />
                             </div>
@@ -83,36 +83,45 @@ export default function Footer() {
                                     style={{
                                         width: 250,
                                         height: "auto",
-                                        border: "1px solid #dfdfe3aa",
+                                        mixBlendMode: "lighten",
                                     }}
                                 />
                             </div>
                         </div>
-                        <div style={{ marginTop: 24, display: "flex", gap: "16px", alignItems: "center", marginBottom: 20 }}>
-                            <a
-                                href="https://www.tursab.org.tr/tr/ddsv"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{ display: "block" }}
-                            >
+                        <div style={{ marginTop: 24, marginBottom: 20 }}>
+                            <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+                                <a
+                                    href="https://www.tursab.org.tr/tr/ddsv"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ display: "block" }}
+                                >
+                                    <img
+                                        src="/images/tursab-dds-18069.png"
+                                        alt="TURSAB DDS 18069"
+                                        style={{ width: 180, height: "auto", borderRadius: 8 }}
+                                    />
+                                </a>
+                                <a
+                                    href="https://etbis.eticaret.gov.tr/sitedogrulama/5073561215243103"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ display: "block" }}
+                                >
+                                    <img
+                                        src="/images/etbis.jpeg"
+                                        alt="ETBİS'e Kayıtlıdır"
+                                        style={{ width: 80, height: "auto" }}
+                                    />
+                                </a>
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "center", width: 276, marginTop: 16 }}>
                                 <img
-                                    src="/images/tursab-dds-18069.png"
-                                    alt="TURSAB DDS 18069"
-                                    style={{ width: 180, height: "auto", borderRadius: 8 }}
+                                    src="/images/tescil.png"
+                                    alt="Marka Tescil"
+                                    style={{ width: 160, height: "auto", borderRadius: 8 }}
                                 />
-                            </a>
-                            <a
-                                href="https://etbis.eticaret.gov.tr/sitedogrulama/5073561215243103"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{ display: "block" }}
-                            >
-                                <img
-                                    src="/images/etbis.jpeg"
-                                    alt="ETBİS'e Kayıtlıdır"
-                                    style={{ width: 80, height: "auto" }}
-                                />
-                            </a>
+                            </div>
                         </div>
                         <div style={{ maxWidth: "85%" }}>
                             <div style={{ color: "#c5c5c7", fontWeight: 400, fontSize: 13, marginBottom: 4 }}>
@@ -204,11 +213,11 @@ export default function Footer() {
                         <div className="poppins fheadBot" style={{ marginBottom: 16, textAlign: "right", fontSize: 24 }}>Bizi Takip Edin</div>
                         <div style={{ display: "flex", gap: 28, justifyContent: "flex-end" }}>
                             <a href="https://instagram.com/villatatilinde" target="_blank" rel="noopener noreferrer" className="footer-link" style={{ display: "flex", alignItems: "center", color: "#c5c5c7", fontSize: 17, textDecoration: "none" }}>
-                                <img src="/images/instagramw.svg" alt="Instagram" style={{ height: 22, width: "auto", marginRight: 8, opacity: 0.8 }} />
+                                <img src="/images/instagram-color.svg" alt="Instagram" style={{ height: 22, width: "auto", marginRight: 8 }} />
                                 villatatilinde
                             </a>
                             <a href="https://www.facebook.com/share/17PKGdZK2x/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="footer-link" style={{ display: "flex", alignItems: "center", color: "#c5c5c7", fontSize: 17, textDecoration: "none" }}>
-                                <img src="/images/facebookw.svg" alt="Facebook" style={{ height: 22, width: "auto", marginRight: 8, opacity: 0.8 }} />
+                                <img src="/images/facebook-color.svg" alt="Facebook" style={{ height: 22, width: "auto", marginRight: 8 }} />
                                 villatatilinde
                             </a>
                         </div>
@@ -283,10 +292,10 @@ export default function Footer() {
                         <div style={{ fontSize: 16, color: "#fff", fontWeight: 600, marginBottom: 12 }}>Bizi Takip Edin</div>
                         <div style={{ display: "flex", justifyContent: "center", gap: 20 }}>
                             <a href="https://instagram.com/villatatilinde" target="_blank" rel="noopener noreferrer">
-                                <img src="/images/instagramw.svg" alt="Instagram" style={{ height: 20, width: "auto" }} />
+                                <img src="/images/instagram-color.svg" alt="Instagram" style={{ height: 20, width: "auto" }} />
                             </a>
                             <a href="https://www.facebook.com/share/17PKGdZK2x/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer">
-                                <img src="/images/facebookw.svg" alt="Facebook" style={{ height: 20, width: "auto" }} />
+                                <img src="/images/facebook-color.svg" alt="Facebook" style={{ height: 20, width: "auto" }} />
                             </a>
                         </div>
                     </div>
@@ -324,9 +333,9 @@ export default function Footer() {
 
                     <div style={{ borderTop: "1px solid #ffffff22", padding: "24px 0", marginBottom: 24 }}>
                         <div style={{ fontSize: 18, color: "#fff", fontWeight: 600, marginBottom: 20 }}>Partnerlerimiz ( %15 indirim fırsatı )</div>
-                        <div style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16 }}>Vati Ocakbaşı   <span style={{ color: "#fff" }}>Kaş Marina</span></div>
-                        <div style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16 }}>Mussakka Restaurant   <span style={{ color: "#fff" }}>Kalkan Merkez</span></div>
-                        <div style={{ display: "block", color: "#ccc", fontSize: 13 }}>Ergün Kaptan Tekne Turu ve Sailing   <span style={{ color: "#fff" }}>Kaş Limanı</span></div>
+                        <a href="https://www.vatiocakbasi.com" target="_blank" rel="noopener noreferrer" style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16, textDecoration: "none" }}>Vati Ocakbaşı   <span style={{ color: "#fff" }}>Kaş Marina</span></a>
+                        <a href="https://www.instagram.com/mussakkarestaurant/" target="_blank" rel="noopener noreferrer" style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16, textDecoration: "none" }}>Mussakka Restaurant   <span style={{ color: "#fff" }}>Kalkan Merkez</span></a>
+                        <a href="https://www.boattripturkey.com/tr?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQMMjU2MjgxMDQwNTU4AAGnEjbqiPJJEDMgyALATNxhFYzkJ4YnEqljwQeM3kUXqOKx7H-Ews3vjKdrd98_aem_KkLCM_pmoO6nTsBdUs4gJw" target="_blank" rel="noopener noreferrer" style={{ display: "block", color: "#ccc", fontSize: 13, textDecoration: "none" }}>Ergün Kaptan Tekne Turu ve Sailing   <span style={{ color: "#fff" }}>Kaş Limanı</span></a>
                     </div>
 
                     <div style={{ borderTop: "1px solid #ffffff22", borderBottom: "1px solid #ffffff22", padding: "24px 0", marginBottom: 24, textAlign: "left" }}>
@@ -359,8 +368,8 @@ export default function Footer() {
                     <Link href="/" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
                         <img src="/images/vtlo.png" alt="Villa Tatilinde" style={{ height: 62, width: "auto", margin: "0 auto" }} />
                     </Link>
-                    <img src="/images/prl2.jpeg" alt="Praedium Group" style={{ width: 220, height: "auto", margin: "8px auto 0", display: "block" }} />
-                    <img src="/images/praedium-emlak.png" alt="Praedium Emlak" style={{ width: 220, height: "auto", margin: "8px auto 0", display: "block" }} />
+                    <img src="/images/prl2.png" alt="Praedium Group" style={{ width: 220, height: "auto", margin: "8px auto 0", display: "block", mixBlendMode: "lighten" }} />
+                    <img src="/images/praedium-emlak.png" alt="Praedium Emlak" style={{ width: 220, height: "auto", margin: "8px auto 0", display: "block", mixBlendMode: "lighten" }} />
 
                     <div style={{ marginTop: 24, display: "flex", flexDirection: "column", alignItems: "center" }}>
                         <div style={{ color: "#fff", fontSize: 15, fontWeight: 500, marginBottom: 12 }}>İyzico ile güvenli ödeme</div>
@@ -378,13 +387,18 @@ export default function Footer() {
                         <div style={{ fontWeight: 600 }}>PRAEDIUM GROUP TRAVEL AGENCY</div>
                     </div>
 
-                    <div style={{ marginTop: 20, display: "flex", justifyContent: "center", alignItems: "center", gap: "16px" }}>
-                        <a href="https://www.tursab.org.tr/tr/ddsv" target="_blank" rel="noopener noreferrer">
-                            <img src="/images/tursab-dds-18069.png" alt="TURSAB" style={{ maxHeight: 75, width: "auto", borderRadius: 8 }} />
-                        </a>
-                        <a href="https://etbis.eticaret.gov.tr/sitedogrulama/5073561215243103" target="_blank" rel="noopener noreferrer">
-                            <img src="/images/etbis.jpeg" alt="ETBIS" style={{ maxHeight: 75, width: "auto" }} />
-                        </a>
+                    <div style={{ marginTop: 20, display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
+                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "16px" }}>
+                            <a href="https://www.tursab.org.tr/tr/ddsv" target="_blank" rel="noopener noreferrer">
+                                <img src="/images/tursab-dds-18069.png" alt="TURSAB" style={{ maxHeight: 75, width: "auto", borderRadius: 8 }} />
+                            </a>
+                            <a href="https://etbis.eticaret.gov.tr/sitedogrulama/5073561215243103" target="_blank" rel="noopener noreferrer">
+                                <img src="/images/etbis.jpeg" alt="ETBIS" style={{ maxHeight: 75, width: "auto" }} />
+                            </a>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
+                            <img src="/images/tescil.png" alt="Marka Tescil" style={{ maxHeight: 110, width: "auto", borderRadius: 8 }} />
+                        </div>
                     </div>
                 </div>
             </div>

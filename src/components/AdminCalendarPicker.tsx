@@ -76,11 +76,12 @@ interface MonthGridProps {
     selColor: string;
     rangeColor: string;
     rangeText: string;
+    variant?: "price" | "blocked";
     onDayClick: (d: Date) => void;
     onDayHover: (d: Date) => void;
 }
 
-function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existingPeriods, selColor, rangeColor, rangeText, onDayClick, onDayHover }: MonthGridProps) {
+function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existingPeriods, selColor, rangeColor, rangeText, variant = "price", onDayClick, onDayHover }: MonthGridProps) {
     const totalDays = daysInMonth(year, month);
     const firstOffset = getMondayBasedDay(year, month, 1);
 
@@ -95,6 +96,9 @@ function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existing
         while (week.length < 7) week.push(null);
         rows.push(week);
     }
+
+    // blocked modunda tüm mevcut tarihler tek kırmızıyla gösterilir
+    const BLOCKED_COLOR = { bg: "#fee2e2", text: "#991b1b", border: "#fca5a5" };
 
     const parsedPeriods = useMemo(() =>
         existingPeriods.map((p, i) => ({
@@ -141,7 +145,10 @@ function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existing
                             const matchedPeriod = parsedPeriods.find(p => isBetween(cellDate, p.start, p.end));
                             const isExistingStart = matchedPeriod ? isSameDay(cellDate, matchedPeriod.start) : false;
                             const isExistingEnd = matchedPeriod ? isSameDay(cellDate, matchedPeriod.end) : false;
-                            const periodColor = matchedPeriod ? PERIOD_COLORS[matchedPeriod.colorIdx] : null;
+                            // blocked modunda tek kırmızı, price modunda renk paleti
+                            const periodColor = matchedPeriod
+                                ? (variant === "blocked" ? BLOCKED_COLOR : PERIOD_COLORS[matchedPeriod.colorIdx])
+                                : null;
 
                             let bg = "transparent";
                             let color = isPast ? "#cbd5e1" : "#1e293b";
@@ -439,6 +446,7 @@ export default function AdminCalendarPicker({
                         selColor={theme.selColor}
                         rangeColor={theme.rangeColor}
                         rangeText={theme.rangeText}
+                        variant={variant}
                         onDayClick={handleDayClick} onDayHover={handleDayHover}
                     />
                 </div>
@@ -465,13 +473,14 @@ export default function AdminCalendarPicker({
                         selColor={theme.selColor}
                         rangeColor={theme.rangeColor}
                         rangeText={theme.rangeText}
+                        variant={variant}
                         onDayClick={handleDayClick} onDayHover={handleDayHover}
                     />
                 </div>
             </div>
 
-            {/* Legend */}
-            {legendPeriods.length > 0 && (
+            {/* Legend: sadece price modunda göster */}
+            {variant !== "blocked" && legendPeriods.length > 0 && (
                 <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid #f1f5f9" }}>
                     <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                         {theme.legendLabel}

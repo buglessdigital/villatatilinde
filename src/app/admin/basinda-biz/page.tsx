@@ -109,13 +109,7 @@ export default function BasindaBizAdminPage() {
         setSaving(true);
         
         try {
-            if (formData.is_featured) {
-                // Remove featured status from others if this one is featured
-                await supabase
-                    .from("press_mentions")
-                    .update({ is_featured: false })
-                    .neq("id", editId || "non-existent");
-            }
+            // Artık birden fazla ana sayfada gösterilen haber desteklendiği için, diğerlerini false yapmıyoruz.
 
             if (editId) {
                 // Update
@@ -304,15 +298,17 @@ export default function BasindaBizAdminPage() {
                                     </td>
                                     <td style={{ padding: "16px 20px", textAlign: "right" }}>
                                         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-                                            <a 
-                                                href={mention.url} 
-                                                target="_blank" 
-                                                rel="noopener noreferrer"
-                                                style={{ padding: "6px", color: "#50b0f0", background: "#e0f0ff", borderRadius: 6, display: "inline-flex" }}
-                                                title="Habere Git"
-                                            >
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                                            </a>
+                                            {mention.url && (
+                                                <a 
+                                                    href={mention.url} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    style={{ padding: "6px", color: "#50b0f0", background: "#e0f0ff", borderRadius: 6, display: "inline-flex" }}
+                                                    title="Habere Git"
+                                                >
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                                </a>
+                                            )}
                                             <button 
                                                 onClick={() => handleOpenModal(mention)}
                                                 style={{ padding: "6px", color: "#6772e5", background: "#ede9fe", border: "none", borderRadius: 6, cursor: "pointer", display: "inline-flex" }}
@@ -395,9 +391,8 @@ export default function BasindaBizAdminPage() {
                                     </div>
 
                                     <div style={{ gridColumn: "span 2" }}>
-                                        <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 6 }}>Haber Linki (URL) *</label>
+                                        <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 6 }}>Haber Linki (URL) <span style={{ fontWeight: 400, color: "#94a3b8", fontSize: 12 }}>(İsteğe Bağlı)</span></label>
                                         <input 
-                                            required
                                             type="url" 
                                             value={formData.url} 
                                             onChange={e => setFormData({...formData, url: e.target.value})} 
@@ -444,6 +439,17 @@ export default function BasindaBizAdminPage() {
                                                 >
                                                     {uploadingImage ? "Yükleniyor..." : "Yeni Görsel Yükle"}
                                                 </button>
+                                                <div style={{ display: "flex", alignItems: "flex-start", gap: 6, marginTop: 8, padding: "8px 10px", background: "#eff6ff", borderRadius: 6, border: "1px solid #bfdbfe" }}>
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                                    <div>
+                                                        <div style={{ fontSize: 11, fontWeight: 600, color: "#1d4ed8", marginBottom: 2 }}>Önerilen Görsel Boyutları</div>
+                                                        <div style={{ fontSize: 11, color: "#3b82f6", lineHeight: 1.5 }}>
+                                                            • <strong>Masaüstü:</strong> En az <strong>800 × 450 px</strong> (16:9 oran önerilir)<br />
+                                                            • <strong>Mobil:</strong> Görsel yüksekliği <strong>240px</strong> ile sınırlıdır<br />
+                                                            • Dosya formatı: <strong>JPG, PNG veya WebP</strong>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                                 <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 8 }}>Veya görsel URL'si girin:</div>
                                                 <input 
                                                     type="text" 
@@ -516,7 +522,7 @@ export default function BasindaBizAdminPage() {
                                             />
                                             <div>
                                                 <div style={{ fontSize: 14, fontWeight: 600, color: "#0f172a" }}>Ana Sayfada Göster</div>
-                                                <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>Bu kart seçildiğinde diğer haberler ana sayfadan kaldırılır, sadece bu kart ana sayfada ziyaretçilere gösterilir.</div>
+                                                <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>Bu seçenek işaretlendiğinde bu haber ana sayfadaki "Basında Biz" kaydırıcısına (slider) eklenir. Birden fazla haber seçilebilir.</div>
                                             </div>
                                         </label>
                                     </div>

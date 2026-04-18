@@ -252,6 +252,17 @@ const blogStyles = `
         .blog-back-btn { display: none; }
         .blog-modern-wrap { padding-top: 56px; }
     }
+
+    /* Mobil / Desktop görsel geçişi */
+    .blog-cover-img-mobile,
+    .blog-modern-img-mobile { display: none !important; }
+
+    @media (max-width: 768px) {
+        .blog-cover-img-desktop,
+        .blog-modern-img-desktop { display: none !important; }
+        .blog-cover-img-mobile,
+        .blog-modern-img-mobile { display: block !important; }
+    }
 `;
 
 export default async function BlogDetailPage({ params }: Props) {
@@ -351,13 +362,25 @@ export default async function BlogDetailPage({ params }: Props) {
                         {/* Image at the bottom */}
                         {blog.cover_image_url && (
                             <div className="blog-modern-image">
+                                {(blog as any).mobile_image_url && (blog as any).mobile_image_url !== blog.cover_image_url && (
+                                    <Image
+                                        src={(blog as any).mobile_image_url}
+                                        alt={blog.title}
+                                        width={750}
+                                        height={1000}
+                                        sizes="100vw"
+                                        className="blog-modern-img-mobile"
+                                        style={{ width: "100%", height: "auto", objectFit: "cover", display: "block" }}
+                                    />
+                                )}
                                 <Image
                                     src={blog.cover_image_url}
                                     alt={blog.title}
-                                    width={600}
-                                    height={230}
+                                    width={1200}
+                                    height={630}
                                     sizes="(max-width: 640px) 100vw, 880px"
-                                    style={{ width: "100%", height: "230px", display: "block", objectFit: "cover" }}
+                                    className={(blog as any).mobile_image_url && (blog as any).mobile_image_url !== blog.cover_image_url ? "blog-modern-img-desktop" : ""}
+                                    style={{ width: "100%", height: "auto", objectFit: "cover", display: "block" }}
                                 />
                             </div>
                         )}
@@ -406,14 +429,27 @@ export default async function BlogDetailPage({ params }: Props) {
                             {/* Cover image inside card */}
                             {blog.cover_image_url && (
                                 <div className="blog-cover-img-wrap">
+                                    {(blog as any).mobile_image_url && (blog as any).mobile_image_url !== blog.cover_image_url && (
+                                        <Image
+                                            src={(blog as any).mobile_image_url}
+                                            alt={blog.title}
+                                            width={750}
+                                            height={1000}
+                                            priority
+                                            sizes="100vw"
+                                            className="blog-cover-img-mobile"
+                                            style={{ width: "100%", height: "auto", objectFit: "cover", display: "block" }}
+                                        />
+                                    )}
                                     <Image
                                         src={blog.cover_image_url}
                                         alt={blog.title}
-                                        width={600}
-                                        height={230}
+                                        width={1200}
+                                        height={630}
                                         priority
                                         sizes="(max-width: 640px) 100vw, 980px"
-                                        style={{ width: "100%", height: "230px", objectFit: "cover", display: "block" }}
+                                        className={(blog as any).mobile_image_url && (blog as any).mobile_image_url !== blog.cover_image_url ? "blog-cover-img-desktop" : ""}
+                                        style={{ width: "100%", height: "auto", objectFit: "cover", display: "block" }}
                                     />
                                 </div>
                             )}

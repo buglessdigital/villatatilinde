@@ -15,6 +15,7 @@ interface BlogForm {
     subtitle: string;
     content_html: string;
     cover_image_url: string;
+    mobile_image_url: string;
     author: string;
     read_time_min: number;
     is_published: boolean;
@@ -22,7 +23,8 @@ interface BlogForm {
 }
 
 const emptyForm: BlogForm = {
-    title: "", slug: "", subtitle: "", content_html: "", cover_image_url: "",
+    title: "", slug: "", subtitle: "", content_html: "",
+    cover_image_url: "", mobile_image_url: "",
     author: "Villa Tatilinde", read_time_min: 5, is_published: false,
     blog_type: "standard",
 };
@@ -49,6 +51,7 @@ export default function BlogEditPage() {
         setForm({
             title: data.title || "", slug: data.slug || "", subtitle: data.subtitle || "",
             content_html: data.content_html || "", cover_image_url: data.cover_image_url || "",
+            mobile_image_url: data.mobile_image_url || "",
             author: data.author || "Villa Tatilinde", read_time_min: data.read_time_min || 5,
             is_published: data.is_published || false,
             blog_type: data.blog_type || "standard",
@@ -119,7 +122,7 @@ export default function BlogEditPage() {
                         <input type="number" style={inputStyle} value={form.read_time_min} onChange={(e) => setForm({ ...form, read_time_min: +e.target.value })} />
                     </div>
                 </div>
-                <div style={{ display: "flex", gap: 16, marginBottom: 14 }}>
+                <div style={{ display: "flex", gap: 16, marginBottom: 20 }}>
                     <div style={{ flex: "1 1 100%" }}>
                         <label style={labelStyle}>Tasarım (Blog Tipi)</label>
                         <select style={inputStyle} value={form.blog_type} onChange={(e) => setForm({ ...form, blog_type: e.target.value as "standard" | "modern" })}>
@@ -128,15 +131,68 @@ export default function BlogEditPage() {
                         </select>
                     </div>
                 </div>
-                <div style={{ marginBottom: 14 }}>
-                    <ImageUploader
-                        value={form.cover_image_url}
-                        onChange={(url) => setForm({ ...form, cover_image_url: url })}
-                        bucket="images"
-                        folder="blogs"
-                        label="Kapak Görseli"
-                    />
+
+                {/* ─── Görsel Alanları ─── */}
+                <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, padding: "16px 20px", marginBottom: 20 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#334155", marginBottom: 4 }}>📸 Blog Görselleri</div>
+                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 16 }}>
+                        Web ve mobil için ayrı görsel yükleyebilirsiniz. Mobil görsel yüklenmezse web görseli tüm cihazlarda kullanılır.
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+
+                        {/* Web Kapak Görseli */}
+                        <div>
+                            <ImageUploader
+                                value={form.cover_image_url}
+                                onChange={(url) => setForm({ ...form, cover_image_url: url })}
+                                bucket="images"
+                                folder="blogs"
+                                label="Web Kapak Görseli"
+                                height={160}
+                                hint={
+                                    <span>
+                                        • <strong>Boyut:</strong> <strong>1200 × 630 px</strong> önerilir<br />
+                                        • <strong>Oran:</strong> 16:9 (yatay / landscape)<br />
+                                        • <strong>Format:</strong> JPG, PNG, WebP<br />
+                                        • <strong>Maks. dosya:</strong> 10 MB<br />
+                                        Blog detay sayfasında üst hero banner olarak ve liste kartlarında görünür.
+                                    </span>
+                                }
+                            />
+                            <div style={{ marginTop: 5, display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#64748b" }}>
+                                <span style={{ background: "#dbeafe", color: "#1d4ed8", borderRadius: 4, padding: "1px 6px", fontWeight: 600, fontSize: 10 }}>WEB</span>
+                                1200 × 630 px · 16:9 yatay
+                            </div>
+                        </div>
+
+                        {/* Mobil Kapak Görseli */}
+                        <div>
+                            <ImageUploader
+                                value={form.mobile_image_url}
+                                onChange={(url) => setForm({ ...form, mobile_image_url: url })}
+                                bucket="images"
+                                folder="blogs"
+                                label="Mobil Kapak Görseli"
+                                height={160}
+                                hint={
+                                    <span>
+                                        • <strong>Boyut:</strong> <strong>750 × 1000 px</strong> önerilir<br />
+                                        • <strong>Oran:</strong> 3:4 (dikey / portre)<br />
+                                        • <strong>Format:</strong> JPG, PNG, WebP<br />
+                                        • <strong>Maks. dosya:</strong> 10 MB<br />
+                                        Mobil cihazlarda (≤768px) blog listesi ve detay sayfasında kullanılır.
+                                    </span>
+                                }
+                            />
+                            <div style={{ marginTop: 5, display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#64748b" }}>
+                                <span style={{ background: "#d1fae5", color: "#065f46", borderRadius: 4, padding: "1px 6px", fontWeight: 600, fontSize: 10 }}>MOBİL</span>
+                                750 × 1000 px · 3:4 dikey
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
+
                 <div style={{ marginBottom: 14 }}>
                     <label style={labelStyle}>Özet</label>
                     <textarea style={{ ...inputStyle, height: 80, resize: "vertical" }} value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} />

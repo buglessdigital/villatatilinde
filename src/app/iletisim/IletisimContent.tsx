@@ -225,7 +225,7 @@ export default function IletisimContent() {
                             <a href="https://instagram.com/villatatilinde" target="_blank" rel="noopener noreferrer">
                                 <Image
                                     className="bhs"
-                                    src="/images/instagram.svg"
+                                    src="/images/instagram-color.svg"
                                     alt="Instagram"
                                     width={24}
                                     height={24}
@@ -239,7 +239,7 @@ export default function IletisimContent() {
                             >
                                 <Image
                                     className="bhs"
-                                    src="/images/facebook.svg"
+                                    src="/images/facebook-color.svg"
                                     alt="Facebook"
                                     width={24}
                                     height={24}
