@@ -843,8 +843,8 @@ function SonuclarInner() {
                 score += (matchCount * 2);
             }
 
-            // 5. Tie breaker & Priority
-            if (villa.is_exclusive) score += 1;
+            // 5. Tie breaker & Priority (high score villas get a small bonus)
+            if (villa.score >= 4.8) score += 1;
 
             return { villa, score };
         });
