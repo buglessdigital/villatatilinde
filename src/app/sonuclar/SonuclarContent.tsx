@@ -827,7 +827,7 @@ function SonuclarInner() {
             if (selectedPriceRanges.length > 0) {
                 const priceMatches = selectedPriceRanges.some(rangeStr => {
                     const [min, max] = rangeStr.split('-').map(Number);
-                    const p = villa.min_price || 0;
+                    const p = villa.minEver || 0;
                     if (max) return p >= min && p <= max;
                     return p >= min;
                 });
