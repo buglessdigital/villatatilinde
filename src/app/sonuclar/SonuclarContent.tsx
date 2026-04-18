@@ -816,9 +816,9 @@ function SonuclarInner() {
             
             // 2. People capacity match (+5 points for exact/greater, +3 for close)
             if (people > 0) {
-                if (villa.max_guests >= people) {
+                if (villa.guests >= people) {
                     score += 5;
-                } else if (Math.abs(villa.max_guests - people) <= 2) {
+                } else if (Math.abs(villa.guests - people) <= 2) {
                     score += 3;
                 }
             }
