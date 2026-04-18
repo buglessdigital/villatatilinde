@@ -268,7 +268,7 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                         endDate: d.end_date,
                         status: "reserved" as const,
                     })),
-                    commissionRate: detail.commission_rate || 20
+                    commissionRate: detail.commission_pct || 20
                 };
 
                 if (detail.cover_image_url && !mapped.images.includes(detail.cover_image_url)) {
