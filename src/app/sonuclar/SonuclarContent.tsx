@@ -838,7 +838,7 @@ function SonuclarInner() {
             if (selectedFeatures.length > 0 && Array.isArray(villa.features)) {
                 let matchCount = 0;
                 for (const sf of selectedFeatures) {
-                    if (villa.features.some(f => f.title === sf)) matchCount++;
+                    if (villa.features.some(f => f === sf)) matchCount++;
                 }
                 score += (matchCount * 2);
             }
