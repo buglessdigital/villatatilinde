@@ -488,8 +488,11 @@ function SonuclarInner() {
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 18;
 
+    const isSyncingFromUrl = useRef(false);
+
     /* Sync external URL changes to internal state */
     useEffect(() => {
+        isSyncingFromUrl.current = true;
         const locParam = searchParams.get("location");
         const currentLocs = locParam ? locParam.split(",") : [];
         if (currentLocs.join(",") !== selectedLocations.join(",")) {
@@ -528,10 +531,17 @@ function SonuclarInner() {
         if (sortParam !== sortBy) {
             setSortBy(sortParam);
         }
+        
+        // Safely declare syncing complete right after the frame finishes
+        setTimeout(() => {
+            isSyncingFromUrl.current = false;
+        }, 50);
     }, [searchParams]);
 
     /* Sync internal filter state back to URL */
     useEffect(() => {
+        if (isSyncingFromUrl.current) return;
+        
         const params = new URLSearchParams(searchParams.toString());
         let changed = false;
 
@@ -636,16 +646,14 @@ function SonuclarInner() {
             result = result.filter((v) => {
                 // 1) Exact match via locationToFilter map
                 const exactKey = locationToFilter[v.location];
-                if (exactKey) return selectedLocations.includes(exactKey);
+                if (exactKey && selectedLocations.includes(exactKey)) return true;
                 // 2) Normalize slug comparison (handles "/ ", Turkish chars, etc.)
                 const villaSlug = toLocSlug(v.location);
                 return selectedLocations.some((sel) => {
-                    if (villaSlug === sel) return true;
-                    // e.g. "kalkan-kalamar" matches "kalkan / kalamar" → slug "kalkan-kalamar"
                     const selDisplaySlug = toLocSlug(locationsList[sel] || sel);
-                    if (villaSlug === selDisplaySlug) return true;
-                    // Fallback to substring match for robustness (e.g. "Kalkan İslamlar" vs "Kalkan / İslamlar")
-                    return villaSlug.includes(sel) || sel.includes(villaSlug);
+                    if (villaSlug === sel || villaSlug === selDisplaySlug) return true;
+                    // Fallback to substring match for robustness using the normalized slug
+                    return villaSlug.includes(selDisplaySlug) || selDisplaySlug.includes(villaSlug);
                 });
             });
         }
@@ -786,6 +794,70 @@ function SonuclarInner() {
             </div>
         </div>
     );
+
+    // Recommendation logic when no results
+    const recommendedVillas = useMemo(() => {
+        if (filteredVillas.length > 0 || allVillas.length === 0) return [];
+        
+        let candidates = allVillas.map(villa => {
+            let score = 0;
+            
+            // 1. Location match (+10 points)
+            if (selectedLocations.length > 0) {
+                const exactKey = locationToFilter[villa.location];
+                const isLocMatch = (exactKey && selectedLocations.includes(exactKey)) || selectedLocations.some((sel) => {
+                    const villaSlug = toLocSlug(villa.location);
+                    const selDisplaySlug = toLocSlug(locationsList[sel] || sel);
+                    if (villaSlug === sel || villaSlug === selDisplaySlug) return true;
+                    return villaSlug.includes(selDisplaySlug) || selDisplaySlug.includes(villaSlug);
+                });
+                if (isLocMatch) score += 10;
+            }
+            
+            // 2. People capacity match (+5 points for exact/greater, +3 for close)
+            if (people > 0) {
+                if (villa.max_guests >= people) {
+                    score += 5;
+                } else if (Math.abs(villa.max_guests - people) <= 2) {
+                    score += 3;
+                }
+            }
+            
+            // 3. Price range match (+4 points)
+            if (selectedPriceRanges.length > 0) {
+                const priceMatches = selectedPriceRanges.some(rangeStr => {
+                    const [min, max] = rangeStr.split('-').map(Number);
+                    const p = villa.min_price || 0;
+                    if (max) return p >= min && p <= max;
+                    return p >= min;
+                });
+                if (priceMatches) score += 4;
+            }
+            
+            // 4. Features match (+2 points per matched feature)
+            if (selectedFeatures.length > 0 && Array.isArray(villa.features)) {
+                let matchCount = 0;
+                for (const sf of selectedFeatures) {
+                    if (villa.features.some(f => f.title === sf)) matchCount++;
+                }
+                score += (matchCount * 2);
+            }
+
+            // 5. Tie breaker & Priority
+            if (villa.is_exclusive) score += 1;
+
+            return { villa, score };
+        });
+        
+        // Sort by highest score. Randomize ties to create dynamic views if scores match.
+        candidates.sort((a, b) => {
+            if (a.score !== b.score) return b.score - a.score;
+            return Math.random() - 0.5;
+        });
+
+        return candidates.slice(0, 6).map(c => c.villa);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filteredVillas.length, allVillas, selectedLocations, people, selectedFeatures, selectedPriceRanges]);
 
     /* ──────────── RENDER ──────────── */
     return (
@@ -954,90 +1026,112 @@ function SonuclarInner() {
                     </div>
 
                     {/* Villa Cards */}
+                    {/* Villa Cards */}
                     <div className={styles.villasContainer}>
-                        {paginatedVillas.map((villa) => (
-                            <VillaCard
-                                key={villa.slug}
-                                villa={villa}
-                                slideIndex={getSlideIndex(villa.slug)}
-                                onSlidePrev={() => slidePrev(villa.slug, villa.images.length)}
-                                onSlideNext={() => slideNext(villa.slug, villa.images.length)}
-                                checkIn={checkInParam || undefined}
-                                checkOut={checkOutParam || undefined}
-                            />
-                        ))}
+                        {filteredVillas.length > 0 ? (
+                            <>
+                                {paginatedVillas.map((villa) => (
+                                    <VillaCard
+                                        key={villa.slug}
+                                        villa={villa}
+                                        slideIndex={getSlideIndex(villa.slug)}
+                                        onSlidePrev={() => slidePrev(villa.slug, villa.images.length)}
+                                        onSlideNext={() => slideNext(villa.slug, villa.images.length)}
+                                        checkIn={checkInParam || undefined}
+                                        checkOut={checkOutParam || undefined}
+                                    />
+                                ))}
 
-                        {/* Pagination */}
-                        {totalPages > 1 && (
-                            <div style={{
-                                gridColumn: "1 / -1",
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                gap: "16px",
-                                marginTop: "32px",
-                                marginBottom: "16px"
-                            }}>
-                                <button
-                                    onClick={() => {
-                                        setCurrentPage(p => Math.max(1, p - 1));
-                                        window.scrollTo({ top: 300, behavior: 'smooth' });
-                                    }}
-                                    disabled={currentPage === 1}
-                                    style={{
-                                        padding: "10px 20px",
-                                        borderRadius: "8px",
-                                        border: "1px solid #ddd",
-                                        background: currentPage === 1 ? "#f5f5f5" : "#fff",
-                                        color: currentPage === 1 ? "#999" : "#333",
-                                        fontWeight: 600,
-                                        cursor: currentPage === 1 ? "not-allowed" : "pointer",
-                                        transition: "all 0.2s"
-                                    }}
-                                >
-                                    Önceki Sayfa
-                                </button>
-                                
-                                <div style={{ fontWeight: 500, color: "#555" }}>
-                                    Sayfa {currentPage} / {totalPages}
-                                </div>
-                                
-                                <button
-                                    onClick={() => {
-                                        setCurrentPage(p => Math.min(totalPages, p + 1));
-                                        window.scrollTo({ top: 300, behavior: 'smooth' });
-                                    }}
-                                    disabled={currentPage === totalPages}
-                                    style={{
-                                        padding: "10px 20px",
-                                        borderRadius: "8px",
-                                        border: "none",
-                                        background: currentPage === totalPages ? "#ccc" : "#1e90ff",
-                                        color: "#fff",
-                                        fontWeight: 600,
-                                        cursor: currentPage === totalPages ? "not-allowed" : "pointer",
-                                        transition: "all 0.2s"
-                                    }}
-                                >
-                                    Sonraki Sayfa
-                                </button>
-                            </div>
-                        )}
-
-                        {/* No Results */}
-                        {filteredVillas.length === 0 && (
-                            <div className={styles.noResults}>
-                                <div className={styles.noResultsInner}>
-                                    <div style={{ color: "#e83e8c", fontSize: "16px", fontWeight: 500 }}>
-                                        Arama kriterlerinize uygun villa bulunamadı
+                                {/* Pagination */}
+                                {totalPages > 1 && (
+                                    <div style={{
+                                        width: "100%",
+                                        display: "flex",
+                                        justifyContent: "center",
+                                        alignItems: "center",
+                                        gap: "16px",
+                                        marginTop: "32px",
+                                        marginBottom: "16px"
+                                    }}>
+                                        <button
+                                            onClick={() => {
+                                                setCurrentPage(p => Math.max(1, p - 1));
+                                                window.scrollTo({ top: 300, behavior: 'smooth' });
+                                            }}
+                                            disabled={currentPage === 1}
+                                            style={{
+                                                padding: "10px 20px",
+                                                borderRadius: "8px",
+                                                border: "1px solid #ddd",
+                                                background: currentPage === 1 ? "#f5f5f5" : "#fff",
+                                                color: currentPage === 1 ? "#999" : "#333",
+                                                fontWeight: 600,
+                                                cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                                                transition: "all 0.2s"
+                                            }}
+                                        >
+                                            Önceki Sayfa
+                                        </button>
+                                        
+                                        <div style={{ fontWeight: 500, color: "#555" }}>
+                                            Sayfa {currentPage} / {totalPages}
+                                        </div>
+                                        
+                                        <button
+                                            onClick={() => {
+                                                setCurrentPage(p => Math.min(totalPages, p + 1));
+                                                window.scrollTo({ top: 300, behavior: 'smooth' });
+                                            }}
+                                            disabled={currentPage === totalPages}
+                                            style={{
+                                                padding: "10px 20px",
+                                                borderRadius: "8px",
+                                                border: "none",
+                                                background: currentPage === totalPages ? "#ccc" : "#1e90ff",
+                                                color: "#fff",
+                                                fontWeight: 600,
+                                                cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                                                transition: "all 0.2s"
+                                            }}
+                                        >
+                                            Sonraki Sayfa
+                                        </button>
                                     </div>
-                                    <div style={{ marginTop: "22px", paddingTop: "20px", borderTop: "1px solid #ddd" }}>
-                                        <div style={{ fontSize: "17px", fontWeight: 500, color: "#333" }}>
-                                            <Link href="/sonuclar" onClick={clearAllFilters}>Filtreleri kaldırmak için tıklayın</Link>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                <div className={styles.noResults} style={{ width: "100%", marginBottom: "40px" }}>
+                                    <div className={styles.noResultsInner}>
+                                        <div style={{ color: "#e83e8c", fontSize: "16px", fontWeight: 500 }}>
+                                            Arama kriterlerinize uygun villa bulunamadı
+                                        </div>
+                                        <div style={{ marginTop: "22px", paddingTop: "20px", borderTop: "1px solid #ddd" }}>
+                                            <div style={{ fontSize: "17px", fontWeight: 500, color: "#333" }}>
+                                                <Link href="/sonuclar" onClick={clearAllFilters}>Filtreleri kaldırmak için tıklayın</Link>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                                
+                                {/* Recommended Villas */}
+                                {recommendedVillas.length > 0 && (
+                                    <>
+                                        <div style={{ width: "100%", fontSize: "22px", fontWeight: 600, color: "#1e293b", marginBottom: "24px", paddingTop: "10px", borderTop: "1px solid #f1f5f9" }}>
+                                            Bunlara da bakabilirsiniz
+                                        </div>
+                                        {recommendedVillas.map((villa) => (
+                                            <VillaCard
+                                                key={villa.slug}
+                                                villa={villa}
+                                                slideIndex={getSlideIndex(villa.slug)}
+                                                onSlidePrev={() => slidePrev(villa.slug, villa.images.length)}
+                                                onSlideNext={() => slideNext(villa.slug, villa.images.length)}
+                                            />
+                                        ))}
+                                    </>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>

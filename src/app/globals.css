@@ -1951,7 +1951,7 @@ font {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
-  max-height: 320px;
+  max-height: 160px;
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 4px;

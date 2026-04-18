@@ -129,6 +129,7 @@ export default function AdminDestinasyonlar() {
                             bucket="images"
                             folder="destinations"
                             label="Görsel"
+                            hint={<div>En iyi görünüm için <strong>800x600 piksel</strong> veya yatay dikdörtgen (4:3) oranında,<br/>yüksek çözünürlüklü bir görsel yüklemeniz önerilir.</div>}
                             height={140}
                         />
                     </div>

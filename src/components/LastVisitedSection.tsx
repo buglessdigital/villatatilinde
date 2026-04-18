@@ -257,12 +257,44 @@ export default function LastVisitedSection() {
         [isDragging, startX, scrollLeftPos]
     );
 
+    const scrollLeft = useCallback(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollBy({ left: -320, behavior: "smooth" });
+        }
+    }, []);
+
+    const scrollRight = useCallback(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollBy({ left: 320, behavior: "smooth" });
+        }
+    }, []);
+
     if (villas.length === 0) return null;
 
     return (
         <div className="paddingMobile lastVisitedCont">
             <div className="lastVisitedContInner">
-                <div className="dm-sans lastVisitedTitle">En Son Gezilenler</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                    <div className="dm-sans lastVisitedTitle" style={{ margin: 0 }}>En Son Gezilenler</div>
+                    <div className="no1023" style={{ display: "flex", gap: "10px" }}>
+                        <button 
+                            onClick={scrollLeft} 
+                            style={{ width: 40, height: 40, borderRadius: "50%", border: "1px solid #dfdfe3", background: "#fff", cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center", transition: "all 0.2s" }}
+                            onMouseOver={(e) => e.currentTarget.style.background = "#f8f9fa"}
+                            onMouseOut={(e) => e.currentTarget.style.background = "#fff"}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        </button>
+                        <button 
+                            onClick={scrollRight} 
+                            style={{ width: 40, height: 40, borderRadius: "50%", border: "1px solid #dfdfe3", background: "#fff", cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center", transition: "all 0.2s" }}
+                            onMouseOver={(e) => e.currentTarget.style.background = "#f8f9fa"}
+                            onMouseOut={(e) => e.currentTarget.style.background = "#fff"}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </button>
+                    </div>
+                </div>
                 <div
                     ref={scrollRef}
                     className="hideScrollbar"
@@ -270,6 +302,10 @@ export default function LastVisitedSection() {
                         display: "flex",
                         overflowX: "auto",
                         cursor: isDragging ? "grabbing" : "grab",
+                        scrollBehavior: "smooth",
+                        WebkitOverflowScrolling: "touch",
+                        paddingBottom: "10px",
+                        gap: "0px"
                     }}
                     onMouseDown={handleMouseDown}
                     onMouseUp={handleMouseUp}

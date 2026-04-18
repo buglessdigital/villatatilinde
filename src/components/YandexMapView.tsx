@@ -1,13 +1,12 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 
-export default function MapPicker({ lat, lng, onChange }: { lat: string; lng: string; onChange: (lat: string, lng: string) => void }) {
+export default function YandexMapView({ lat, lng, title }: { lat: number, lng: number, title?: string }) {
     const mapRef = useRef<HTMLDivElement>(null);
     const [loaded, setLoaded] = useState(false);
     const mapInstance = useRef<any>(null);
 
     useEffect(() => {
-        // Load yandex map script
         if (!document.getElementById("yandex-map-script")) {
             const script = document.createElement("script");
             script.id = "yandex-map-script";
@@ -37,49 +36,25 @@ export default function MapPicker({ lat, lng, onChange }: { lat: string; lng: st
         const ymaps = (window as any).ymaps;
         if (!ymaps) return;
 
-        // Default to Kalkan
-        const defaultLat = 36.265;
-        const defaultLng = 29.412;
-        const initLat = parseFloat(lat) || defaultLat;
-        const initLng = parseFloat(lng) || defaultLng;
-
-        // Avoid re-initializing the same map on the same DOM element
         if (mapRef.current.innerHTML !== "") {
             mapRef.current.innerHTML = "";
         }
 
         const map = new ymaps.Map(mapRef.current, {
-            center: [initLat, initLng],
-            zoom: 12,
-            controls: ['zoomControl', 'searchControl', 'typeSelector', 'fullscreenControl']
+            center: [lat, lng],
+            zoom: 13,
+            controls: ['zoomControl', 'fullscreenControl']
         });
         
         mapInstance.current = map;
 
-        let placemark = new ymaps.Placemark([initLat, initLng], {}, {
+        let placemark = new ymaps.Placemark([lat, lng], {
+            iconCaption: title || ''
+        }, {
             preset: 'islands#blueIcon'
         });
         
         map.geoObjects.add(placemark);
-
-        map.events.add('click', function(e: any) {
-            const coords = e.get('coords');
-            placemark.geometry.setCoordinates(coords);
-            onChange(coords[0].toString(), coords[1].toString());
-        });
-
-        // Search event handling
-        const searchControl = map.controls.get('searchControl');
-        if (searchControl) {
-            searchControl.events.add('resultselect', function (e: any) {
-                const index = e.get('index');
-                searchControl.getResult(index).then(function (res: any) {
-                    const coords = res.geometry.getCoordinates();
-                    placemark.geometry.setCoordinates(coords);
-                    onChange(coords[0].toString(), coords[1].toString());
-                });
-            });
-        }
 
         return () => {
             if (mapInstance.current) {
@@ -87,16 +62,12 @@ export default function MapPicker({ lat, lng, onChange }: { lat: string; lng: st
                 mapInstance.current = null;
             }
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [loaded]); // Removed lat/lng from deps to prevent map re-render on click
+    }, [loaded, lat, lng, title]);
 
     return (
-        <div style={{ width: "100%", height: "400px", borderRadius: "8px", overflow: "hidden", border: "1px solid #cbd5e1" }}>
+        <div style={{ width: "100%", height: "100%", position: "relative" }}>
             {!loaded && <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", background: "#f1f5f9" }}>Harita Yükleniyor...</div>}
             <div ref={mapRef} style={{ width: "100%", height: "100%", display: loaded ? "block" : "none" }}></div>
-            <div style={{ textAlign: "center", padding: "8px", fontSize: "12px", color: "#64748b", background: "#f8fafc", borderTop: "1px solid #e2e8f0" }}>
-                Harita üzerinde arama yaparak veya tıklayarak villa konumunu seçebilirsiniz. (Seçilen Koordinat: {lat || "-"}, {lng || "-"})
-            </div>
         </div>
     );
 }

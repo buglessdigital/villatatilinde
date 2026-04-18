@@ -60,6 +60,7 @@ export interface Villa {
     score2percent: number;
     score1percent: number;
     reviews: Review[];
+    commissionRate?: number;
 }
 
 export interface PriceBlock {

@@ -314,18 +314,22 @@ export default function VillaEditPage() {
 
         await loadPricePeriods();
         await loadDisabledDates();
-        await loadGalleryImages();
+        await loadGalleryImages(data.cover_image_url);
         setLoading(false);
     }
 
-    async function loadGalleryImages() {
+    async function loadGalleryImages(coverUrl?: string) {
         const { data } = await supabase
             .from("villa_images")
             .select("url")
             .eq("villa_id", villaId)
-            .eq("is_cover", false)
             .order("sort_order", { ascending: true });
-        if (data) setGalleryImages(data);
+        
+        let finalImages: GalleryImage[] = data ? [...data] : [];
+        if (coverUrl && !finalImages.some(img => img.url === coverUrl)) {
+            finalImages = [{ url: coverUrl }, ...finalImages];
+        }
+        setGalleryImages(finalImages);
     }
 
     async function loadPricePeriods() {
@@ -558,7 +562,7 @@ export default function VillaEditPage() {
             pool_length: safeNumeric52(form.pool_length),
             pool_depth: safeNumeric52(form.pool_depth),
             min_price: safeNumeric122(form.min_price),
-            cover_image_url: form.cover_image_url,
+            cover_image_url: galleryImages.length > 0 ? galleryImages[0].url : "",
             description_tr: form.description_tr,
             description_html: form.description_tr ? form.description_tr.replace(/\n/g, '<br />') : "",
             summary_tr: form.summary_tr,
@@ -660,8 +664,7 @@ export default function VillaEditPage() {
         await supabase
             .from("villa_images")
             .delete()
-            .eq("villa_id", vId)
-            .eq("is_cover", false);
+            .eq("villa_id", vId);
 
         // Insert new gallery images
         if (galleryImages.length > 0) {
@@ -669,7 +672,7 @@ export default function VillaEditPage() {
                 villa_id: vId,
                 url: img.url,
                 media_type: "image",
-                is_cover: false,
+                is_cover: i === 0,
                 sort_order: i
             }));
             await supabase.from("villa_images").insert(inserts);
@@ -816,27 +819,7 @@ export default function VillaEditPage() {
                         />
                     </FormField>
                 </FormRow>
-                <FormRow>
-                                    <FormField label="" width="100%">
-                        <ImageUploader
-                            value={form.cover_image_url}
-                            onChange={(url) => updateField("cover_image_url", url)}
-                            bucket="images"
-                            folder="villas"
-                            label="Kapak Görseli"
-                            addWatermark={true}
-                            hint={
-                                <span>
-                                    • <strong>Boyut:</strong> En az <strong>1200 × 800 px</strong> önerilir<br />
-                                    • <strong>Oran:</strong> 3:2 veya 16:9 ideal<br />
-                                    • <strong>Format:</strong> JPG, PNG, WebP<br />
-                                    • <strong>Maks. dosya:</strong> 10 MB<br />
-                                    Bu gürsel arama sonuçları ve liste kartlarında ana fotoğraf olarak çıkar.
-                                </span>
-                            }
-                        />
-                    </FormField>
-                </FormRow>
+
                 <FormRow>
                     <FormField label="Tanıtım Videosu URL (YouTube, Vimeo vb.)" width="100%">
                         <input

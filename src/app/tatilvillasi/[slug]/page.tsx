@@ -11,6 +11,7 @@ import ReservationBottomSheet from "@/components/ReservationBottomSheet";
 import { useCurrency } from "@/context/CurrencyContext";
 import { supabase } from "@/lib/supabase";
 import CallbackModal from "@/components/CallbackModal";
+import YandexMapView from "@/components/YandexMapView";
 
 /* ─────────────── Feature Maps ─────────────── */
 const FEATURE_LABELS: Record<string, string> = {
@@ -266,7 +267,8 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                         startDate: d.start_date,
                         endDate: d.end_date,
                         status: "reserved" as const,
-                    }))
+                    })),
+                    commissionRate: detail.commission_rate || 20
                 };
 
                 if (detail.cover_image_url && !mapped.images.includes(detail.cover_image_url)) {
@@ -358,7 +360,8 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
 
         const cleaning = nights <= (villa.minResCleaning || 0) ? (villa.cleaning || 0) : 0;
         const total = accommodation + cleaning;
-        const advance = Math.round(total * 0.15); // 15% advance payment as per standard
+        const commissionPct = villa.commissionRate || 20;
+        const advance = Math.round(total * (commissionPct / 100)); // Dynamic advance payment based on commission rate
         return { nightCount: nights, accommodationPrice: accommodation, cleaningFeeTotal: cleaning, totalPrice: total, advancePayment: advance, remainingPayment: total - advance, hasUnpricedDays: unpriced };
     }, [villa, checkInDate, checkOutDate]);
 
@@ -693,12 +696,12 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                     </div>
 
                                     <div className="vd-res-pricing-row" style={{ fontWeight: 500 }}>
-                                        <span>%15 Ön Ödeme</span>
+                                        <span>%{(villa?.commissionRate || 20)} Ön Ödeme</span>
                                         <span>{formatPrice(advancePayment)}</span>
                                     </div>
 
                                     <div className="vd-res-pricing-row" style={{ fontWeight: 500 }}>
-                                        <span>%85 Kalan Ödeme</span>
+                                        <span>%{100 - (villa?.commissionRate || 20)} Kalan Ödeme</span>
                                         <span>{formatPrice(remainingPayment)}</span>
                                     </div>
 
@@ -765,9 +768,15 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                     directionLink = mapUrl || "#";
                                 }
 
+                                const hasCoordinates = (villa.position.lat !== 0 && villa.position.lng !== 0);
+
                                 return (
                                     <>
-                                        {mapUrl ? (
+                                        {hasCoordinates ? (
+                                            <div style={{ width: "100%", height: 350, borderRadius: 12, overflow: "hidden", border: "1px solid #e2e8f0" }}>
+                                                <YandexMapView lat={villa.position.lat} lng={villa.position.lng} title={villa.name} />
+                                            </div>
+                                        ) : mapUrl ? (
                                             <iframe
                                                 src={mapUrl}
                                                 width="100%"
@@ -775,20 +784,23 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                                 style={{ border: 0, overflow: "hidden", borderRadius: 12 }}
                                                 loading="lazy"
                                                 referrerPolicy="no-referrer-when-downgrade"
-                                            ></iframe>
+                                            />
                                         ) : (
-                                            <div style={{ height: 315, display: "flex", alignItems: "center", justifyContent: "center", background: "#f1f5f9", borderRadius: 12 }}>
-                                                {iframeInput ? "Geçersiz Harita Kodu" : "Harita Linki Eklenmedi"}
+                                            <div style={{ height: 315, display: "flex", alignItems: "center", justifyContent: "center", background: "#f1f5f9", borderRadius: 12, border: "1px solid #e2e8f0" }}>
+                                                {iframeInput ? "Geçersiz Harita Kodu" : "Harita Koordinatı veya Linki Eklenmedi"}
                                             </div>
                                         )}
-                                        {(mapUrl || villa.position.lat !== 0) && (
-                                            <a
-                                                href={directionLink}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                <div className="vd-directions-btn">Yol Tarifi</div>
-                                            </a>
+                                        {(hasCoordinates || mapUrl) && (
+                                            <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "8px", marginTop: "16px" }}>
+                                                <a
+                                                    href={directionLink}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    style={{ textDecoration: "none" }}
+                                                >
+                                                    <div className="vd-directions-btn" style={{ width: "100%", textAlign: "center" }}>Yol Tarifi</div>
+                                                </a>
+                                            </div>
                                         )}
                                     </>
                                 );
