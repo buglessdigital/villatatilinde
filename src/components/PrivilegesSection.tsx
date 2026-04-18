@@ -42,6 +42,7 @@ export default function PrivilegesSection() {
                     description: 'Tesislerde size özel indirim kuponu oluşturmak için hemen tıklayın.',
                     image_url: '/images/discount.png',
                     external_url: '/kupon-olustur',
+                    category: '',
                     is_active: true,
                     sort_order: -1
                 };
