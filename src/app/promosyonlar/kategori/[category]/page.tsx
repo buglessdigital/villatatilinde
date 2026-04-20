@@ -229,7 +229,7 @@ export default async function KategoriPage({ params }: Props) {
                 ) : (
                     promos.map((promo) => (
                         <div key={promo.id} className="prms-cat-card">
-                            <Link href={promo.external_url || `/promosyonlar/${promo.slug}`}>
+                            <Link href={`/promosyonlar/${promo.slug}`}>
                                 <div className="prms-cat-img-wrap">
                                     {/* Location icon */}
                                     <div className="prms-cat-icon" style={{ top: 12 }}>

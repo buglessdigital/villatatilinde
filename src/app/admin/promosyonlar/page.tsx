@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import ImageUploader from "@/components/ImageUploader";
+import MediaUploader from "@/components/MediaUploader";
 
 interface Promotion {
     id: string;
@@ -19,6 +20,7 @@ interface Promotion {
     validity_start: string;
     validity_end: string;
     is_active: boolean;
+    is_couponable: boolean;
     sort_order: number;
     created_at: string;
 }
@@ -46,6 +48,7 @@ const emptyPromo = {
     validity_start: "",
     validity_end: "",
     is_active: true,
+    is_couponable: true,
     sort_order: 0,
 };
 
@@ -107,6 +110,7 @@ export default function AdminPromosyonlar() {
             validity_start: p.validity_start || "",
             validity_end: p.validity_end || "",
             is_active: p.is_active,
+            is_couponable: p.is_couponable ?? true,
             sort_order: p.sort_order,
         });
         setEditId(p.id);
@@ -144,6 +148,7 @@ export default function AdminPromosyonlar() {
             validity_start: form.validity_start || null,
             validity_end: form.validity_end || null,
             is_active: form.is_active,
+            is_couponable: form.is_couponable,
             sort_order: form.sort_order,
         };
 
@@ -186,57 +191,101 @@ export default function AdminPromosyonlar() {
                         <button onClick={() => { setShowForm(false); setEditId(null); }} style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", color: "#94a3b8" }}>✕</button>
                     </div>
 
-                    {/* Temel bilgiler */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-                        <div>
-                            <label style={labelStyle}>Başlık *</label>
-                            <input style={inputStyle} value={form.title}
-                                onChange={(e) => { const t = e.target.value; setForm((f) => ({ ...f, title: t, slug: slugify(t) })); }}
-                                placeholder="ör: Vati Ocakbaşı İndirimi" />
-                        </div>
-                        <div>
-                            <label style={labelStyle}>Slug (URL)</label>
-                            <input style={inputStyle} value={form.slug}
-                                onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))} placeholder="otomatik oluşturulur" />
-                        </div>
-                        <div>
-                            <label style={labelStyle}>Kategori</label>
-                            <input style={inputStyle} value={form.category}
-                                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                                placeholder="ör: Restaurant, Tekne Turu, Villa..."
-                                list="category-suggestions" />
-                            <datalist id="category-suggestions">
-                                {existingCategories.map((c) => <option key={c} value={c} />)}
-                            </datalist>
-                            <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
-                                Yeni bir kategori adı yazarak yeni kategori oluşturabilirsiniz
+                    {/* ── BÖLÜM 1: Kart Bilgileri ── */}
+                    <div style={sectionStyle}>
+                        <div style={sectionHeaderStyle}>🏷️ Kart Bilgileri <span style={sectionHintStyle}>Listeleme sayfasında görünür</span></div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                            <div>
+                                <label style={labelStyle}>Başlık *</label>
+                                <input style={inputStyle} value={form.title}
+                                    onChange={(e) => { const t = e.target.value; setForm((f) => ({ ...f, title: t, slug: slugify(t) })); }}
+                                    placeholder="ör: Vati Ocakbaşı İndirimi" />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Slug (URL)</label>
+                                <input style={inputStyle} value={form.slug}
+                                    onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))} placeholder="otomatik oluşturulur" />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Kategori</label>
+                                <input style={inputStyle} value={form.category}
+                                    onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                                    placeholder="ör: Restaurant, Tekne Turu, Villa..."
+                                    list="category-suggestions" />
+                                <datalist id="category-suggestions">
+                                    {existingCategories.map((c) => <option key={c} value={c} />)}
+                                </datalist>
+                                <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>Yeni isim yazarak yeni kategori oluşturabilirsiniz</div>
+                            </div>
+                            <div>
+                                <label style={labelStyle}>İndirim Metni</label>
+                                <input style={inputStyle} value={form.discount_text}
+                                    onChange={(e) => setForm((f) => ({ ...f, discount_text: e.target.value }))} placeholder="ör: %15 İndirim" />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Geçerlilik Başlangıç</label>
+                                <input type="date" style={inputStyle} value={form.validity_start}
+                                    onChange={(e) => setForm((f) => ({ ...f, validity_start: e.target.value }))} />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Geçerlilik Bitiş</label>
+                                <input type="date" style={inputStyle} value={form.validity_end}
+                                    onChange={(e) => setForm((f) => ({ ...f, validity_end: e.target.value }))} />
                             </div>
                         </div>
-                        <div>
-                            <label style={labelStyle}>İndirim Metni</label>
-                            <input style={inputStyle} value={form.discount_text}
-                                onChange={(e) => setForm((f) => ({ ...f, discount_text: e.target.value }))} placeholder="ör: %15 İndirim" />
+                        <div style={{ display: "flex", gap: 24, marginTop: 12, alignItems: "center" }}>
+                            <div style={{ width: 100 }}>
+                                <label style={labelStyle}>Sıralama</label>
+                                <input type="number" style={inputStyle} value={form.sort_order}
+                                    onChange={(e) => setForm((f) => ({ ...f, sort_order: +e.target.value }))} />
+                            </div>
+                            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 14, marginTop: 18 }}>
+                                <input type="checkbox" checked={form.is_active}
+                                    onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
+                                    style={{ width: 18, height: 18, accentColor: "#10b981" }} />
+                                Aktif (yayında)
+                            </label>
                         </div>
                     </div>
 
-                    {/* Görsel */}
-                    <div style={{ marginBottom: 16 }}>
-                        <ImageUploader value={form.image_url}
-                            onChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
-                            bucket="images" folder="promotions" label="Ana Görsel" height={160} />
+                    {/* ── BÖLÜM 2: Detay Sayfası Hero ── */}
+                    <div style={sectionStyle}>
+                        <div style={sectionHeaderStyle}>📄 Detay Sayfası — Hero Alanı <span style={sectionHintStyle}>Sayfanın üst bölümü</span></div>
+                        <div style={{ marginBottom: 14 }}>
+                            <label style={labelStyle}>Açıklama Metni</label>
+                            <textarea style={{ ...inputStyle, height: 90, resize: "vertical" }} value={form.description}
+                                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                                placeholder="Detay sayfasında başlığın altında görünür..." />
+                        </div>
+                        <div style={{ marginBottom: 14 }}>
+                            <label style={labelStyle}>Harici Link (İşletme web sitesi)</label>
+                            <input style={inputStyle} value={form.external_url}
+                                onChange={(e) => setForm((f) => ({ ...f, external_url: e.target.value }))} placeholder="https://..." />
+                            <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>«• [İşletme adı] sayfasını ziyaret edin» şeklinde gösterilir</div>
+                        </div>
+                        <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 14 }}>
+                            <input type="checkbox" checked={form.is_couponable}
+                                onChange={(e) => setForm((f) => ({ ...f, is_couponable: e.target.checked }))}
+                                style={{ width: 18, height: 18, accentColor: "#3b82f6" }} />
+                            <span>
+                                <b>Kupon Kodu Oluştur</b> butonu göster
+                                <span style={{ fontSize: 11, color: "#94a3b8", marginLeft: 6 }}>— kapalıysa buton detay sayfasında çıkmaz</span>
+                            </span>
+                        </label>
                     </div>
 
-                    {/* Galeri */}
-                    <div style={{ marginBottom: 16 }}>
-                        <label style={labelStyle}>Galeri Görselleri</label>
+                    {/* ── BÖLÜM 3: Galeri ── */}
+                    <div style={sectionStyle}>
+                        <div style={sectionHeaderStyle}>🖼️ Detay Sayfası — Galeri <span style={sectionHintStyle}>Başlığın hemen altındaki fotoğraf mozaiği (max 5 görsel)</span></div>
                         {form.gallery_images.length > 0 && (
-                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
                                 {form.gallery_images.map((img, i) => (
-                                    <div key={i} style={{ position: "relative", width: 100, height: 70, borderRadius: 8, overflow: "hidden" }}>
+                                    <div key={i} style={{ position: "relative", width: 120, height: 80, borderRadius: 8, overflow: "hidden", border: "1px solid #e2e8f0" }}>
                                         <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                        <div style={{ position: "absolute", top: 4, left: 6, background: "rgba(0,0,0,0.55)", color: "#fff", fontSize: 10, fontWeight: 700, padding: "1px 5px", borderRadius: 4 }}>{i + 1}</div>
                                         <button onClick={() => removeGalleryImage(i)} style={{
                                             position: "absolute", top: 2, right: 2, width: 20, height: 20,
-                                            borderRadius: "50%", background: "rgba(0,0,0,0.6)", color: "#fff",
+                                            borderRadius: "50%", background: "rgba(0,0,0,0.65)", color: "#fff",
                                             border: "none", fontSize: 11, cursor: "pointer", display: "flex",
                                             alignItems: "center", justifyContent: "center",
                                         }}>✕</button>
@@ -244,82 +293,57 @@ export default function AdminPromosyonlar() {
                                 ))}
                             </div>
                         )}
-                        <div style={{ display: "flex", gap: 8 }}>
-                            <ImageUploader
+                        {form.gallery_images.length < 5 && (
+                            <MediaUploader
                                 value=""
                                 onChange={(url) => { if (url) addGalleryImage(url); }}
                                 bucket="images" folder="promotions/gallery"
-                                label="" height={80}
+                                label={`Görsel Ekle (${form.gallery_images.length}/5)`}
+                                height={100}
+                                acceptType="image/*"
                             />
-                        </div>
+                        )}
                         <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                             <input style={{ ...inputStyle, flex: 1 }} value={newGalleryUrl}
                                 onChange={(e) => setNewGalleryUrl(e.target.value)}
-                                placeholder="veya galeri görsel URL'si yapıştırın..." />
+                                placeholder="veya görsel URL'si yapıştırın..." />
                             <button onClick={() => addGalleryImage(newGalleryUrl)}
-                                style={{ padding: "8px 16px", borderRadius: 8, background: "#3b82f6", color: "#fff", border: "none", cursor: "pointer", fontSize: 13 }}>
-                                Ekle
+                                style={{ padding: "8px 16px", borderRadius: 8, background: "#3b82f6", color: "#fff", border: "none", cursor: "pointer", fontSize: 13, whiteSpace: "nowrap" }}>
+                                + Ekle
                             </button>
                         </div>
                     </div>
 
-                    {/* Açıklama */}
-                    <div style={{ marginBottom: 16 }}>
-                        <label style={labelStyle}>Açıklama</label>
-                        <textarea style={{ ...inputStyle, height: 80, resize: "vertical" }} value={form.description}
-                            onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Promosyon açıklaması..." />
+                    {/* ── BÖLÜM 4: Ana Görsel ── */}
+                    <div style={sectionStyle}>
+                        <div style={sectionHeaderStyle}>📷 Detay Sayfası — Ana Görsel <span style={sectionHintStyle}>Galeri yoksa tam genişlik gösterilir; konum bölümünde de kullanılır</span></div>
+                        <ImageUploader value={form.image_url}
+                            onChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
+                            bucket="images" folder="promotions" label="" height={160} />
                     </div>
 
-                    {/* Adres ve harita */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-                        <div>
-                            <label style={labelStyle}>Adres</label>
-                            <input style={inputStyle} value={form.address}
-                                onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-                                placeholder="ör: Andifli, Uğur Mumcu Cd. No: 37, Kaş/Antalya" />
-                        </div>
-                        <div>
-                            <label style={labelStyle}>Google Maps Embed URL</label>
-                            <input style={inputStyle} value={form.map_embed_url}
-                                onChange={(e) => setForm((f) => ({ ...f, map_embed_url: e.target.value }))}
-                                placeholder="https://www.google.com/maps/embed?pb=..." />
-                        </div>
-                    </div>
-
-                    {/* Link ve tarihler */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-                        <div>
-                            <label style={labelStyle}>Harici Link</label>
-                            <input style={inputStyle} value={form.external_url}
-                                onChange={(e) => setForm((f) => ({ ...f, external_url: e.target.value }))} placeholder="https://..." />
-                        </div>
-                        <div style={{ display: "flex", gap: 16 }}>
-                            <div style={{ flex: 1 }}>
-                                <label style={labelStyle}>Geçerlilik Başlangıç</label>
-                                <input type="date" style={inputStyle} value={form.validity_start}
-                                    onChange={(e) => setForm((f) => ({ ...f, validity_start: e.target.value }))} />
+                    {/* ── BÖLÜM 5: Konum Bilgisi ── */}
+                    <div style={sectionStyle}>
+                        <div style={sectionHeaderStyle}>📍 Detay Sayfası — Konum Bölümü <span style={sectionHintStyle}>Sayfanın alt kısmı; en az biri doluysa gösterilir</span></div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                            <div>
+                                <label style={labelStyle}>Adres</label>
+                                <input style={inputStyle} value={form.address}
+                                    onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+                                    placeholder="ör: Andifli, Uğur Mumcu Cd. No: 37, Kaş/Antalya" />
                             </div>
-                            <div style={{ flex: 1 }}>
-                                <label style={labelStyle}>Geçerlilik Bitiş</label>
-                                <input type="date" style={inputStyle} value={form.validity_end}
-                                    onChange={(e) => setForm((f) => ({ ...f, validity_end: e.target.value }))} />
+                            <div>
+                                <label style={labelStyle}>Google Maps Embed URL</label>
+                                <input style={inputStyle} value={form.map_embed_url}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        const match = val.match(/src="([^"]*google\.com\/maps\/embed[^"]*)"/);
+                                        setForm((f) => ({ ...f, map_embed_url: match ? match[1] : val }));
+                                    }}
+                                    placeholder="iframe kodunu veya sadece URL'yi yapıştırın" />
+                                <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>Google Maps → Paylaş → Haritayı göm → tüm iframe kodunu yapıştırabilirsiniz, URL otomatik ayıklanır.</div>
                             </div>
                         </div>
-                    </div>
-
-                    {/* Sıra ve aktif */}
-                    <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 16 }}>
-                        <div style={{ width: 100 }}>
-                            <label style={labelStyle}>Sıralama</label>
-                            <input type="number" style={inputStyle} value={form.sort_order}
-                                onChange={(e) => setForm((f) => ({ ...f, sort_order: +e.target.value }))} />
-                        </div>
-                        <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 14, marginTop: 18 }}>
-                            <input type="checkbox" checked={form.is_active}
-                                onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
-                                style={{ width: 18, height: 18, accentColor: "#10b981" }} />
-                            Aktif
-                        </label>
                     </div>
 
                     <div style={{ display: "flex", gap: 8 }}>
@@ -413,3 +437,6 @@ const greenBtnStyle: React.CSSProperties = { padding: "10px 20px", borderRadius:
 const thStyle: React.CSSProperties = { padding: "12px 16px", fontSize: 12, fontWeight: 600, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", textAlign: "center" };
 const labelStyle: React.CSSProperties = { display: "block", fontSize: 12, fontWeight: 600, color: "#475569", marginBottom: 4 };
 const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, outline: "none", boxSizing: "border-box" as const };
+const sectionStyle: React.CSSProperties = { background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, padding: 20, marginBottom: 16 };
+const sectionHeaderStyle: React.CSSProperties = { fontSize: 14, fontWeight: 700, color: "#1e293b", marginBottom: 14, display: "flex", alignItems: "center", gap: 8 };
+const sectionHintStyle: React.CSSProperties = { fontSize: 11, fontWeight: 400, color: "#94a3b8", marginLeft: 4 };

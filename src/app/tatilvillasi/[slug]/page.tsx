@@ -472,25 +472,37 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                         {/* Desktop: Mosaic Grid (1 big + 2 small) */}
                         <div className="vd-gallery-mosaic">
                             <div className="vd-mosaic-big" onClick={() => openGallery(0)}>
-                                <img
-                                    src={villa.images[0] || villa.coverImage || undefined}
+                                <Image
+                                    src={villa.images[0] || villa.coverImage || ""}
                                     alt={`${villa.name} 1`}
                                     className="vd-mosaic-img"
+                                    fill
+                                    sizes="(max-width: 768px) 100vw, 66vw"
+                                    priority
+                                    style={{ objectFit: "cover" }}
                                 />
                             </div>
                             <div className="vd-mosaic-side">
                                 <div className="vd-mosaic-small" onClick={() => openGallery(1)}>
-                                    <img
-                                        src={villa.images[1] || villa.images[0] || undefined}
+                                    <Image
+                                        src={villa.images[1] || villa.images[0] || ""}
                                         alt={`${villa.name} 2`}
                                         className="vd-mosaic-img"
+                                        fill
+                                        sizes="(max-width: 768px) 100vw, 33vw"
+                                        priority
+                                        style={{ objectFit: "cover" }}
                                     />
                                 </div>
                                 <div className="vd-mosaic-small" onClick={() => openGallery(2)}>
-                                    <img
-                                        src={villa.images[2] || villa.images[0] || undefined}
+                                    <Image
+                                        src={villa.images[2] || villa.images[0] || ""}
                                         alt={`${villa.name} 3`}
                                         className="vd-mosaic-img"
+                                        fill
+                                        sizes="(max-width: 768px) 100vw, 33vw"
+                                        priority
+                                        style={{ objectFit: "cover" }}
                                     />
                                     {/* Photo count overlay */}
                                     <div className="vd-mosaic-overlay" onClick={(e) => { e.stopPropagation(); openGallery(0); }}>
@@ -504,10 +516,14 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                         {/* Mobile: Single Image Gallery */}
                         <div className="vd-gallery-mobile">
                             <div className="vd-mobile-gallery-wrap" onClick={() => openGallery(0)}>
-                                <img
-                                    src={villa.images[0] || villa.coverImage || undefined}
+                                <Image
+                                    src={villa.images[0] || villa.coverImage || ""}
                                     alt={villa.name}
                                     className="vd-mobile-gallery-img"
+                                    fill
+                                    sizes="100vw"
+                                    priority
+                                    style={{ objectFit: "cover" }}
                                 />
                                 <div className="vd-mobile-photo-btn">
                                     <img src="/images/ims.png" alt="" style={{ height: 16, marginRight: 6, opacity: 0.9 }} />
@@ -1147,10 +1163,14 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                         onTouchStart={handleTouchStart}
                         onTouchEnd={handleTouchEnd}
                     >
-                        <img
+                        <Image
                             src={villa.images[currentImage]}
                             alt={`${villa.name} ${currentImage + 1}`}
                             className="vd-gallery-modal-img"
+                            fill
+                            sizes="100vw"
+                            style={{ objectFit: "contain" }}
+                            priority
                         />
                     </div>
 
@@ -1169,7 +1189,14 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                 className={`vd-gallery-modal-thumb ${i === currentImage ? 'vd-gallery-modal-thumb-active' : ''}`}
                                 onClick={() => setCurrentImage(i)}
                             >
-                                <img src={img} alt={`Thumb ${i + 1}`} />
+                                <Image
+                                    src={img}
+                                    alt={`Thumb ${i + 1}`}
+                                    fill
+                                    sizes="80px"
+                                    style={{ objectFit: "cover" }}
+                                    loading="lazy"
+                                />
                             </div>
                         ))}
                     </div>

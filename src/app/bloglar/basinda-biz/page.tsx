@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -300,23 +299,6 @@ export default function BasindaBizPage() {
                 </div>
             </div>
 
-            {/* ── Mini Footer ── */}
-            <div style={{ padding: "4px 1%", borderTop: "1px solid #dfdfe3" }}>
-                <div className="middleft smallFooterC">
-                    <div className="smallFooterLeft1">
-                        © 2025 Villa Tatilinde
-                        <br />
-                        Belge No: 18069 - PRAEDIUM GROUP TRAVEL AGENCY
-                    </div>
-                    <div className="smallFooterRight1">
-                        <Link href="/sartlar-kosullar">Koşullar ve Şartlar</Link>
-                    </div>
-                    <div className="smallFooterRight2">
-                        <Link href="/gizlilik-politikasi">Gizlilik</Link>
-                    </div>
-                </div>
-            </div>
-            
             {/* Some CSS to handle small fixes */}
             <style jsx global>{`
                 .fourLine {

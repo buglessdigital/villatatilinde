@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* ─── Campaign card images ─── */
+.campaign-img-desktop { position: relative; display: block; }
+.campaign-img-mobile  { position: relative; display: none; }
+@media (max-width: 640px) {
+  .campaign-img-desktop { display: none; }
+  .campaign-img-mobile  { display: block; }
+}
+
 /* ===== RESET ===== */
 *,
 *::before,
@@ -1789,6 +1797,7 @@ font {
 
 .vd-gallery-modal-image-wrap {
   flex: 1;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1826,6 +1835,7 @@ font {
 
 .vd-gallery-modal-thumb {
   flex-shrink: 0;
+  position: relative;
   width: 72px;
   height: 48px;
   border-radius: 4px;

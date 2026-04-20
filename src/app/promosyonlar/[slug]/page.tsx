@@ -16,6 +16,7 @@ interface Promotion {
     external_url: string;
     validity_start: string;
     validity_end: string;
+    is_couponable: boolean;
 }
 
 interface Props {
@@ -147,28 +148,30 @@ export default async function PromosyonDetayPage({ params }: Props) {
                                                 sayfasını ziyaret edin
                                             </div>
                                         )}
-                                        <Link href="/kupon-olustur">
-                                            <div className="middleft" style={{ marginTop: 20 }}>
-                                                <div
-                                                    className="middle bhs"
-                                                    style={{
-                                                        fontWeight: 500,
-                                                        background: "#000",
-                                                        color: "#fff",
-                                                        fontSize: 15,
-                                                        padding: "10px 16px",
-                                                        borderRadius: 32,
-                                                    }}
-                                                >
-                                                    Kupon Kodu Oluştur
-                                                    <img
-                                                        src="/images/qrw.svg"
-                                                        style={{ height: 13, marginLeft: 6 }}
-                                                        alt=""
-                                                    />
+                                        {promo.is_couponable !== false && (
+                                            <Link href="/kupon-olustur">
+                                                <div className="middleft" style={{ marginTop: 20 }}>
+                                                    <div
+                                                        className="middle bhs"
+                                                        style={{
+                                                            fontWeight: 500,
+                                                            background: "#000",
+                                                            color: "#fff",
+                                                            fontSize: 15,
+                                                            padding: "10px 16px",
+                                                            borderRadius: 32,
+                                                        }}
+                                                    >
+                                                        Kupon Kodu Oluştur
+                                                        <img
+                                                            src="/images/qrw.svg"
+                                                            style={{ height: 13, marginLeft: 6 }}
+                                                            alt=""
+                                                        />
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </Link>
+                                            </Link>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -290,10 +293,10 @@ export default async function PromosyonDetayPage({ params }: Props) {
                                             </div>
                                         </div>
                                     )}
-                                    {promo.map_embed_url && (
+                                    {promo.map_embed_url && promo.map_embed_url.startsWith("https://www.google.com/maps/embed") && (
                                         <div className="cntc32">
                                             <iframe
-                                                src={promo.map_embed_url || undefined}
+                                                src={promo.map_embed_url}
                                                 width="100%"
                                                 height="340"
                                                 style={{ border: 0, borderRadius: 8 }}

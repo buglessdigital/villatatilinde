@@ -15,6 +15,7 @@ interface Campaign {
     discount_amount?: number | null;
     discount_type?: "percentage" | "fixed" | null;
     image_url?: string | null;
+    mobile_image_url?: string | null;
     created_at: string;
 }
 
@@ -28,6 +29,7 @@ const emptyCampaign = {
     discount_amount: 0,
     discount_type: "percentage" as "percentage" | "fixed",
     image_url: "",
+    mobile_image_url: "",
 };
 
 export default function AdminKampanyalar() {
@@ -37,6 +39,8 @@ export default function AdminKampanyalar() {
     const [form, setForm] = useState(emptyCampaign);
     const [saving, setSaving] = useState(false);
     const [editId, setEditId] = useState<string | null>(null);
+    const [showImgInfo, setShowImgInfo] = useState(false);
+    const [showMobileImgInfo, setShowMobileImgInfo] = useState(false);
 
     useEffect(() => {
         loadCampaigns();
@@ -80,6 +84,7 @@ export default function AdminKampanyalar() {
             discount_amount: c.discount_amount || 0,
             discount_type: c.discount_type || "percentage",
             image_url: c.image_url || "",
+            mobile_image_url: c.mobile_image_url || "",
         });
         setEditId(c.id);
         setShowForm(true);
@@ -102,6 +107,7 @@ export default function AdminKampanyalar() {
             discount_amount: form.discount_amount ? Number(form.discount_amount) : null,
             discount_type: form.discount_type || null,
             image_url: form.image_url || null,
+            mobile_image_url: form.mobile_image_url || null,
         };
 
         if (editId) {
@@ -171,15 +177,71 @@ export default function AdminKampanyalar() {
                             />
                         </div>
                         
-                        <div style={{ gridColumn: "1 / -1", marginTop: 8 }}>
-                            <ImageUploader
-                                value={form.image_url || ""}
-                                onChange={(url) => setForm({ ...form, image_url: url })}
-                                label="Kampanya Seçili Görseli"
-                                bucket="images"
-                                folder="campaigns"
-                                height={200}
-                            />
+                        {/* Görseller: Desktop + Mobil */}
+                        <div style={{ gridColumn: "1 / -1", marginTop: 8, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                            {/* Masaüstü Görseli */}
+                            <div>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                                    <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>🖥️ Masaüstü Görseli</span>
+                                    <div style={{ position: "relative" }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowImgInfo((v) => !v)}
+                                            style={{ width: 18, height: 18, borderRadius: "50%", background: "#3b82f6", color: "#fff", border: "none", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                        >i</button>
+                                        {showImgInfo && (
+                                            <div style={{ position: "absolute", top: 24, left: 0, zIndex: 50, background: "#1e293b", color: "#f8fafc", borderRadius: 10, padding: "12px 16px", fontSize: 13, lineHeight: 1.6, width: 240, boxShadow: "0 4px 20px rgba(0,0,0,0.2)" }}>
+                                                <div style={{ fontWeight: 700, marginBottom: 6, color: "#60a5fa" }}>Masaüstü Görsel</div>
+                                                <div>📐 Oran: <b>16:9</b></div>
+                                                <div>📏 Boyut: <b>1200 × 675 px</b></div>
+                                                <div style={{ marginTop: 6, color: "#94a3b8", fontSize: 12 }}>Bu oran dışında yüklenen görseller kırpılır.</div>
+                                                <button type="button" onClick={() => setShowImgInfo(false)} style={{ marginTop: 8, background: "none", border: "none", color: "#60a5fa", fontSize: 12, cursor: "pointer", padding: 0 }}>Kapat</button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <ImageUploader
+                                    value={form.image_url || ""}
+                                    onChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
+                                    label=""
+                                    bucket="images"
+                                    folder="campaigns"
+                                    height={180}
+                                />
+                                <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>Önerilen: 1200 × 675 px (16:9)</div>
+                            </div>
+
+                            {/* Mobil Görseli */}
+                            <div>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                                    <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>📱 Mobil Görseli</span>
+                                    <div style={{ position: "relative" }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowMobileImgInfo((v) => !v)}
+                                            style={{ width: 18, height: 18, borderRadius: "50%", background: "#3b82f6", color: "#fff", border: "none", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                        >i</button>
+                                        {showMobileImgInfo && (
+                                            <div style={{ position: "absolute", top: 24, left: 0, zIndex: 50, background: "#1e293b", color: "#f8fafc", borderRadius: 10, padding: "12px 16px", fontSize: 13, lineHeight: 1.6, width: 240, boxShadow: "0 4px 20px rgba(0,0,0,0.2)" }}>
+                                                <div style={{ fontWeight: 700, marginBottom: 6, color: "#60a5fa" }}>Mobil Görsel</div>
+                                                <div>📐 Oran: <b>4:3</b></div>
+                                                <div>📏 Boyut: <b>800 × 600 px</b></div>
+                                                <div style={{ marginTop: 6, color: "#94a3b8", fontSize: 12 }}>Dikey ve dar ekranlarda daha iyi görünür.</div>
+                                                <button type="button" onClick={() => setShowMobileImgInfo(false)} style={{ marginTop: 8, background: "none", border: "none", color: "#60a5fa", fontSize: 12, cursor: "pointer", padding: 0 }}>Kapat</button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <ImageUploader
+                                    value={form.mobile_image_url || ""}
+                                    onChange={(url) => setForm((f) => ({ ...f, mobile_image_url: url }))}
+                                    label=""
+                                    bucket="images"
+                                    folder="campaigns/mobile"
+                                    height={135}
+                                />
+                                <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>Önerilen: 800 × 600 px (4:3)</div>
+                            </div>
                         </div>
                         
                         <div style={{ gridColumn: "1 / -1" }}>

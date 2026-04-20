@@ -192,8 +192,21 @@ export default async function KampanyalarPage() {
                                     borderRadius: 12,
                                     overflow: "hidden"
                                 }}>
-                                    {c.image_url && (
-                                        <img src={c.image_url} alt={c.title} style={{ width: "100%", height: 200, objectFit: "cover" }} />
+                                    {(c.image_url || c.mobile_image_url) && (
+                                        <div style={{ position: "relative", width: "100%", overflow: "hidden" }}>
+                                            {/* Masaüstü: 16:9 */}
+                                            {c.image_url && (
+                                                <div className="campaign-img-desktop" style={{ aspectRatio: "16/9" }}>
+                                                    <img src={c.image_url} alt={c.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                                                </div>
+                                            )}
+                                            {/* Mobil: 4:3 */}
+                                            {c.mobile_image_url && (
+                                                <div className="campaign-img-mobile" style={{ aspectRatio: "4/3" }}>
+                                                    <img src={c.mobile_image_url} alt={c.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                                                </div>
+                                            )}
+                                        </div>
                                     )}
                                     <div style={{ padding: 20 }}>
                                         <div style={{ color: "#50b0f0", fontSize: 14, fontWeight: 600, margin: "0 0 4px" }}>
