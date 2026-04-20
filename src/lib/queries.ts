@@ -50,7 +50,7 @@ export async function getVillaDetailBySlug(slug: string): Promise<VillaDetail | 
             .from('villa_price_periods')
             .select('*')
             .eq('villa_id', villa.id)
-            .order('sort_order'),
+            .order('start_date'),
 
         // Dolu tarihler
         supabase
@@ -95,7 +95,7 @@ export async function getVillaDetailBySlug(slug: string): Promise<VillaDetail | 
 export async function getFeaturedVillas(limit = 8): Promise<VillaCard[]> {
     const { data: villas, error } = await supabase
         .from('villas')
-        .select('id, slug, name, cover_image_url, location_label, min_price, max_guests, bedrooms, beds, max_discount_pct, has_active_discount, is_exclusive')
+        .select('id, slug, name, cover_image_url, location_label, min_price, max_guests, bedrooms, beds, bathrooms, max_discount_pct, has_active_discount, is_exclusive')
         .eq('is_published', true)
         .order('sort_order')
         .limit(limit);
@@ -114,15 +114,16 @@ export async function getFeaturedVillas(limit = 8): Promise<VillaCard[]> {
                     .limit(3),
                 supabase
                     .from('villa_features')
-                    .select('features(label_tr)')
+                    .select('features!inner(label_tr, group_type)')
                     .eq('villa_id', v.id)
-                    .limit(3),
+                    .eq('features.group_type', 'premium')
+                    .limit(5),
             ]);
 
             const images = (imagesRes.data || []).map((img: { url: string }) => img.url);
             const features = (featuresRes.data || [])
-                .map((vf: Record<string, unknown>) => {
-                    const f = vf.features as { label_tr: string } | null;
+                .map((vf: any) => {
+                    const f = vf.features;
                     return f?.label_tr || '';
                 })
                 .filter(Boolean);
@@ -144,7 +145,7 @@ export async function getFeaturedVillas(limit = 8): Promise<VillaCard[]> {
 export async function getRecentVillas(limit = 6): Promise<VillaCard[]> {
     const { data: villas, error } = await supabase
         .from('villas')
-        .select('id, slug, name, cover_image_url, location_label, min_price, max_guests, bedrooms, beds, max_discount_pct, has_active_discount, is_exclusive, avg_rating')
+        .select('id, slug, name, cover_image_url, location_label, min_price, max_guests, bedrooms, beds, bathrooms, max_discount_pct, has_active_discount, is_exclusive, avg_rating')
         .eq('is_published', true)
         .order('created_at', { ascending: false })
         .limit(limit);
@@ -155,13 +156,14 @@ export async function getRecentVillas(limit = 6): Promise<VillaCard[]> {
         villas.map(async (v) => {
             const featuresRes = await supabase
                 .from('villa_features')
-                .select('features(label_tr)')
+                .select('features!inner(label_tr, group_type)')
                 .eq('villa_id', v.id)
-                .limit(4);
+                .eq('features.group_type', 'premium')
+                .limit(5);
 
             const features = (featuresRes.data || [])
-                .map((vf: Record<string, unknown>) => {
-                    const f = vf.features as { label_tr: string } | null;
+                .map((vf: any) => {
+                    const f = vf.features;
                     return f?.label_tr || '';
                 })
                 .filter(Boolean);
@@ -205,7 +207,7 @@ export async function getAllVillasForSearch(): Promise<VillaDetail[]> {
                     .from('villa_price_periods')
                     .select('*')
                     .eq('villa_id', villa.id)
-                    .order('sort_order'),
+                    .order('start_date'),
                 supabase
                     .from('villa_images')
                     .select('*')

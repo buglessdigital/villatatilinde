@@ -67,6 +67,7 @@ interface PromotionalVilla {
     min_price: number;
     max_guests: number;
     bedrooms: number;
+    bathrooms: number;
     promotion_discount_text: string;
     promotion_description: string;
     villa_images?: { url: string; sort_order: number }[];
@@ -82,12 +83,26 @@ export default async function KategoriPage({ params }: Props) {
     if (config.isVilla) {
         const { data: villas } = await supabase
             .from("villas")
-            .select("id, name, slug, cover_image_url, location_label, min_price, max_guests, bedrooms, promotion_discount_text, promotion_description, villa_images(url, sort_order)")
+            .select("id, name, slug, cover_image_url, location_label, min_price, max_guests, bedrooms, bathrooms, promotion_discount_text, promotion_description, villa_images(url, sort_order)")
             .eq("is_published", true)
             .eq("is_promotional", true)
             .order("sort_order", { ascending: true });
 
         const promoVillas = (villas || []) as PromotionalVilla[];
+
+        // Fetch premium features for these villas
+        const villaIds = promoVillas.map(v => v.id);
+        const { data: featureData } = await supabase
+            .from('villa_features')
+            .select('villa_id, features!inner(label_tr, group_type)')
+            .in('villa_id', villaIds)
+            .eq('features.group_type', 'premium');
+
+        const premiumFeaturesMap: Record<string, string[]> = {};
+        (featureData || []).forEach((vf: any) => {
+            if (!premiumFeaturesMap[vf.villa_id]) premiumFeaturesMap[vf.villa_id] = [];
+            premiumFeaturesMap[vf.villa_id].push(vf.features.label_tr);
+        });
 
         return (
             <div className="prms-page" style={{ paddingBottom: 72 }}>
@@ -129,12 +144,13 @@ export default async function KategoriPage({ params }: Props) {
                                 slug: villa.slug,
                                 name: villa.name,
                                 images: allImages,
-                                features: [],
+                                features: (premiumFeaturesMap[villa.id] || []).slice(0, 4),
                                 nightlyPrice: rawPrice,
                                 totalPrice: rawPrice * 5,
                                 dateRange: "5 Gece",
                                 beds: villa.bedrooms,
                                 guests: villa.max_guests,
+                                bathrooms: villa.bathrooms || 0,
                                 maxDiscount: 0,
                                 cheapestVilla: true,
                                 promotionDiscountText: villa.promotion_discount_text,

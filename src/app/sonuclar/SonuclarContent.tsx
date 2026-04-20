@@ -29,6 +29,7 @@ interface Villa {
     images: string[];
     guests: number;
     bedrooms: number;
+    bathrooms: number;
     minEver: number;
     priceBlocks: PriceBlock[];
     features: string[];
@@ -47,6 +48,7 @@ function mapVillaDetail(v: VillaDetail): Villa {
             : [v.cover_image_url || '/images/natureview.jpg'],
         guests: v.max_guests,
         bedrooms: v.bedrooms,
+        bathrooms: v.bathrooms || 0,
         minEver: v.min_price || 0,
         priceBlocks: (v.price_periods || []).map((pp: DbVillaPricePeriod) => ({
             period: pp.label,
@@ -56,7 +58,9 @@ function mapVillaDetail(v: VillaDetail): Villa {
             minNights: pp.min_nights,
             originalPrice: pp.original_price || undefined,
         })),
-        features: (v.features || []).map((f: DbFeature) => f.key || f.label_tr),
+        features: (v.features || [])
+            .filter((f: DbFeature) => f.group_type === 'premium')
+            .map((f: DbFeature) => f.key || f.label_tr),
         score: v.avg_rating || 0,
     };
 }
@@ -401,6 +405,17 @@ function VillaCard({
                                     alt="Beds"
                                 />
                                 {villa.bedrooms}
+                                <img
+                                    src="/images/bathsolid.svg"
+                                    style={{
+                                        marginLeft: 20,
+                                        display: "inline-block",
+                                        height: 12,
+                                        marginRight: 7,
+                                    }}
+                                    alt="Baths"
+                                />
+                                {villa.bathrooms}
                                 <img
                                     src="/images/people.svg"
                                     style={{
@@ -1026,9 +1041,35 @@ function SonuclarInner() {
                     </div>
 
                     {/* Villa Cards */}
-                    {/* Villa Cards */}
                     <div className={styles.villasContainer}>
-                        {filteredVillas.length > 0 ? (
+                        {loadingVillas ? (
+                            <div style={{ 
+                                width: "100%", 
+                                display: "flex", 
+                                flexDirection: "column", 
+                                alignItems: "center", 
+                                justifyContent: "center", 
+                                padding: "80px 20px",
+                                color: "#1e90ff"
+                            }}>
+                                <div className={styles.spinner} style={{ 
+                                    width: "40px", 
+                                    height: "40px", 
+                                    border: "4px solid #f3f3f3", 
+                                    borderTop: "4px solid #1e90ff", 
+                                    borderRadius: "50%", 
+                                    animation: "spin 1s linear infinite",
+                                    marginBottom: "16px"
+                                }}></div>
+                                <div className="poppins" style={{ fontSize: "18px", fontWeight: 600 }}>Arama yapılıyor...</div>
+                                <style jsx>{`
+                                    @keyframes spin {
+                                        0% { transform: rotate(0deg); }
+                                        100% { transform: rotate(360deg); }
+                                    }
+                                `}</style>
+                            </div>
+                        ) : filteredVillas.length > 0 ? (
                             <>
                                 {paginatedVillas.map((villa) => (
                                     <VillaCard

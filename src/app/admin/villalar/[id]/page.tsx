@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { getDestinations } from "@/lib/queries";
 import { DbDestination } from "@/lib/types";
 import ImageUploader from "@/components/ImageUploader";
+import MediaUploader from "@/components/MediaUploader";
 import MultiImageUploader, { GalleryImage } from "@/components/MultiImageUploader";
 import MapPicker from "@/components/MapPicker";
 import AdminCalendarPicker from "@/components/AdminCalendarPicker";
@@ -547,7 +548,6 @@ export default function VillaEditPage() {
         const safeInt = (v: number) => Math.max(Math.floor(Number(v) || 0), 0);
 
         // Sadece veritabanında var olan alanları gönder
-        // (is_promotional, promotion_discount_text, promotion_description DB'de YOK)
         const payload: Record<string, unknown> = {
             slug,
             name: form.name,
@@ -577,6 +577,9 @@ export default function VillaEditPage() {
             parties_allowed: form.parties_allowed,
             is_published: form.is_published,
             is_exclusive: form.is_exclusive,
+            is_promotional: form.is_promotional,
+            promotion_discount_text: form.promotion_discount_text,
+            promotion_description: form.promotion_description,
             sort_order: safeInt(form.sort_order),
             owner_name: form.owner_name,
             owner_phone: form.owner_phone,
@@ -821,12 +824,15 @@ export default function VillaEditPage() {
                 </FormRow>
 
                 <FormRow>
-                    <FormField label="Tanıtım Videosu URL (YouTube, Vimeo vb.)" width="100%">
-                        <input
-                            style={inputStyle}
+                    <FormField label="Tanıtım Videosu" width="100%">
+                        <MediaUploader
+                            label=""
                             value={form.video_url}
-                            onChange={(e) => updateField("video_url", e.target.value)}
-                            placeholder="https://www.youtube.com/watch?v=..."
+                            onChange={(url) => updateField("video_url", url)}
+                            bucket="images"
+                            folder="videos"
+                            acceptType="video/*"
+                            height={240}
                         />
                     </FormField>
                 </FormRow>

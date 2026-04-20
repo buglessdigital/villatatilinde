@@ -159,7 +159,30 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
     const reservationRef = useRef<HTMLDivElement>(null);
 
     // Currency context
-    const { formatPrice, currency: activeCurrency, convertPrice } = useCurrency();
+    const { formatPrice, currency: activeCurrency, convertPrice, rates } = useCurrency();
+
+    // Villa's own currency-aware price formatter
+    // Fiyatlar DB'de villa.currency cinsinden saklanıyor (GBP, TRY, EUR vb.)
+    // Bu fonksiyon doğru birimi gösterir ve kullanıcının seçtiği dövize çevirir
+    const formatVillaPrice = (amount: number): string => {
+        if (!villa) return formatPrice(amount);
+        const villaCurrency = (villa.currency || "TRY").toUpperCase();
+        const SYMBOLS: Record<string, string> = { TRY: "₺", GBP: "£", EUR: "€", USD: "$", RUB: "₽" };
+
+        // Kullanıcı hangi dövizi seçmiş?
+        const targetCode = activeCurrency.code;
+
+        if (villaCurrency === targetCode) {
+            // Aynı birim → sembol + sayı, dönüşüm yok
+            const sym = SYMBOLS[villaCurrency] || villaCurrency + " ";
+            return `${sym}${amount.toLocaleString("tr-TR")}`;
+        }
+
+        // Farklı birim → önce TRY'ye çevir, sonra hedef dövize
+        const toTRY = villaCurrency === "TRY" ? amount : amount / (rates[villaCurrency] || 1);
+        const converted = targetCode === "TRY" ? toTRY : Math.round(toTRY * (rates[targetCode] || 1));
+        return `${activeCurrency.symbol}${converted.toLocaleString("tr-TR")}`;
+    };
 
     // Resolve params and fetch data
     useEffect(() => {
@@ -498,7 +521,7 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                         {/* Price Header */}
                         <div className="vd-price-header">
                             <div className="vd-price-big">
-                                {formatPrice(villa.minEver)}
+                                {formatVillaPrice(villa.minEver)}
                             </div>
                             <div className="vd-price-sub">&apos;den başlayan fiyatlar</div>
                         </div>
@@ -542,7 +565,7 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                             </div>
                             <div className="vd-price-blocks">
                                 {villa.priceBlocks.map((pb, i) => (
-                                    <PriceBlockCard key={i} block={pb} weekly={weeklyShow} formatPriceFn={formatPrice} />
+                                    <PriceBlockCard key={i} block={pb} weekly={weeklyShow} formatPriceFn={formatVillaPrice} />
                                 ))}
                             </div>
                         </div>
@@ -581,13 +604,13 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                     <div className="vd-info-item">
                                         <div className="vd-info-label">Depozito</div>
                                         <div className="vd-info-value">
-                                            : {formatPrice(villa.deposit)}
+                                            : {formatVillaPrice(villa.deposit)}
                                         </div>
                                     </div>
                                     <div className="vd-info-item">
                                         <div className="vd-info-label">Temizlik <span className="vd-info-small">( {villa.minResCleaning} gün ve altı için )</span></div>
                                         <div className="vd-info-value">
-                                            : {formatPrice(villa.cleaning)}
+                                            : {formatVillaPrice(villa.cleaning)}
                                         </div>
                                     </div>
                                     <div className="vd-info-item">
@@ -679,30 +702,30 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                         <>
                                             <div className="vd-res-pricing-row" style={{ fontWeight: 500 }}>
                                                 <span>Konaklama Ücreti</span>
-                                                <span>{formatPrice(accommodationPrice)}</span>
+                                                <span>{formatVillaPrice(accommodationPrice)}</span>
                                             </div>
                                             <div className="vd-res-pricing-row" style={{ fontWeight: 500 }}>
                                                 <span style={{ display: "flex", alignItems: "center" }}>
                                                     Temizlik
                                                 </span>
-                                                <span>{formatPrice(cleaningFeeTotal)}</span>
+                                                <span>{formatVillaPrice(cleaningFeeTotal)}</span>
                                             </div>
                                         </>
                                     )}
 
                                     <div className="vd-res-pricing-row" style={{ fontSize: 16, borderBottom: "1px solid #e2e8f0", paddingBottom: 12, marginBottom: 16 }}>
                                         <span>{nightCount} Gece Toplam Tutar</span>
-                                        <span>{formatPrice(totalPrice)}</span>
+                                        <span>{formatVillaPrice(totalPrice)}</span>
                                     </div>
 
                                     <div className="vd-res-pricing-row" style={{ fontWeight: 500 }}>
                                         <span>%{(villa?.commissionRate || 20)} Ön Ödeme</span>
-                                        <span>{formatPrice(advancePayment)}</span>
+                                        <span>{formatVillaPrice(advancePayment)}</span>
                                     </div>
 
                                     <div className="vd-res-pricing-row" style={{ fontWeight: 500 }}>
                                         <span>%{100 - (villa?.commissionRate || 20)} Kalan Ödeme</span>
-                                        <span>{formatPrice(remainingPayment)}</span>
+                                        <span>{formatVillaPrice(remainingPayment)}</span>
                                     </div>
 
                                     <div className="vd-res-pricing-row" style={{ fontWeight: 500 }}>
@@ -710,7 +733,7 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                             Depozito
                                             <span style={{ fontSize: 12, color: "#64748b", fontWeight: 400, marginLeft: 4 }}>(toplam tutara dahil değildir)</span>
                                         </span>
-                                        <span>{formatPrice(villa.deposit)}</span>
+                                        <span>{formatVillaPrice(villa.deposit)}</span>
                                     </div>
                                 </div>
                             )}
@@ -867,9 +890,9 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                             <RuleCard img="/images/checkout2.png" label={`Villa Çıkış Saati\n${villa.checkOut}`} />
                             {villa.selfCheckin && <RuleCard img="/images/checkin2.png" label="Özerk Giriş\n(Anahtar Kutusu)" />}
                             {villa.poolFence && <RuleCard img="/images/poolfence.png" label="Havuz Etrafında\nGüvenlik Çiti" />}
-                            {villa.pet && <RuleCard img="/images/petnot.png" label="Evcil Hayvana\nİzin Verilmiyor" />}
+                            {villa.pet && <RuleCard img="/images/petnot.png" label="Evcil Hayvanlara\nİzin Verilmiyor" />}
                             {villa.smoke && <RuleCard img="/images/nosmoking.png" label="İç Mekanda Sigara\nİçilmez" />}
-                            {villa.party && <RuleCard img="/images/noparty.png" label="Parti ve Toplantı\nYapılmaz" />}
+                            {villa.party && <RuleCard img="/images/noparty.png" label="Parti\nYapılmaz" />}
                             {villa.sound && <RuleCard img="/images/noloud.png" label="Yüksek Ses\nYapılmaz" />}
                         </div>
                     </section>
@@ -1277,7 +1300,7 @@ function RuleCard({ img, label }: { img: string; label: string }) {
                 <img src={img} alt="" />
             </div>
             <div className="vd-rule-label">
-                {label.split("\n").map((line, i) => (
+                {label.split(/\\n|\n/).map((line, i) => (
                     <span key={i}>{line}<br /></span>
                 ))}
             </div>

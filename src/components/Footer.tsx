@@ -238,7 +238,7 @@ export default function Footer() {
                             <>
                                 <Link href="/gizlilik-politikasi" className="footer-link">Gizlilik Politikası</Link>
                                 <Link href="/sartlar-kosullar" className="footer-link">Şartlar ve Koşullar</Link>
-                                <Link href="/iptal-iade-politikalari" className="footer-link">İptal ve İade Politikası</Link>
+                                <Link href="/mesafeli-satis-sozlesmesi" className="footer-link">Mesafeli Satış Sözleşmesi</Link>
                             </>
                         )}
                     </div>
@@ -312,7 +312,7 @@ export default function Footer() {
                         <Link href="/nasil-kiralanir" style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16, textDecoration: "none" }}>Nasıl Kiralanır</Link>
                         <Link href="/odeme-yontemleri" style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16, textDecoration: "none" }}>Taksit Seçenekleri ve Ödeme Yöntemleri</Link>
                         <Link href="/sikca-sorulan-sorular" style={{ display: "block", color: "#ccc", fontSize: 13, marginBottom: 16, textDecoration: "none" }}>Sıkça Sorulan Sorular</Link>
-                        <Link href="/iptal-iade-politikalari" style={{ display: "block", color: "#ccc", fontSize: 13, textDecoration: "none" }}>İptal ve İade Politikası</Link>
+                        <Link href="/mesafeli-satis-sozlesmesi" style={{ display: "block", color: "#ccc", fontSize: 13, textDecoration: "none" }}>Mesafeli Satış Sözleşmesi</Link>
                     </div>
 
                     <div style={{ marginBottom: 32 }}>
@@ -354,7 +354,7 @@ export default function Footer() {
                             <>
                                 <Link href="/gizlilik-politikasi" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>Gizlilik Politikası</Link>
                                 <Link href="/sartlar-kosullar" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>Şartlar ve Koşullar</Link>
-                                <Link href="/iptal-iade-politikalari" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>İptal ve İade Politikası</Link>
+                                <Link href="/mesafeli-satis-sozlesmesi" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>Mesafeli Satış Sözleşmesi</Link>
                             </>
                         )}
                     </div>

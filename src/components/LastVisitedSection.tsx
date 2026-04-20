@@ -16,6 +16,7 @@ interface LastVisitedVilla {
     minPrice: number;
     bedrooms: number;
     guests: number;
+    bathrooms: number;
     hasDiscount: boolean;
 }
 
@@ -30,6 +31,7 @@ function mapToLastVisited(v: VillaCardType): LastVisitedVilla {
         minPrice: Number(v.min_price) || 0,
         bedrooms: v.bedrooms,
         guests: v.max_guests,
+        bathrooms: v.bathrooms || 0,
         hasDiscount: v.has_active_discount || false,
     };
 }
@@ -192,6 +194,18 @@ function LastVisitedCard({ villa }: { villa: LastVisitedVilla }) {
                                 alt="Beds"
                             />
                             &nbsp;{villa.bedrooms}
+                            <img
+                                src="/images/bathsolid.svg"
+                                style={{
+                                    opacity: 1,
+                                    marginLeft: 25,
+                                    display: "inline-block",
+                                    height: 13,
+                                    marginRight: 6,
+                                }}
+                                alt="Baths"
+                            />
+                            &nbsp;{villa.bathrooms}
                             <img
                                 src="/images/people.svg"
                                 style={{

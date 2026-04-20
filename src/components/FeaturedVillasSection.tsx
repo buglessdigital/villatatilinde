@@ -20,6 +20,7 @@ function mapVillaToView(v: VillaCardType): VillaView {
         dateRange: "5 Gece",
         beds: v.bedrooms,
         guests: v.max_guests,
+        bathrooms: v.bathrooms || 0,
         maxDiscount: v.max_discount_pct || 0,
         cheapestVilla: true,
     };

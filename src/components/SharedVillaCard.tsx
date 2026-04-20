@@ -14,6 +14,7 @@ export interface VillaView {
     dateRange?: string;
     beds: number;
     guests: number;
+    bathrooms: number;
     maxDiscount: number;
     cheapestVilla: boolean;
     promotionDiscountText?: string;
@@ -321,6 +322,17 @@ export default function SharedVillaCard({ villa, className }: { villa: VillaView
                                 alt="Beds"
                             />
                             {villa.beds}
+                            <img
+                                src="/images/bathsolid.svg"
+                                style={{
+                                    marginLeft: 20,
+                                    display: "inline-block",
+                                    height: 12,
+                                    marginRight: 7,
+                                }}
+                                alt="Baths"
+                            />
+                            {villa.bathrooms}
                             <img
                                 src="/images/people.svg"
                                 style={{

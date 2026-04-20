@@ -1,4 +1,5 @@
 import SearchFilterBar from "./SearchFilterBar";
+import Link from "next/link";
 
 interface HeroSectionProps {
     bgImage?: string | null;
@@ -126,7 +127,7 @@ export default function HeroSection({ bgImage, title, subtitle, textColor }: Her
                                                 lineHeight: 1.2,
                                             }}
                                         >
-                                            İptal ve İade Politikası Koşulları Kapsamında{" "}
+                                            <Link href="/mesafeli-satis-sozlesmesi" style={{ textDecoration: "underline", color: "inherit" }}>Mesafeli Satış Sözleşmesi</Link> Koşulları Kapsamında{" "}
                                             <img
                                                 className="bhs"
                                                 src="/images/question.svg"
@@ -204,7 +205,7 @@ export default function HeroSection({ bgImage, title, subtitle, textColor }: Her
                                         lineHeight: 1.2,
                                     }}
                                 >
-                                    İptal ve İade Politikası Koşulları Kapsamında{" "}
+                                    <Link href="/mesafeli-satis-sozlesmesi" style={{ textDecoration: "underline", color: "inherit" }}>Mesafeli Satış Sözleşmesi</Link> Koşulları Kapsamında{" "}
                                     <img
                                         className="bhs"
                                         src="/images/question.svg"

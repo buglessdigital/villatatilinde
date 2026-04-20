@@ -250,7 +250,7 @@ export default function OdemeYontemleriContent() {
                                         fontSize: "1rem",
                                     }}
                                 >
-                                    <Link href="/iptal-iade-politikalari">
+                                    <Link href="/mesafeli-satis-sozlesmesi">
                                         <div
                                             className="middleft bhs"
                                             style={{
@@ -272,7 +272,7 @@ export default function OdemeYontemleriContent() {
                                                     width: "calc(100% - 48px - 1rem)",
                                                 }}
                                             >
-                                                İptal ve İade Politikası için tıklayın
+                                                Mesafeli Satış Sözleşmesi için tıklayın
                                             </div>
                                         </div>
                                     </Link>

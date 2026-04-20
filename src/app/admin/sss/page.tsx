@@ -88,12 +88,21 @@ export default function AdminSSS() {
                         <input style={inputStyle} value={form.question_tr} onChange={(e) => setForm({ ...form, question_tr: e.target.value })} placeholder="Soru metni..." />
                     </div>
                     <div style={{ marginBottom: 12 }}>
-                        <label style={labelStyle}>Cevap</label>
+                        <label style={labelStyle}>Cevap (Link eklemek için metni seçip üstteki zincir 🔗 ikonuna tıklayın)</label>
                         <div style={{ background: "#fff", borderRadius: 8, overflow: 'hidden' }}>
                             <ReactQuill 
                                 theme="snow" 
                                 value={form.answer_html_tr} 
-                                onChange={(val) => setForm({ ...form, answer_html_tr: val })} 
+                                onChange={(val) => setForm({ ...form, answer_html_tr: val })}
+                                modules={{
+                                    toolbar: [
+                                        [{ 'header': [1, 2, false] }],
+                                        ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+                                        [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
+                                        ['link'],
+                                        ['clean']
+                                    ],
+                                }}
                             />
                         </div>
                     </div>

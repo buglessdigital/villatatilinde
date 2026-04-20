@@ -21,7 +21,9 @@ export default function KuponOlusturPage() {
             const { data } = await supabase
                 .from("promotions")
                 .select("id, title")
-                .eq("is_active", true);
+                .eq("is_active", true)
+                .eq("is_couponable", true)
+                .order("sort_order", { ascending: true });
             if (data) {
                 setPromotions(data);
             }

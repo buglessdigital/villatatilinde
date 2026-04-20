@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 
 export default function MobileBestPriceBanner() {
     const [activeModal, setActiveModal] = useState<number | null>(null);
@@ -127,7 +128,7 @@ export default function MobileBestPriceBanner() {
                         </div>
                         <div style={{ marginLeft: 12, flex: 1, overflow: "hidden" }}>
                             <div className="oneLine" style={{ fontSize: 16, fontWeight: 600, color: "#111" }}>%100 Para İade Garantisi</div>
-                            <div className="oneLine" style={{ fontSize: 13, fontWeight: 400, color: "#444" }}>İptal ve İade Politikası Koşulları Kapsamında...</div>
+                            <div className="oneLine" style={{ fontSize: 13, fontWeight: 400, color: "#444" }}>Mesafeli Satış Sözleşmesi Koşulları Kapsamında...</div>
                         </div>
                         <div style={{ marginLeft: "auto", flexShrink: 0 }}>
                             <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#f6f6f6", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: 14, color: "#000" }}>?</div>
@@ -343,14 +344,14 @@ export default function MobileBestPriceBanner() {
                                     %100 Para İade Garantisi
                                 </div>
                                 <div style={{ fontSize: 15, color: "#333", marginBottom: 12, display: "flex", gap: 6 }}>
-                                    <span>•</span> İptal ve İade Politikası Koşulları Kapsamındadır
+                                    <span>•</span> Mesafeli Satış Sözleşmesi Koşulları Kapsamındadır
                                 </div>
                                 <div style={{ fontSize: 15, color: "#333", marginBottom: 12, display: "flex", gap: 6 }}>
                                     <span>•</span>
-                                    <div>
-                                        İptal ve İade Politikası görüntülemek için tıklayın
+                                    <Link href="/mesafeli-satis-sozlesmesi" style={{ color: "inherit", textDecoration: "none" }}>
+                                        Mesafeli Satış Sözleşmesi görüntülemek için tıklayın
                                         <span style={{ display: "inline-block", background: "#ddd", borderRadius: "50%", width: 16, height: 16, textAlign: "center", lineHeight: "16px", fontSize: 11, fontWeight: "bold", marginLeft: 6 }}>?</span>
-                                    </div>
+                                    </Link>
                                 </div>
                                 <ContactLinks />
                             </div>

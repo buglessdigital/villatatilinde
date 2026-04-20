@@ -389,7 +389,7 @@ export default function Navbar() {
                                 {[
                                     { href: "/sorular", label: "Sorular & Destek" },
                                     { href: "/garantili-villa-kiralama", label: "Garantili Kiralama" },
-                                    { href: "/iptal-iade-politikalari", label: "İptal ve İade Politikası" },
+                                    { href: "/mesafeli-satis-sozlesmesi", label: "Mesafeli Satış Sözleşmesi" },
                                     { href: "/odeme-yontemleri", label: "Ödeme Yöntemleri" },
                                     { href: "/politika/mesafeli-satis-kiralama-sozlesmesi", label: "Mesafeli Satış Sözleşmesi" },
                                 ].map((item) => (

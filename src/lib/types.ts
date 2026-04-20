@@ -57,6 +57,9 @@ export interface DbVilla {
     owner_notes: string;
     is_published: boolean;
     is_exclusive: boolean;
+    is_promotional: boolean;
+    promotion_discount_text: string | null;
+    promotion_description: string | null;
     sort_order: number;
     has_active_discount: boolean;
     max_discount_pct: number;
@@ -190,6 +193,7 @@ export interface VillaCard {
     max_discount_pct: number;
     has_active_discount: boolean;
     is_exclusive: boolean;
+    bathrooms: number;
     features: string[];  // feature label_tr array
     images: string[];    // image URLs
 }
