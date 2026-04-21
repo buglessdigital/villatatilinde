@@ -187,6 +187,7 @@ export interface VillaCard {
     cover_image_url: string;
     location_label: string;
     min_price: number;
+    currency?: string;
     max_guests: number;
     bedrooms: number;
     beds: number;

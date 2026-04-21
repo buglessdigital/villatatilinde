@@ -14,6 +14,7 @@ interface LastVisitedVilla {
     features: string[];
     score: number;
     minPrice: number;
+    currency?: string;
     bedrooms: number;
     guests: number;
     bathrooms: number;
@@ -29,6 +30,7 @@ function mapToLastVisited(v: VillaCardType): LastVisitedVilla {
         features: v.features.slice(0, 3),
         score: 0,
         minPrice: Number(v.min_price) || 0,
+        currency: v.currency,
         bedrooms: v.bedrooms,
         guests: v.max_guests,
         bathrooms: v.bathrooms || 0,
@@ -38,7 +40,8 @@ function mapToLastVisited(v: VillaCardType): LastVisitedVilla {
 
 /* ─── Last Visited Card ─── */
 function LastVisitedCard({ villa }: { villa: LastVisitedVilla }) {
-    const { formatPrice } = useCurrency();
+    const { formatVillaCurrencyPrice } = useCurrency();
+    const fmt = (amount: number) => formatVillaCurrencyPrice(amount, villa.currency);
     return (
         <div
             className="lastVisitedSlide"
@@ -164,7 +167,7 @@ function LastVisitedCard({ villa }: { villa: LastVisitedVilla }) {
                                 className="poppins"
                                 style={{ fontSize: 16, color: "#333" }}
                             >
-                                {formatPrice(villa.minPrice)}
+                                {fmt(villa.minPrice)}
                             </span>{" "}
                             / Gece&apos;den başlayan fiya...
                         </div>

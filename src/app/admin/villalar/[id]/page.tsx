@@ -68,7 +68,7 @@ interface VillaForm {
     map_iframe_url: string;
     video_url: string;
     currency: string;
-    commission_rate: number;
+    commission_pct: number;
 }
 
 interface PricePeriod {
@@ -151,7 +151,7 @@ const emptyForm: VillaForm = {
     map_iframe_url: "",
     video_url: "",
     currency: "TRY",
-    commission_rate: 20,
+    commission_pct: 20,
 };
 
 const emptyPeriod = {
@@ -298,7 +298,7 @@ export default function VillaEditPage() {
             map_iframe_url: data.map_iframe_url || "",
             video_url: data.video_urls && data.video_urls.length > 0 ? data.video_urls[0] : "",
             currency: data.currency || "TRY",
-            commission_rate: data.commission_rate ?? 20,
+            commission_pct: data.commission_pct ?? 20,
         });
 
         setIncludedServices(data.included_services || []);
@@ -605,7 +605,7 @@ export default function VillaEditPage() {
             included_services: includedServices,
             video_urls: form.video_url ? [form.video_url] : [],
             currency: form.currency,
-            commission_rate: safeNumeric52(form.commission_rate),
+            commission_pct: safeNumeric52(form.commission_pct),
             destination_id: form.destination_id || null,
         };
 
@@ -803,7 +803,16 @@ export default function VillaEditPage() {
                         <select
                             style={inputStyle}
                             value={form.destination_id || ""}
-                            onChange={(e) => updateField("destination_id", e.target.value || null)}
+                            onChange={(e) => {
+                                const selectedId = e.target.value || null;
+                                const selectedDest = allDestinations.find(d => d.id === selectedId);
+                                // Destinasyon seçilince location_label'ı otomatik güncelle
+                                // Arama filtresi location_label üzerinden çalıştığı için bu kritik
+                                updateField("destination_id", selectedId);
+                                if (selectedDest) {
+                                    updateField("location_label", selectedDest.name);
+                                }
+                            }}
                         >
                             <option value="">-- Destinasyon Seçin --</option>
                             {allDestinations.map(dest => (
@@ -932,8 +941,8 @@ export default function VillaEditPage() {
                         <input
                             type="number"
                             style={inputStyle}
-                            value={form.commission_rate}
-                            onChange={(e) => updateField("commission_rate", +e.target.value)}
+                            value={form.commission_pct}
+                            onChange={(e) => updateField("commission_pct", +e.target.value)}
                             min={0}
                             max={100}
                             step={1}
@@ -951,8 +960,8 @@ export default function VillaEditPage() {
                             alignItems: "center",
                             cursor: "not-allowed",
                         }}>
-                            {form.min_price > 0 && form.commission_rate > 0
-                                ? `${(form.min_price * (form.commission_rate / 100)).toLocaleString("tr-TR", { maximumFractionDigits: 2 })} ${form.currency} (%${form.commission_rate} × Min. Fiyat)`
+                            {form.min_price > 0 && form.commission_pct > 0
+                                ? `${(form.min_price * (form.commission_pct / 100)).toLocaleString("tr-TR", { maximumFractionDigits: 2 })} ${form.currency} (%${form.commission_pct} × Min. Fiyat)`
                                 : "—"}
                         </div>
                     </FormField>

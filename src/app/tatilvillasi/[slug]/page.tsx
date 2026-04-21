@@ -175,13 +175,13 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
         if (villaCurrency === targetCode) {
             // Aynı birim → sembol + sayı, dönüşüm yok
             const sym = SYMBOLS[villaCurrency] || villaCurrency + " ";
-            return `${sym}${amount.toLocaleString("tr-TR")}`;
+            return `${sym}${Math.round(amount).toLocaleString("tr-TR", { maximumFractionDigits: 0 })}`;
         }
 
         // Farklı birim → önce TRY'ye çevir, sonra hedef dövize
         const toTRY = villaCurrency === "TRY" ? amount : amount / (rates[villaCurrency] || 1);
         const converted = targetCode === "TRY" ? toTRY : Math.round(toTRY * (rates[targetCode] || 1));
-        return `${activeCurrency.symbol}${converted.toLocaleString("tr-TR")}`;
+        return `${activeCurrency.symbol}${converted.toLocaleString("tr-TR", { maximumFractionDigits: 0 })}`;
     };
 
     // Resolve params and fetch data
@@ -232,8 +232,9 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                     pDepth: detail.pool_depth || 0,
                     coverImage: detail.cover_image_url,
                     images: (() => {
-                        const urls = detail.images.map(i => i.url).filter(Boolean);
-                        return urls.length > 0 ? urls : [detail.cover_image_url];
+                        const urls = detail.images.map(i => i.url).filter((u): u is string => !!u);
+                        if (urls.length > 0) return urls;
+                        return detail.cover_image_url ? [detail.cover_image_url] : ["/images/natureview.jpg"];
                     })(),
                     toBeach: detail.to_beach || 0,
                     toRestaurant: detail.to_restaurant || 0,
@@ -473,7 +474,7 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                         <div className="vd-gallery-mosaic">
                             <div className="vd-mosaic-big" onClick={() => openGallery(0)}>
                                 <Image
-                                    src={villa.images[0] || villa.coverImage || ""}
+                                    src={villa.images[0] || villa.coverImage || "/images/natureview.jpg"}
                                     alt={`${villa.name} 1`}
                                     className="vd-mosaic-img"
                                     fill
@@ -485,7 +486,7 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                             <div className="vd-mosaic-side">
                                 <div className="vd-mosaic-small" onClick={() => openGallery(1)}>
                                     <Image
-                                        src={villa.images[1] || villa.images[0] || ""}
+                                        src={villa.images[1] || villa.images[0] || "/images/natureview.jpg"}
                                         alt={`${villa.name} 2`}
                                         className="vd-mosaic-img"
                                         fill
@@ -496,7 +497,7 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                 </div>
                                 <div className="vd-mosaic-small" onClick={() => openGallery(2)}>
                                     <Image
-                                        src={villa.images[2] || villa.images[0] || ""}
+                                        src={villa.images[2] || villa.images[0] || "/images/natureview.jpg"}
                                         alt={`${villa.name} 3`}
                                         className="vd-mosaic-img"
                                         fill
@@ -517,7 +518,7 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                         <div className="vd-gallery-mobile">
                             <div className="vd-mobile-gallery-wrap" onClick={() => openGallery(0)}>
                                 <Image
-                                    src={villa.images[0] || villa.coverImage || ""}
+                                    src={villa.images[0] || villa.coverImage || "/images/natureview.jpg"}
                                     alt={villa.name}
                                     className="vd-mobile-gallery-img"
                                     fill
@@ -1164,7 +1165,7 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                         onTouchEnd={handleTouchEnd}
                     >
                         <Image
-                            src={villa.images[currentImage]}
+                            src={villa.images[currentImage] || "/images/natureview.jpg"}
                             alt={`${villa.name} ${currentImage + 1}`}
                             className="vd-gallery-modal-img"
                             fill
@@ -1183,7 +1184,7 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
 
                     {/* Thumbnail strip */}
                     <div className="vd-gallery-modal-thumbs">
-                        {villa.images.map((img, i) => (
+                        {villa.images.filter(img => !!img).map((img, i) => (
                             <div
                                 key={i}
                                 className={`vd-gallery-modal-thumb ${i === currentImage ? 'vd-gallery-modal-thumb-active' : ''}`}

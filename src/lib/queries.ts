@@ -95,7 +95,7 @@ export async function getVillaDetailBySlug(slug: string): Promise<VillaDetail | 
 export async function getFeaturedVillas(limit = 8): Promise<VillaCard[]> {
     const { data: villas, error } = await supabase
         .from('villas')
-        .select('id, slug, name, cover_image_url, location_label, min_price, max_guests, bedrooms, beds, bathrooms, max_discount_pct, has_active_discount, is_exclusive')
+        .select('id, slug, name, cover_image_url, location_label, min_price, currency, max_guests, bedrooms, beds, bathrooms, max_discount_pct, has_active_discount, is_exclusive')
         .eq('is_published', true)
         .order('sort_order')
         .limit(limit);
@@ -145,7 +145,7 @@ export async function getFeaturedVillas(limit = 8): Promise<VillaCard[]> {
 export async function getRecentVillas(limit = 6): Promise<VillaCard[]> {
     const { data: villas, error } = await supabase
         .from('villas')
-        .select('id, slug, name, cover_image_url, location_label, min_price, max_guests, bedrooms, beds, bathrooms, max_discount_pct, has_active_discount, is_exclusive, avg_rating')
+        .select('id, slug, name, cover_image_url, location_label, min_price, currency, max_guests, bedrooms, beds, bathrooms, max_discount_pct, has_active_discount, is_exclusive, avg_rating')
         .eq('is_published', true)
         .order('created_at', { ascending: false })
         .limit(limit);

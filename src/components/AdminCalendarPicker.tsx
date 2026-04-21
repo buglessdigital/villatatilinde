@@ -74,14 +74,12 @@ interface MonthGridProps {
     hoverDate: Date | null;
     existingPeriods: ExistingPeriod[];
     selColor: string;
-    rangeColor: string;
-    rangeText: string;
     variant?: "price" | "blocked";
     onDayClick: (d: Date) => void;
     onDayHover: (d: Date) => void;
 }
 
-function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existingPeriods, selColor, rangeColor, rangeText, variant = "price", onDayClick, onDayHover }: MonthGridProps) {
+function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existingPeriods, selColor, variant = "price", onDayClick, onDayHover }: MonthGridProps) {
     const totalDays = daysInMonth(year, month);
     const firstOffset = getMondayBasedDay(year, month, 1);
 
@@ -143,56 +141,32 @@ function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existing
                             const isSelected = isStart || isEnd || isHoverEnd;
 
                             const matchedPeriod = parsedPeriods.find(p => isBetween(cellDate, p.start, p.end));
-                            const isExistingStart = matchedPeriod ? isSameDay(cellDate, matchedPeriod.start) : false;
-                            const isExistingEnd = matchedPeriod ? isSameDay(cellDate, matchedPeriod.end) : false;
-                            // blocked modunda tek kırmızı, price modunda renk paleti
                             const periodColor = matchedPeriod
                                 ? (variant === "blocked" ? BLOCKED_COLOR : PERIOD_COLORS[matchedPeriod.colorIdx])
                                 : null;
 
-                            let bg = "transparent";
+                            // ── Inner circle ──
+                            let outerBg = "transparent";
+                            let innerBg = "transparent";
+                            let innerRadius = "50%";
                             let color = isPast ? "#cbd5e1" : "#1e293b";
                             let fw = 500;
-                            let radius = "6px";
-                            let outerBg = "transparent";
 
-                            if (isToday && !isSelected && !inRange && !matchedPeriod) {
-                                bg = "#f0f9ff";
-                                color = "#0284c7";
+                            if (inRange) {
+                                // Tüm seçili günler komple kırmızı dolgu
+                                outerBg = selColor;
+                                color = "#fff";
                                 fw = 700;
-                            }
-
-                            if (matchedPeriod && !isSelected) {
+                                innerRadius = "0";
+                            } else if (matchedPeriod) {
                                 outerBg = periodColor!.bg;
                                 color = periodColor!.text;
-                                fw = 500;
-                                if (isExistingStart && isExistingEnd) { radius = "6px"; }
-                                else if (isExistingStart) { radius = "6px 0 0 6px"; }
-                                else if (isExistingEnd) { radius = "0 6px 6px 0"; }
-                                else { radius = "0"; }
-                            }
-
-                            if (inRange && !isSelected) {
-                                outerBg = "transparent";
-                                bg = rangeColor;
-                                color = rangeText;
-                            }
-                            if (isStart) {
-                                outerBg = "transparent";
-                                bg = selColor;
-                                color = "#fff";
+                                innerRadius = "0";
+                            } else if (isToday) {
+                                innerBg = "#f0f9ff";
+                                color = "#0284c7";
                                 fw = 700;
-                                radius = endDate || hoverDate ? "6px 0 0 6px" : "6px";
-                            }
-                            if (isEnd || isHoverEnd) {
-                                outerBg = "transparent";
-                                bg = selColor;
-                                color = "#fff";
-                                fw = 700;
-                                radius = "0 6px 6px 0";
-                            }
-                            if (isStart && (isEnd || isHoverEnd)) {
-                                radius = "6px";
+                                innerRadius = "50%";
                             }
 
                             const title = matchedPeriod && !isSelected ? matchedPeriod.label : undefined;
@@ -207,16 +181,15 @@ function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existing
                                             display: "flex", alignItems: "center", justifyContent: "center",
                                             height: 32, fontSize: 12, fontWeight: fw,
                                             color,
-                                            background: matchedPeriod && !isSelected && !inRange ? outerBg : (inRange && !isSelected ? bg : "transparent"),
-                                            borderRadius: matchedPeriod && !isSelected && !inRange ? radius : undefined,
+                                            background: outerBg,
                                             cursor: isPast ? "default" : "pointer",
                                         }}
                                     >
                                         <div style={{
                                             display: "flex", alignItems: "center", justifyContent: "center",
                                             width: 30, height: 30,
-                                            borderRadius: isSelected ? radius : undefined,
-                                            background: isSelected ? bg : "transparent",
+                                            borderRadius: innerRadius,
+                                            background: innerBg,
                                         }}>
                                             {day}
                                         </div>
@@ -254,8 +227,8 @@ const THEMES = {
     },
     blocked: {
         selColor: "#ef4444",
-        rangeColor: "#fee2e2",
-        rangeText: "#991b1b",
+        rangeColor: "#fecaca",
+        rangeText: "#b91c1c",
         activeInputBorder: "#fca5a5",
         activeInputBg: "#fef2f2",
         activeInputText: "#b91c1c",
@@ -444,8 +417,6 @@ export default function AdminCalendarPicker({
                         startDate={selStart} endDate={selEnd} hoverDate={hoverDate}
                         existingPeriods={existingPeriods}
                         selColor={theme.selColor}
-                        rangeColor={theme.rangeColor}
-                        rangeText={theme.rangeText}
                         variant={variant}
                         onDayClick={handleDayClick} onDayHover={handleDayHover}
                     />
@@ -471,8 +442,6 @@ export default function AdminCalendarPicker({
                         startDate={selStart} endDate={selEnd} hoverDate={hoverDate}
                         existingPeriods={existingPeriods}
                         selColor={theme.selColor}
-                        rangeColor={theme.rangeColor}
-                        rangeText={theme.rangeText}
                         variant={variant}
                         onDayClick={handleDayClick} onDayHover={handleDayHover}
                     />

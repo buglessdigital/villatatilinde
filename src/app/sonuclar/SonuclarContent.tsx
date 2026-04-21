@@ -25,6 +25,8 @@ interface Villa {
     slug: string;
     name: string;
     location: string;
+    destination_id?: string | null;
+    currency?: string;
     coverImage: string;
     images: string[];
     guests: number;
@@ -42,6 +44,7 @@ function mapVillaDetail(v: VillaDetail): Villa {
         slug: v.slug,
         name: v.name,
         location: v.location_label || '',
+        destination_id: v.destination_id || null,
         coverImage: v.cover_image_url || '/images/natureview.jpg',
         images: v.images?.length > 0
             ? v.images.map((img: { url: string }) => img.url || v.cover_image_url)
@@ -50,6 +53,7 @@ function mapVillaDetail(v: VillaDetail): Villa {
         bedrooms: v.bedrooms,
         bathrooms: v.bathrooms || 0,
         minEver: v.min_price || 0,
+        currency: v.currency,
         priceBlocks: (v.price_periods || []).map((pp: DbVillaPricePeriod) => ({
             period: pp.label,
             nightlyPrice: pp.nightly_price,
@@ -266,7 +270,8 @@ function VillaCard({
     const maxPrice = villa.priceBlocks.length ? Math.max(...villa.priceBlocks.map((p) => p.nightlyPrice)) : villa.minEver;
     const hasDiscount = villa.priceBlocks.some((p) => p.discount && p.discount > 0);
     const maxDiscount = hasDiscount ? Math.max(...villa.priceBlocks.filter((p) => p.discount).map((p) => p.discount!)) : 0;
-    const { formatPrice } = useCurrency();
+    const { formatVillaCurrencyPrice } = useCurrency();
+    const fmt = (amount: number) => formatVillaCurrencyPrice(amount, villa.currency);
     const touchStartX = useRef(0);
     const touchEndX = useRef(0);
 
@@ -388,7 +393,7 @@ function VillaCard({
                             <div style={{ marginTop: "12px" }}>
                                 <div style={{ display: "flex", alignItems: "center", fontSize: "15px" }}>
                                     <span className="poppins" style={{ fontWeight: 700, fontSize: "18px" }}>
-                                        {formatPrice(villa.minEver)}-{formatPrice(maxPrice)}
+                                        {fmt(villa.minEver)}-{fmt(maxPrice)}
                                     </span>
                                     &nbsp;/ Gece
                                 </div>
@@ -627,13 +632,13 @@ function SonuclarInner() {
         getUnavailableVillaIds(checkInParam, checkOutParam).then(setUnavailableIds).catch(() => setUnavailableIds(new Set()));
     }, [checkInParam, checkOutParam]);
 
-    const [dbLocations, setDbLocations] = useState<{key: string, label: string}[]>([]);
+    const [dbLocations, setDbLocations] = useState<{key: string, label: string, id: string}[]>([]);
     useEffect(() => {
         import("@/lib/supabase").then(({ supabase }) => {
-            supabase.from("destinations").select("name, filter_param").eq("is_active", true).order("sort_order")
+            supabase.from("destinations").select("id, name, filter_param").eq("is_active", true).order("sort_order")
                 .then(({ data }) => {
                     if (data) {
-                        setDbLocations(data.map(d => ({ key: d.filter_param, label: d.name })));
+                        setDbLocations(data.map(d => ({ id: d.id, key: d.filter_param, label: d.name })));
                     }
                 });
         });
@@ -659,6 +664,11 @@ function SonuclarInner() {
 
         if (selectedLocations.length > 0) {
             result = result.filter((v) => {
+                // 0) destination_id ile doğrudan eşleştir (en güvenilir yöntem)
+                if (v.destination_id) {
+                    const matchedDest = dbLocations.find(d => d.id === v.destination_id);
+                    if (matchedDest && selectedLocations.includes(matchedDest.key)) return true;
+                }
                 // 1) Exact match via locationToFilter map
                 const exactKey = locationToFilter[v.location];
                 if (exactKey && selectedLocations.includes(exactKey)) return true;
@@ -667,7 +677,6 @@ function SonuclarInner() {
                 return selectedLocations.some((sel) => {
                     const selDisplaySlug = toLocSlug(locationsList[sel] || sel);
                     if (villaSlug === sel || villaSlug === selDisplaySlug) return true;
-                    // Fallback to substring match for robustness using the normalized slug
                     return villaSlug.includes(selDisplaySlug) || selDisplaySlug.includes(villaSlug);
                 });
             });
@@ -819,8 +828,11 @@ function SonuclarInner() {
             
             // 1. Location match (+10 points)
             if (selectedLocations.length > 0) {
+                const destMatch = villa.destination_id
+                    ? dbLocations.find(d => d.id === villa.destination_id && selectedLocations.includes(d.key))
+                    : null;
                 const exactKey = locationToFilter[villa.location];
-                const isLocMatch = (exactKey && selectedLocations.includes(exactKey)) || selectedLocations.some((sel) => {
+                const isLocMatch = !!destMatch || (exactKey && selectedLocations.includes(exactKey)) || selectedLocations.some((sel) => {
                     const villaSlug = toLocSlug(villa.location);
                     const selDisplaySlug = toLocSlug(locationsList[sel] || sel);
                     if (villaSlug === sel || villaSlug === selDisplaySlug) return true;

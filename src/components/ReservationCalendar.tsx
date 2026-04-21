@@ -294,7 +294,7 @@ export default function ReservationCalendar({
     // Format price for display
     const formatPrice = useCallback((price: number): string => {
         const converted = convertPrice(price);
-        return `${currency}${converted.toLocaleString("tr-TR")}`;
+        return `${currency}${Math.round(converted).toLocaleString("tr-TR", { maximumFractionDigits: 0 })}`;
     }, [currency, convertPrice]);
 
     return (

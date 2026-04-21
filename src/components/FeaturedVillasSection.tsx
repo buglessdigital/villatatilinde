@@ -17,6 +17,7 @@ function mapVillaToView(v: VillaCardType): VillaView {
         features: v.features.slice(0, 3),
         nightlyPrice: raw,
         totalPrice: raw * 5,
+        currency: v.currency,
         dateRange: "5 Gece",
         beds: v.bedrooms,
         guests: v.max_guests,

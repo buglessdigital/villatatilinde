@@ -20,6 +20,8 @@ interface CurrencyContextType {
     setCurrency: (code: CurrencyCode) => void;
     convertPrice: (tryAmount: number) => number;
     formatPrice: (tryAmount: number) => string;
+    // Villa'nın kendi para birimi (GBP, EUR vs.) ile saklanan fiyatı doğru gösterir
+    formatVillaCurrencyPrice: (amount: number, villaCurrency?: string) => string;
     rates: ExchangeRates;
     loading: boolean;
 }
@@ -130,12 +132,40 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         (tryAmount: number): string => {
             const converted = convertPrice(tryAmount);
             if (currency.code === "TRY") {
-                return `₺${converted.toLocaleString("tr-TR")}`;
+                return `₺${Math.round(converted).toLocaleString("tr-TR", { maximumFractionDigits: 0 })}`;
             }
-            // For non-TRY, use standard formatting
-            return `${currency.symbol}${converted.toLocaleString("tr-TR")}`;
+            return `${currency.symbol}${Math.round(converted).toLocaleString("tr-TR", { maximumFractionDigits: 0 })}`;
         },
         [convertPrice, currency.code, currency.symbol]
+    );
+
+    // Villa'nın kendi para biriminde (GBP, EUR, USD vs.) saklanan fiyatı
+    // kullanıcının seçtiği dövize doğru şekilde çevirir.
+    // Mantık: villa_para_birimi → TRY → kullanıcı_para_birimi
+    const SYMBOLS: Record<string, string> = { TRY: "₺", GBP: "£", EUR: "€", USD: "$", RUB: "₽" };
+    const formatVillaCurrencyPrice = useCallback(
+        (amount: number, villaCurrency?: string): string => {
+            const vCurr = (villaCurrency || "TRY").toUpperCase();
+            const targetCode = currency.code;
+
+            // Aynı para birimi ise dönüşüm gerekmez, sayıyı direkt göster
+            if (vCurr === targetCode) {
+                return `${SYMBOLS[vCurr] || vCurr + " "}${Math.round(amount).toLocaleString("tr-TR", { maximumFractionDigits: 0 })}`;
+            }
+
+            // Adım 1: Villa fiyatını TRY'ye çevir
+            // rates["GBP"] = "1 TRY kaç GBP yapar" yani ~0.02
+            // £400'ü TRY'ye çevirmek için: 400 / 0.02 = 20.000 TRY
+            const toTRY = vCurr === "TRY" ? amount : amount / (rates[vCurr] || 1);
+
+            // Adım 2: TRY'yi kullanıcının seçtiği dövize çevir
+            const converted = targetCode === "TRY"
+                ? Math.round(toTRY)
+                : Math.round(toTRY * (rates[targetCode] || 1));
+
+            return `${currency.symbol}${converted.toLocaleString("tr-TR", { maximumFractionDigits: 0 })}`;
+        },
+        [currency.code, currency.symbol, rates]
     );
 
     const value = useMemo(
@@ -144,6 +174,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
             setCurrency,
             convertPrice,
             formatPrice,
+            formatVillaCurrencyPrice,
             rates,
             loading,
         }),

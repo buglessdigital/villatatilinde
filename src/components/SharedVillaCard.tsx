@@ -11,6 +11,7 @@ export interface VillaView {
     features: string[];
     nightlyPrice: number;
     totalPrice: number;
+    currency?: string; // Villa'nın para birimi: "TRY", "GBP", "EUR" vs.
     dateRange?: string;
     beds: number;
     guests: number;
@@ -24,7 +25,8 @@ export interface VillaView {
 export default function SharedVillaCard({ villa, className }: { villa: VillaView, className?: string }) {
     const [imgIndex, setImgIndex] = useState(0);
     const [imgAnim, setImgAnim] = useState(false);
-    const { formatPrice } = useCurrency();
+    const { formatVillaCurrencyPrice } = useCurrency();
+    const fmt = (amount: number) => formatVillaCurrencyPrice(amount, villa.currency);
     const touchStartX = useRef(0);
     const touchEndX = useRef(0);
 
@@ -251,7 +253,7 @@ export default function SharedVillaCard({ villa, className }: { villa: VillaView
                                     {villa.nightlyPrice > 0 ? (
                                         <>
                                             <span className="mainNightlyPriceBold poppins">
-                                                {formatPrice(villa.nightlyPrice)}
+                                                {fmt(villa.nightlyPrice)}
                                             </span>{" "}
                                             / Gece
                                         </>
@@ -294,7 +296,7 @@ export default function SharedVillaCard({ villa, className }: { villa: VillaView
                                         <div>
                                             <span>
                                                 <span style={{ fontWeight: 600, fontSize: 16 }}>
-                                                    {formatPrice(villa.totalPrice)}
+                                                    {fmt(villa.totalPrice)}
                                                 </span>
                                             </span>{" "}
                                             · Toplam

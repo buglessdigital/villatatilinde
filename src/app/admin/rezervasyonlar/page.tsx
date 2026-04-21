@@ -31,7 +31,7 @@ const STATUS_MAP: Record<string, { label: string; bg: string; color: string }> =
 };
 
 function formatTR(n: number): string {
-    return n.toLocaleString("tr-TR");
+    return Math.round(n).toLocaleString("tr-TR", { maximumFractionDigits: 0 });
 }
 
 export default function AdminReservasyonlar() {
