@@ -135,7 +135,21 @@ export default function IptalIadeContent() {
                             {/* Item 6 */}
                             <div className="pitemsCancell">
                                 <div className="pi1Cancel">
-                                    6. İletişim
+                                    6. Mesafeli Satış Sözleşmesi
+                                </div>
+                                <div className="pi2Cancel">
+                                    Rezervasyonunuza ilişkin{" "}
+                                    <Link href="/mesafeli-satis-sozlesmesi" style={{ color: "inherit", textDecoration: "underline" }}>
+                                        Mesafeli Satış Sözleşmesi
+                                    </Link>
+                                    {"'"}ni inceleyebilirsiniz. Sözleşme, ödeme ve teslimat koşullarını kapsamaktadır.
+                                </div>
+                            </div>
+
+                            {/* Item 7 */}
+                            <div className="pitemsCancell">
+                                <div className="pi1Cancel">
+                                    7. İletişim
                                 </div>
                                 <div className="pi2Cancel">
                                     İptal ve iade süreçleri hakkında detaylı bilgi almak

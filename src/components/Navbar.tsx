@@ -674,6 +674,11 @@ export default function Navbar() {
                                                     <div style={{ fontSize: 16, fontWeight: 500 }}>İptal Politikası</div>
                                                 </div>
                                             </Link>
+                                            <Link href="/mesafeli-satis-sozlesmesi">
+                                                <div className="bhbhbg middleft" style={{ padding: 12, borderRadius: 8 }}>
+                                                    <div style={{ fontSize: 16, fontWeight: 500 }}>Mesafeli Satış Sözleşmesi</div>
+                                                </div>
+                                            </Link>
                                             <Link href="/odeme-yontemleri">
                                                 <div className="bhbhbg middleft" style={{ padding: 12, borderRadius: 8 }}>
                                                     <div style={{ fontSize: 16, fontWeight: 500 }}>Ödeme Yöntemleri</div>

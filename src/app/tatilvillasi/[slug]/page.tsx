@@ -641,6 +641,12 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                         </Link>
                                     </div>
                                     <div className="vd-info-item">
+                                        <div className="vd-info-label">Mesafeli Satış Sözleşmesi</div>
+                                        <Link href="/mesafeli-satis-sozlesmesi" className="vd-info-value" style={{ textDecoration: 'none', color: 'inherit' }}>
+                                            : Detaylar <img src="/images/iconlink.svg" alt="link" style={{ marginLeft: 6, height: 20 }} />
+                                        </Link>
+                                    </div>
+                                    <div className="vd-info-item">
                                         <div className="vd-info-label">Giriş Saati</div>
                                         <div className="vd-info-value">: {villa.checkIn}</div>
                                     </div>
