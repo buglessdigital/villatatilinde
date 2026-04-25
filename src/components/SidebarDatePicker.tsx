@@ -138,6 +138,28 @@ export default function SidebarDatePicker({
         return null;
     }, [reservations]);
 
+    const getReservationPosition = useCallback((dateStr: string): "start" | "end" | "mid" | "both" | null => {
+        const endRes = reservations.find(r => r.endDate === dateStr);
+        const startRes = reservations.find(r => r.startDate === dateStr);
+        if (endRes && startRes) return "both";
+        for (const res of reservations) {
+            if (isBetween(dateStr, res.startDate, res.endDate)) {
+                if (dateStr === res.startDate) return "start";
+                if (dateStr === res.endDate) return "end";
+                return "mid";
+            }
+        }
+        return null;
+    }, [reservations]);
+
+    const getReservationDualInfo = useCallback((dateStr: string): { endColor: string; startColor: string } | null => {
+        const endRes = reservations.find(r => r.endDate === dateStr);
+        const startRes = reservations.find(r => r.startDate === dateStr);
+        if (!endRes || !startRes) return null;
+        const colorOf = (s: "reserved" | "option") => s === "reserved" ? "red" : "orange";
+        return { endColor: colorOf(endRes.status), startColor: colorOf(startRes.status) };
+    }, [reservations]);
+
     const isSelected = useCallback((dateStr: string): boolean => {
         if (!checkInDate) return false;
         if (!checkOutDate) return dateStr === checkInDate;
@@ -262,54 +284,62 @@ export default function SidebarDatePicker({
                     </div>
 
                     {/* Day Headers */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px", marginBottom: "8px" }}>
+                    <div style={{ display: "flex", marginBottom: "8px" }}>
                         {DAY_HEADERS.map(dh => (
-                            <div key={dh} style={{ textAlign: "center", fontSize: "12px", fontWeight: 700, color: "#cbd5e1" }}>
+                            <div key={dh} style={{ width: "calc(100% / 7)", flexShrink: 0, textAlign: "center", fontSize: "12px", fontWeight: 700, color: "#cbd5e1" }}>
                                 {dh.toUpperCase()}
                             </div>
                         ))}
                     </div>
 
                     {/* Grid */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px" }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", rowGap: "4px" }}>
                         {cells.map((day, idx) => {
-                            if (day === null) return <div key={`empty-${idx}`} />;
+                            if (day === null) return <div key={`empty-${idx}`} style={{ width: "calc(100% / 7)", flexShrink: 0 }} />;
                             
                             const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                             const price = getPrice(dateStr);
                             const resStatus = getReservationStatus(dateStr);
+                            const resPos = getReservationPosition(dateStr);
+                            const dualInfo = resPos === "both" ? getReservationDualInfo(dateStr) : null;
                             const selected = isSelected(dateStr);
                             const past = isPast(dateStr);
                             const checkIn = checkInDate === dateStr;
                             const checkOut = checkOutDate === dateStr;
 
-                            const clickable = !past && resStatus !== "reserved" && price !== null;
+                            const clickable = !past && resPos !== "both" && resStatus !== "reserved" && price !== null;
                             const noPrice = price === null && !past && !resStatus;
 
                             let bg = "transparent";
                             let color = "#1e293b";
                             let priceColor = "#94a3b8";
-                            let borderRadius = "8px";
 
                             if (past || noPrice) {
                                 color = "#cbd5e1";
                                 priceColor = "#cbd5e1";
+                            } else if (dualInfo) {
+                                // İki dönem buluşuyor: sol üst = biten, sağ alt = başlayan, beyaz köşegen çizgisi
+                                bg = `linear-gradient(-45deg, ${dualInfo.startColor} calc(50% - 1.5px), #fff calc(50% - 1.5px), #fff calc(50% + 1.5px), ${dualInfo.endColor} calc(50% + 1.5px))`;
+                                color = "#1e293b";
                             } else if (resStatus === "reserved") {
-                                bg = "#fee2e2";
-                                color = "#ef4444";
-                                priceColor = "#fca5a5";
+                                const resColor = "red";
+                                if (resPos === "start") bg = `linear-gradient(-45deg, ${resColor} 50%, transparent 50%)`;
+                                else if (resPos === "end") bg = `linear-gradient(135deg, ${resColor} 50%, transparent 50%)`;
+                                else bg = resColor;
+                                color = resPos === "mid" ? "#fff" : "#ef4444";
+                                priceColor = resPos === "mid" ? "rgba(255,255,255,0.8)" : "#fca5a5";
                             } else if (resStatus === "option") {
-                                bg = "#ffedd5";
-                                color = "#f97316";
-                                priceColor = "#fdba74";
+                                const optColor = "orange";
+                                if (resPos === "start") bg = `linear-gradient(-45deg, ${optColor} 50%, transparent 50%)`;
+                                else if (resPos === "end") bg = `linear-gradient(135deg, ${optColor} 50%, transparent 50%)`;
+                                else bg = optColor;
+                                color = resPos === "mid" ? "#fff" : "#f97316";
+                                priceColor = resPos === "mid" ? "rgba(255,255,255,0.8)" : "#fdba74";
                             } else if (selected) {
-                                bg = "#3b82f6";
-                                color = "#fff";
-                                priceColor = "rgba(255,255,255,0.8)";
-                                if (checkIn && !checkOutDate) borderRadius = "8px";
-                                else if (checkIn) borderRadius = "8px 0 0 8px";
-                                else if (checkOut) borderRadius = "0 8px 8px 0";
-                                else borderRadius = "0";
+                                const selColor = "#3b82f6";
+                                if (checkIn) bg = `linear-gradient(-45deg, ${selColor} 50%, transparent 50%)`;
+                                else if (checkOut) bg = `linear-gradient(135deg, ${selColor} 50%, transparent 50%)`;
+                                else { bg = selColor; color = "#fff"; priceColor = "rgba(255,255,255,0.8)"; }
                             }
 
                             return (
@@ -317,7 +347,8 @@ export default function SidebarDatePicker({
                                     key={dateStr}
                                     onClick={clickable ? () => handleDayClick(dateStr) : undefined}
                                     style={{
-                                        background: bg, borderRadius, padding: "8px 0", textAlign: "center",
+                                        width: "calc(100% / 7)", flexShrink: 0,
+                                        background: bg, borderRadius: "0", padding: "8px 0", textAlign: "center",
                                         cursor: clickable ? "pointer" : "default", transition: "all 0.15s ease"
                                     }}
                                 >

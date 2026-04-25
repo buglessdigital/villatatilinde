@@ -144,9 +144,12 @@ export default function ReservationCalendar({
         [reservations]
     );
 
-    // Reservation position: is this date the start, end, or middle of a reservation?
+    // Reservation position: is this date the start, end, middle, or BOTH end+start of consecutive reservations?
     const getReservationPosition = useCallback(
-        (dateStr: string): "start" | "end" | "mid" | null => {
+        (dateStr: string): "start" | "end" | "mid" | "both" | null => {
+            const endRes = reservations.find(r => r.endDate === dateStr);
+            const startRes = reservations.find(r => r.startDate === dateStr);
+            if (endRes && startRes) return "both";
             for (const res of reservations) {
                 if (isBetween(dateStr, res.startDate, res.endDate)) {
                     if (dateStr === res.startDate) return "start";
@@ -155,6 +158,18 @@ export default function ReservationCalendar({
                 }
             }
             return null;
+        },
+        [reservations]
+    );
+
+    // For "both" days: returns the colors of the ending and starting reservations
+    const getReservationDualInfo = useCallback(
+        (dateStr: string): { endColor: string; startColor: string } | null => {
+            const endRes = reservations.find(r => r.endDate === dateStr);
+            const startRes = reservations.find(r => r.startDate === dateStr);
+            if (!endRes || !startRes) return null;
+            const colorOf = (s: "reserved" | "option") => s === "reserved" ? "red" : "orange";
+            return { endColor: colorOf(endRes.status), startColor: colorOf(startRes.status) };
         },
         [reservations]
     );
@@ -402,6 +417,7 @@ export default function ReservationCalendar({
                         getPrice={getPrice}
                         getReservationStatus={getReservationStatus}
                         getReservationPosition={getReservationPosition}
+                        getReservationDualInfo={getReservationDualInfo}
                         getDisabledReason={getDisabledReason}
                         isSelected={isSelected}
                         isCheckIn={isCheckIn}
@@ -432,7 +448,8 @@ interface MonthGridProps {
     month: number;
     getPrice: (dateStr: string) => number | null;
     getReservationStatus: (dateStr: string) => "reserved" | "option" | null;
-    getReservationPosition: (dateStr: string) => "start" | "end" | "mid" | null;
+    getReservationPosition: (dateStr: string) => "start" | "end" | "mid" | "both" | null;
+    getReservationDualInfo: (dateStr: string) => { endColor: string; startColor: string } | null;
     getDisabledReason: (dateStr: string) => string | null;
     isSelected: (dateStr: string) => boolean;
     isCheckIn: (dateStr: string) => boolean;
@@ -448,6 +465,7 @@ function MonthGrid({
     getPrice,
     getReservationStatus,
     getReservationPosition,
+    getReservationDualInfo,
     getDisabledReason,
     isSelected,
     isCheckIn,
@@ -491,28 +509,36 @@ function MonthGrid({
 
                     let cellClass = "vd-cal-cell";
                     if (past) cellClass += " vd-cal-past";
-                    if (resStatus === "reserved") {
+
+                    const dualInfo = resPosition === "both" ? getReservationDualInfo(dateStr) : null;
+                    if (resPosition === "both") {
+                        // inline style ile köşegen çizgisi uygulanır, class yok
+                    } else if (resStatus === "reserved") {
                         if (resPosition === "start") cellClass += " vd-cal-res-start";
                         else if (resPosition === "end") cellClass += " vd-cal-res-end";
-                        else cellClass += " vd-cal-res-mid";
+                        else if (resPosition === "mid") cellClass += " vd-cal-res-mid";
                     } else if (resStatus === "option") {
                         if (resPosition === "start") cellClass += " vd-cal-opt-start";
                         else if (resPosition === "end") cellClass += " vd-cal-opt-end";
-                        else cellClass += " vd-cal-opt-mid";
+                        else if (resPosition === "mid") cellClass += " vd-cal-opt-mid";
                     }
                     if (selected) cellClass += " vd-cal-selected";
                     if (checkIn) cellClass += " vd-cal-checkin";
                     if (checkOut) cellClass += " vd-cal-checkout";
 
-                    const clickable = !past && resStatus !== "reserved" && price !== null;
+                    const clickable = !past && resStatus !== "reserved" && resPosition !== "both" && price !== null;
                     const noPrice = price === null && !past && !resStatus;
+
+                    const dualBg = dualInfo
+                        ? `linear-gradient(-45deg, ${dualInfo.startColor} calc(50% - 1.5px), #fff calc(50% - 1.5px), #fff calc(50% + 1.5px), ${dualInfo.endColor} calc(50% + 1.5px))`
+                        : undefined;
 
                     return (
                         <div
                             key={dateStr}
                             className={`${cellClass}${noPrice ? " vd-cal-noprice" : ""}`}
                             onClick={clickable ? () => onDayClick(dateStr) : undefined}
-                            style={{ cursor: clickable ? "pointer" : "default", opacity: noPrice ? 0.45 : undefined }}
+                            style={{ cursor: clickable ? "pointer" : "default", opacity: noPrice ? 0.45 : undefined, ...(dualBg ? { background: dualBg } : {}) }}
                         >
                             <div className="vd-cal-day-num">{day}</div>
                             <div className="vd-cal-day-price">

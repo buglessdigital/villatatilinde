@@ -3212,8 +3212,7 @@ font {
 
 /* Day Headers */
 .vd-cal-day-headers {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  display: flex;
   text-align: center;
   font-weight: bold;
   color: #1c3661;
@@ -3223,14 +3222,16 @@ font {
 }
 
 .vd-cal-day-header {
+  width: calc(100% / 7);
+  flex-shrink: 0;
   padding: 8px 4px;
 }
 
 /* Days Grid */
 .vd-cal-days {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 12px 0;
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 12px;
 }
 
 /* Day Cell */
@@ -3241,6 +3242,8 @@ font {
   justify-content: center;
   padding: 2px 0 1.2rem 0;
   min-height: 48px;
+  width: calc(100% / 7);
+  flex-shrink: 0;
   text-align: center;
   transition: background 0.15s, color 0.15s;
   border-radius: 0;
@@ -3384,10 +3387,14 @@ font {
 .vd-cal-selected .vd-cal-day-num {
   color: #fff;
   font-weight: 800;
+  position: relative;
+  z-index: 1;
 }
 
 .vd-cal-selected .vd-cal-day-price {
   color: rgba(255, 255, 255, 0.85);
+  position: relative;
+  z-index: 1;
 }
 
 /* Check-in / Check-out */

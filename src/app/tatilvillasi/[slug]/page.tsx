@@ -1215,6 +1215,7 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                     checkOutTime={villa.checkOut}
                     currency={activeCurrency.symbol}
                     villaSlug={villa.slug}
+                    commissionPct={villa.commissionRate || 20}
                     onClose={handleBottomSheetClose}
                 />
             )}

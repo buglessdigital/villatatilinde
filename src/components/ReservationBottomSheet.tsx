@@ -18,6 +18,7 @@ interface Props {
     checkOutTime: string;   // e.g. "10:00"
     currency?: string;
     villaSlug: string;
+    commissionPct?: number;
     onClose: () => void;
 }
 
@@ -63,6 +64,7 @@ export default function ReservationBottomSheet({
     checkOutTime,
     currency = "₺",
     villaSlug,
+    commissionPct = 20,
     onClose,
 }: Props) {
     const { convertPrice } = useCurrency();
@@ -119,7 +121,7 @@ export default function ReservationBottomSheet({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [checkIn, checkOut, priceRanges]);
 
-    const advancePayment = Math.round(totalPrice * 0.2);
+    const advancePayment = Math.round(totalPrice * (commissionPct / 100));
     const remainingPayment = totalPrice - advancePayment;
 
     // Convert all amounts
@@ -202,7 +204,7 @@ export default function ReservationBottomSheet({
                 <div className="rbs-payment-section">
                     <span className="rbs-payment-section-title">Gereken Ön Ödeme</span>
                     <div className="rbs-summary-row">
-                        <span className="rbs-summary-label">%20 Ön Ödeme</span>
+                        <span className="rbs-summary-label">%{commissionPct} Ön Ödeme</span>
                         <span className="rbs-summary-value">{currency}{formatTR(convertedAdvance)}</span>
                     </div>
                 </div>
@@ -211,7 +213,7 @@ export default function ReservationBottomSheet({
                 <div className="rbs-payment-section">
                     <span className="rbs-payment-section-title">Girişte Ödenmesi Gereken</span>
                     <div className="rbs-summary-row">
-                        <span className="rbs-summary-label">%80 Kalan Ödeme</span>
+                        <span className="rbs-summary-label">%{100 - commissionPct} Kalan Ödeme</span>
                         <span className="rbs-summary-value">{currency}{formatTR(convertedRemaining)}</span>
                     </div>
                     <div className="rbs-summary-row">

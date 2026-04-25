@@ -111,7 +111,7 @@ function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existing
     const rangeEnd = endDate || hoverDate;
 
     return (
-        <table style={{ borderCollapse: "collapse", tableLayout: "fixed", width: 230 }}>
+        <table style={{ borderCollapse: "separate", borderSpacing: "0 4px", tableLayout: "fixed", width: 230 }}>
             <thead>
                 <tr>
                     {DAY_NAMES_TR.map(dn => (
@@ -134,18 +134,30 @@ function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existing
                             const isHoverEnd = !endDate && startDate && hoverDate ? isSameDay(cellDate, hoverDate) : false;
 
                             let inRange = false;
+                            let isMiddle = false;
                             if (startDate && rangeEnd && !isBeforeDay(rangeEnd, startDate)) {
                                 inRange = isBetween(cellDate, startDate, rangeEnd);
+                                isMiddle = inRange && !isStart && !(isEnd || isHoverEnd);
                             }
 
-                            const isSelected = isStart || isEnd || isHoverEnd;
+                            // Tüm eşleşen dönemleri bul
+                            const periodsEndingHere = parsedPeriods.filter(p => isSameDay(cellDate, p.end));
+                            const periodsStartingHere = parsedPeriods.filter(p => isSameDay(cellDate, p.start));
+                            const periodsContainingMiddle = parsedPeriods.filter(p =>
+                                isBetween(cellDate, p.start, p.end) &&
+                                !isSameDay(cellDate, p.start) && !isSameDay(cellDate, p.end)
+                            );
 
-                            const matchedPeriod = parsedPeriods.find(p => isBetween(cellDate, p.start, p.end));
-                            const periodColor = matchedPeriod
-                                ? (variant === "blocked" ? BLOCKED_COLOR : PERIOD_COLORS[matchedPeriod.colorIdx])
-                                : null;
+                            const isBothEndAndStart = periodsEndingHere.length > 0 && periodsStartingHere.length > 0;
+                            const isPeriodStart = periodsStartingHere.length > 0 && !isBothEndAndStart && periodsContainingMiddle.length === 0;
+                            const isPeriodEnd = periodsEndingHere.length > 0 && !isBothEndAndStart && periodsContainingMiddle.length === 0;
+                            const isPeriodMiddle = periodsContainingMiddle.length > 0;
 
-                            // ── Inner circle ──
+                            const matchedPeriod = periodsEndingHere[0] || periodsStartingHere[0] || periodsContainingMiddle[0] || null;
+                            const getColor = (p: typeof parsedPeriods[0]) =>
+                                variant === "blocked" ? BLOCKED_COLOR : PERIOD_COLORS[p.colorIdx];
+                            const periodColor = matchedPeriod ? getColor(matchedPeriod) : null;
+
                             let outerBg = "transparent";
                             let innerBg = "transparent";
                             let innerRadius = "50%";
@@ -153,15 +165,64 @@ function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existing
                             let fw = 500;
 
                             if (inRange) {
-                                // Tüm seçili günler komple kırmızı dolgu
-                                outerBg = selColor;
-                                color = "#fff";
+                                if (isStart && periodsEndingHere.length > 0) {
+                                    // Seçim başlangıcı + mevcut dönem bitişi: sol üst = dönem rengi, sağ alt = seçim rengi
+                                    const endColor = getColor(periodsEndingHere[0]);
+                                    outerBg = `linear-gradient(to top left, ${selColor} calc(50% - 1.5px), #fff calc(50% - 1.5px), #fff calc(50% + 1.5px), ${endColor.bg} calc(50% + 1.5px))`;
+                                    color = "#1e293b";
+                                    fw = 700;
+                                } else if (isStart) {
+                                    outerBg = `linear-gradient(to top left, ${selColor} 50%, transparent 50%)`;
+                                    color = "#fff";
+                                    fw = 700;
+                                } else if ((isEnd || isHoverEnd) && periodsStartingHere.length > 0) {
+                                    // Seçim bitişi + mevcut dönem başlangıcı: sol üst = seçim rengi, sağ alt = dönem rengi
+                                    const startColor = getColor(periodsStartingHere[0]);
+                                    outerBg = `linear-gradient(to top left, ${startColor.bg} calc(50% - 1.5px), #fff calc(50% - 1.5px), #fff calc(50% + 1.5px), ${selColor} calc(50% + 1.5px))`;
+                                    color = "#1e293b";
+                                    fw = 700;
+                                } else if (isEnd || isHoverEnd) {
+                                    outerBg = `linear-gradient(to bottom right, ${selColor} 50%, transparent 50%)`;
+                                    color = "#fff";
+                                    fw = 700;
+                                } else if (isMiddle && periodsEndingHere.length > 0) {
+                                    // Orta gün ama mevcut dönem bitiyor: sol üst = dönem rengi, sağ alt = seçim
+                                    const endColor = getColor(periodsEndingHere[0]);
+                                    outerBg = `linear-gradient(to top left, ${selColor} calc(50% - 1.5px), #fff calc(50% - 1.5px), #fff calc(50% + 1.5px), ${endColor.bg} calc(50% + 1.5px))`;
+                                    color = "#1e293b";
+                                    fw = 700;
+                                } else if (isMiddle && periodsStartingHere.length > 0) {
+                                    // Orta gün ama mevcut dönem başlıyor: sol üst = seçim, sağ alt = dönem rengi
+                                    const startColor = getColor(periodsStartingHere[0]);
+                                    outerBg = `linear-gradient(to top left, ${startColor.bg} calc(50% - 1.5px), #fff calc(50% - 1.5px), #fff calc(50% + 1.5px), ${selColor} calc(50% + 1.5px))`;
+                                    color = "#1e293b";
+                                    fw = 700;
+                                } else if (isMiddle) {
+                                    outerBg = selColor;
+                                    color = "#fff";
+                                    fw = 700;
+                                    innerRadius = "0";
+                                }
+                            } else if (isBothEndAndStart) {
+                                // İki dönem buluşuyor: sol üst = bitiş rengi, sağ alt = başlangıç rengi, beyaz köşegen çizgisi
+                                const endColor = getColor(periodsEndingHere[0]);
+                                const startColor = getColor(periodsStartingHere[0]);
+                                outerBg = `linear-gradient(to top left, ${startColor.bg} calc(50% - 1.5px), #fff calc(50% - 1.5px), #fff calc(50% + 1.5px), ${endColor.bg} calc(50% + 1.5px))`;
+                                color = endColor.text;
                                 fw = 700;
                                 innerRadius = "0";
                             } else if (matchedPeriod) {
-                                outerBg = periodColor!.bg;
-                                color = periodColor!.text;
-                                innerRadius = "0";
+                                if (isPeriodMiddle) {
+                                    outerBg = periodColor!.bg;
+                                    color = periodColor!.text;
+                                    innerRadius = "0";
+                                } else if (isPeriodStart) {
+                                    outerBg = `linear-gradient(to top left, ${periodColor!.bg} 50%, transparent 50%)`;
+                                    color = periodColor!.text;
+                                } else if (isPeriodEnd) {
+                                    outerBg = `linear-gradient(to bottom right, ${periodColor!.bg} 50%, transparent 50%)`;
+                                    color = periodColor!.text;
+                                }
                             } else if (isToday) {
                                 innerBg = "#f0f9ff";
                                 color = "#0284c7";
@@ -169,7 +230,7 @@ function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existing
                                 innerRadius = "50%";
                             }
 
-                            const title = matchedPeriod && !isSelected ? matchedPeriod.label : undefined;
+                            const title = matchedPeriod && !isStart && !isEnd ? matchedPeriod.label : undefined;
 
                             return (
                                 <td key={ci} style={{ padding: 0 }}>
@@ -180,7 +241,7 @@ function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existing
                                         style={{
                                             display: "flex", alignItems: "center", justifyContent: "center",
                                             height: 32, fontSize: 12, fontWeight: fw,
-                                            color,
+                                            color: (isMiddle || isPeriodMiddle || isBothEndAndStart) ? color : undefined,
                                             background: outerBg,
                                             cursor: isPast ? "default" : "pointer",
                                         }}
@@ -190,6 +251,9 @@ function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existing
                                             width: 30, height: 30,
                                             borderRadius: innerRadius,
                                             background: innerBg,
+                                            color,
+                                            fontSize: 12,
+                                            fontWeight: fw,
                                         }}>
                                             {day}
                                         </div>
