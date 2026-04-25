@@ -7,10 +7,10 @@ import { formatDistance } from "@/data/mockVillas";
 import type { Villa, PriceBlock, Review } from "@/data/mockVillas";
 import { getVillaDetailBySlug } from "@/lib/queries";
 import ReservationCalendar from "@/components/ReservationCalendar";
-import SidebarDatePicker from "@/components/SidebarDatePicker";
 import ReservationBottomSheet from "@/components/ReservationBottomSheet";
 import { useCurrency } from "@/context/CurrencyContext";
 import { supabase } from "@/lib/supabase";
+import SidebarDatePicker from "@/components/SidebarDatePicker";
 import CallbackModal from "@/components/CallbackModal";
 import YandexMapView from "@/components/YandexMapView";
 
@@ -679,21 +679,22 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                     </button>
                                 )}
                             </div>
-                            <SidebarDatePicker
-                                checkInDate={checkInDate}
-                                checkOutDate={checkOutDate}
-                                onDateSelect={(ci, co) => {
-                                    setCheckInDate(ci);
-                                    setCheckOutDate(co);
-                                    if (ci && co) setShowBottomSheet(true);
-                                    else setShowBottomSheet(false);
-                                }}
-                                priceRanges={villa.calendarPrices}
-                                reservations={[...villa.calendarReservations, ...dbReservations]}
-                                disabledReasons={disabledDateReasons}
-                                formatPriceFn={formatVillaPrice}
-                                minNights={villa.minRes}
-                            />
+                            <div className="vd-res-dates" style={{ display: "block" }}>
+                                <SidebarDatePicker
+                                    checkInDate={checkInDate}
+                                    checkOutDate={checkOutDate}
+                                    onDateChange={(inDate, outDate) => {
+                                        setCheckInDate(inDate || "");
+                                        setCheckOutDate(outDate || "");
+                                        if (inDate && outDate) setShowBottomSheet(true);
+                                    }}
+                                    priceRanges={villa.calendarPrices}
+                                    reservations={villa.calendarReservations}
+                                    disabledReasons={disabledDateReasons}
+                                    minNights={villa.minRes}
+                                    formatPrice={formatVillaPrice}
+                                />
+                            </div>
 
                             {(!checkInDate || !checkOutDate || nightCount <= 0) ? (
                                 <>

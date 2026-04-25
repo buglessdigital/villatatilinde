@@ -13,6 +13,8 @@ interface BlogView {
     subtitle: string;
     coverImage: string;
     mobileCoverImage: string;
+    coverPosition: string;
+    mobilePosition: string;
     dateReadable: string;
     readTime: string;
     tag: string;
@@ -38,6 +40,8 @@ export default function BloglarContent() {
                     subtitle: b.subtitle || "",
                     coverImage: b.cover_image_url || "/images/sailing2.png",
                     mobileCoverImage: b.mobile_image_url || b.cover_image_url || "/images/sailing2.png",
+                    coverPosition: (b as any).cover_image_position || "50% 50%",
+                    mobilePosition: (b as any).mobile_image_position || "50% 50%",
                     dateReadable: b.published_at
                         ? new Date(b.published_at).toLocaleDateString("tr-TR", {
                             day: "numeric", month: "long", year: "numeric",
@@ -314,7 +318,7 @@ export default function BloglarContent() {
                                                     alt={pageBlogs[0].title}
                                                     fill
                                                     sizes="100vw"
-                                                    style={{ objectFit: "cover" }}
+                                                    style={{ objectFit: "cover", objectPosition: pageBlogs[0].mobilePosition }}
                                                 />
                                                 {/* Web görsel */}
                                                 <Image
@@ -323,7 +327,7 @@ export default function BloglarContent() {
                                                     alt={pageBlogs[0].title}
                                                     fill
                                                     sizes="(max-width: 768px) 100vw, 55vw"
-                                                    style={{ objectFit: "cover" }}
+                                                    style={{ objectFit: "cover", objectPosition: pageBlogs[0].coverPosition }}
                                                 />
                                             </>
                                         ) : (
@@ -333,7 +337,7 @@ export default function BloglarContent() {
                                                 alt={pageBlogs[0].title}
                                                 fill
                                                 sizes="(max-width: 768px) 100vw, 55vw"
-                                                style={{ objectFit: "cover" }}
+                                                style={{ objectFit: "cover", objectPosition: pageBlogs[0].coverPosition }}
                                             />
                                         )}
                                         <div style={{ position: "absolute", top: 16, left: 16 }}>
@@ -380,7 +384,7 @@ export default function BloglarContent() {
                                                         alt={blog.title}
                                                         width={600}
                                                         height={230}
-                                                        style={{ width: "100%", height: "230px", objectFit: "cover" }}
+                                                        style={{ width: "100%", height: "230px", objectFit: "cover", objectPosition: blog.mobilePosition }}
                                                     />
                                                     <Image
                                                         className="blog-card-img blog-card-img-desktop"
@@ -388,7 +392,7 @@ export default function BloglarContent() {
                                                         alt={blog.title}
                                                         width={600}
                                                         height={230}
-                                                        style={{ width: "100%", height: "230px", objectFit: "cover" }}
+                                                        style={{ width: "100%", height: "230px", objectFit: "cover", objectPosition: blog.coverPosition }}
                                                     />
                                                 </>
                                             ) : (
@@ -398,7 +402,7 @@ export default function BloglarContent() {
                                                     alt={blog.title}
                                                     width={600}
                                                     height={230}
-                                                    style={{ width: "100%", height: "230px", objectFit: "cover" }}
+                                                    style={{ width: "100%", height: "230px", objectFit: "cover", objectPosition: blog.coverPosition }}
                                                 />
                                             )}
                                             <div className="blog-card-tag">{blog.tag}</div>

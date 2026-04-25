@@ -370,7 +370,7 @@ export default async function BlogDetailPage({ params }: Props) {
                                         height={1000}
                                         sizes="100vw"
                                         className="blog-modern-img-mobile"
-                                        style={{ width: "100%", height: "auto", objectFit: "cover", display: "block" }}
+                                        style={{ width: "100%", height: "auto", objectFit: "cover", objectPosition: (blog as any).mobile_image_position || "50% 50%", display: "block" }}
                                     />
                                 )}
                                 <Image
@@ -380,7 +380,7 @@ export default async function BlogDetailPage({ params }: Props) {
                                     height={630}
                                     sizes="(max-width: 640px) 100vw, 880px"
                                     className={(blog as any).mobile_image_url && (blog as any).mobile_image_url !== blog.cover_image_url ? "blog-modern-img-desktop" : ""}
-                                    style={{ width: "100%", height: "auto", objectFit: "cover", display: "block" }}
+                                    style={{ width: "100%", height: "auto", objectFit: "cover", objectPosition: (blog as any).cover_image_position || "50% 50%", display: "block" }}
                                 />
                             </div>
                         )}
@@ -438,7 +438,7 @@ export default async function BlogDetailPage({ params }: Props) {
                                             priority
                                             sizes="100vw"
                                             className="blog-cover-img-mobile"
-                                            style={{ width: "100%", height: "auto", objectFit: "cover", display: "block" }}
+                                            style={{ width: "100%", height: "auto", objectFit: "cover", objectPosition: (blog as any).mobile_image_position || "50% 50%", display: "block" }}
                                         />
                                     )}
                                     <Image
@@ -449,7 +449,7 @@ export default async function BlogDetailPage({ params }: Props) {
                                         priority
                                         sizes="(max-width: 640px) 100vw, 980px"
                                         className={(blog as any).mobile_image_url && (blog as any).mobile_image_url !== blog.cover_image_url ? "blog-cover-img-desktop" : ""}
-                                        style={{ width: "100%", height: "auto", objectFit: "cover", display: "block" }}
+                                        style={{ width: "100%", height: "auto", objectFit: "cover", objectPosition: (blog as any).cover_image_position || "50% 50%", display: "block" }}
                                     />
                                 </div>
                             )}

@@ -100,6 +100,7 @@ const featuresList: Record<string, string> = {
 };
 
 const locationsList: Record<string, string> = {
+    "kalkan-hepsi": "Kalkan - Hepsi",
     "kalkan-merkez": "Kalkan Merkez",
     "kalkan-kalamar": "Kalkan Kalamar",
     "kalkan-komurluk": "Kalkan Kömürlük",
@@ -638,7 +639,12 @@ function SonuclarInner() {
             supabase.from("destinations").select("id, name, filter_param").eq("is_active", true).order("sort_order")
                 .then(({ data }) => {
                     if (data) {
-                        setDbLocations(data.map(d => ({ id: d.id, key: d.filter_param, label: d.name })));
+                        const locs = data.map(d => ({ id: d.id, key: d.filter_param, label: d.name }));
+                        const hasKalkan = locs.some(l => l.key.startsWith("kalkan-"));
+                        if (hasKalkan) {
+                            locs.unshift({ id: "", key: "kalkan-hepsi", label: "Kalkan - Hepsi" });
+                        }
+                        setDbLocations(locs);
                     }
                 });
         });
@@ -664,6 +670,17 @@ function SonuclarInner() {
 
         if (selectedLocations.length > 0) {
             result = result.filter((v) => {
+                // "Kalkan - Hepsi" seçiliyse tüm kalkan- prefix'li konumlar eşleşir
+                if (selectedLocations.includes("kalkan-hepsi")) {
+                    if (v.destination_id) {
+                        const matchedDest = dbLocations.find(d => d.id === v.destination_id);
+                        if (matchedDest && matchedDest.key.startsWith("kalkan-")) return true;
+                    }
+                    const exactKey = locationToFilter[v.location];
+                    if (exactKey && exactKey.startsWith("kalkan-")) return true;
+                    const villaSlug = toLocSlug(v.location);
+                    if (villaSlug.startsWith("kalkan")) return true;
+                }
                 // 0) destination_id ile doğrudan eşleştir (en güvenilir yöntem)
                 if (v.destination_id) {
                     const matchedDest = dbLocations.find(d => d.id === v.destination_id);
@@ -828,16 +845,23 @@ function SonuclarInner() {
             
             // 1. Location match (+10 points)
             if (selectedLocations.length > 0) {
-                const destMatch = villa.destination_id
-                    ? dbLocations.find(d => d.id === villa.destination_id && selectedLocations.includes(d.key))
-                    : null;
                 const exactKey = locationToFilter[villa.location];
-                const isLocMatch = !!destMatch || (exactKey && selectedLocations.includes(exactKey)) || selectedLocations.some((sel) => {
-                    const villaSlug = toLocSlug(villa.location);
-                    const selDisplaySlug = toLocSlug(locationsList[sel] || sel);
-                    if (villaSlug === sel || villaSlug === selDisplaySlug) return true;
-                    return villaSlug.includes(selDisplaySlug) || selDisplaySlug.includes(villaSlug);
-                });
+                const villaSlug = toLocSlug(villa.location);
+                let isLocMatch = false;
+                if (selectedLocations.includes("kalkan-hepsi")) {
+                    const destMatch = villa.destination_id ? dbLocations.find(d => d.id === villa.destination_id && d.key.startsWith("kalkan-")) : null;
+                    isLocMatch = !!destMatch || (!!exactKey && exactKey.startsWith("kalkan-")) || villaSlug.startsWith("kalkan");
+                }
+                if (!isLocMatch) {
+                    const destMatch = villa.destination_id
+                        ? dbLocations.find(d => d.id === villa.destination_id && selectedLocations.includes(d.key))
+                        : null;
+                    isLocMatch = !!destMatch || (!!exactKey && selectedLocations.includes(exactKey)) || selectedLocations.some((sel) => {
+                        const selDisplaySlug = toLocSlug(locationsList[sel] || sel);
+                        if (villaSlug === sel || villaSlug === selDisplaySlug) return true;
+                        return villaSlug.includes(selDisplaySlug) || selDisplaySlug.includes(villaSlug);
+                    });
+                }
                 if (isLocMatch) score += 10;
             }
             

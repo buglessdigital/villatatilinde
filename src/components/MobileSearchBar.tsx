@@ -40,7 +40,7 @@ function fmtShort(d: Date) {
 /* ─── Location Options ─── */
 const LOCATION_OPTIONS = [
     { label: "Tüm Konumlar", value: "", isBold: true },
-    { label: "Kalkan - Hepsi", value: "kalkan", isBold: true },
+    { label: "Kalkan - Hepsi", value: "kalkan-hepsi", isBold: true },
     { label: "Kalkan Merkez", value: "kalkan-merkez", isBold: false },
     { label: "Kalkan / Kalamar", value: "kalkan-kalamar", isBold: false },
     { label: "Kalkan / Kömürlük", value: "kalkan-komurluk", isBold: false },

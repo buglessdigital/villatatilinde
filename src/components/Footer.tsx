@@ -116,11 +116,13 @@ export default function Footer() {
                                 </a>
                             </div>
                             <div style={{ display: "flex", justifyContent: "center", width: 276, marginTop: 16 }}>
-                                <img
-                                    src="/images/tescil.png"
-                                    alt="Marka Tescil"
-                                    style={{ width: 160, height: "auto", borderRadius: 8 }}
-                                />
+                                <a href="/marka-tescil-belgesi.pdf" target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", cursor: "pointer" }}>
+                                    <img
+                                        src="/images/tescil.png"
+                                        alt="Marka Tescil"
+                                        style={{ width: 160, height: "auto", borderRadius: 8 }}
+                                    />
+                                </a>
                             </div>
                         </div>
                         <div style={{ maxWidth: "85%" }}>
@@ -397,7 +399,9 @@ export default function Footer() {
                             </a>
                         </div>
                         <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
-                            <img src="/images/tescil.png" alt="Marka Tescil" style={{ maxHeight: 110, width: "auto", borderRadius: 8 }} />
+                            <a href="/marka-tescil-belgesi.pdf" target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", cursor: "pointer" }}>
+                                <img src="/images/tescil.png" alt="Marka Tescil" style={{ maxHeight: 110, width: "auto", borderRadius: 8 }} />
+                            </a>
                         </div>
                     </div>
                 </div>

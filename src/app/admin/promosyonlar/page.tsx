@@ -224,12 +224,18 @@ export default function AdminPromosyonlar() {
                             </div>
                             <div>
                                 <label style={labelStyle}>Geçerlilik Başlangıç</label>
-                                <input type="date" style={inputStyle} value={form.validity_start}
+                                <input type="date" style={{...inputStyle, cursor: "pointer"}} value={form.validity_start}
+                                    onClick={(e) => { try { e.currentTarget.showPicker(); } catch (err) {} }}
+                                    onFocus={(e) => { try { e.currentTarget.showPicker(); } catch (err) {} }}
+                                    onKeyDown={(e) => e.preventDefault()}
                                     onChange={(e) => setForm((f) => ({ ...f, validity_start: e.target.value }))} />
                             </div>
                             <div>
                                 <label style={labelStyle}>Geçerlilik Bitiş</label>
-                                <input type="date" style={inputStyle} value={form.validity_end}
+                                <input type="date" style={{...inputStyle, cursor: "pointer"}} value={form.validity_end}
+                                    onClick={(e) => { try { e.currentTarget.showPicker(); } catch (err) {} }}
+                                    onFocus={(e) => { try { e.currentTarget.showPicker(); } catch (err) {} }}
+                                    onKeyDown={(e) => e.preventDefault()}
                                     onChange={(e) => setForm((f) => ({ ...f, validity_end: e.target.value }))} />
                             </div>
                         </div>

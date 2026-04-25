@@ -88,7 +88,12 @@ export default function SearchFilterBar({
         supabase.from("destinations").select("name, filter_param").eq("is_active", true).order("sort_order")
             .then(({ data }) => {
                 if (data) {
-                    setDbLocations(data.map(d => ({ key: d.filter_param, label: d.name })));
+                    const locs = data.map(d => ({ key: d.filter_param, label: d.name }));
+                    const hasKalkan = locs.some(l => l.key.startsWith("kalkan-"));
+                    if (hasKalkan) {
+                        locs.unshift({ key: "kalkan-hepsi", label: "Kalkan - Hepsi" });
+                    }
+                    setDbLocations(locs);
                 }
             });
     }, []);

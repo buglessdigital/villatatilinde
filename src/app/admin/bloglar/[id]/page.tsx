@@ -16,6 +16,8 @@ interface BlogForm {
     content_html: string;
     cover_image_url: string;
     mobile_image_url: string;
+    cover_image_position: string;
+    mobile_image_position: string;
     author: string;
     read_time_min: number;
     is_published: boolean;
@@ -25,6 +27,7 @@ interface BlogForm {
 const emptyForm: BlogForm = {
     title: "", slug: "", subtitle: "", content_html: "",
     cover_image_url: "", mobile_image_url: "",
+    cover_image_position: "50% 50%", mobile_image_position: "50% 50%",
     author: "Villa Tatilinde", read_time_min: 5, is_published: false,
     blog_type: "standard",
 };
@@ -52,6 +55,8 @@ export default function BlogEditPage() {
             title: data.title || "", slug: data.slug || "", subtitle: data.subtitle || "",
             content_html: data.content_html || "", cover_image_url: data.cover_image_url || "",
             mobile_image_url: data.mobile_image_url || "",
+            cover_image_position: data.cover_image_position || "50% 50%",
+            mobile_image_position: data.mobile_image_position || "50% 50%",
             author: data.author || "Villa Tatilinde", read_time_min: data.read_time_min || 5,
             is_published: data.is_published || false,
             blog_type: data.blog_type || "standard",
@@ -145,10 +150,12 @@ export default function BlogEditPage() {
                             <ImageUploader
                                 value={form.cover_image_url}
                                 onChange={(url) => setForm({ ...form, cover_image_url: url })}
+                                objectPosition={form.cover_image_position}
+                                onObjectPositionChange={(pos) => setForm(f => ({ ...f, cover_image_position: pos }))}
                                 bucket="images"
                                 folder="blogs"
                                 label="Web Kapak Görseli"
-                                height={160}
+                                aspectRatio="8/5"
                                 hint={
                                     <span>
                                         • <strong>Boyut:</strong> <strong>1200 × 630 px</strong> önerilir<br />
@@ -170,10 +177,12 @@ export default function BlogEditPage() {
                             <ImageUploader
                                 value={form.mobile_image_url}
                                 onChange={(url) => setForm({ ...form, mobile_image_url: url })}
+                                objectPosition={form.mobile_image_position}
+                                onObjectPositionChange={(pos) => setForm(f => ({ ...f, mobile_image_position: pos }))}
                                 bucket="images"
                                 folder="blogs"
                                 label="Mobil Kapak Görseli"
-                                height={160}
+                                aspectRatio="3/4"
                                 hint={
                                     <span>
                                         • <strong>Boyut:</strong> <strong>750 × 1000 px</strong> önerilir<br />

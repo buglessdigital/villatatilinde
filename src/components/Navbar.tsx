@@ -669,14 +669,9 @@ export default function Navbar() {
                                                     <div style={{ fontSize: 16, fontWeight: 500 }}>Garantili Kiralama</div>
                                                 </div>
                                             </Link>
-                                            <Link href="/politika/cancellation">
+                                            <Link href="/politika/mesafeli-satis-kiralama-sozlesmesi">
                                                 <div className="bhbhbg middleft" style={{ padding: 12, borderRadius: 8 }}>
-                                                    <div style={{ fontSize: 16, fontWeight: 500 }}>İptal Politikası</div>
-                                                </div>
-                                            </Link>
-                                            <Link href="/mesafeli-satis-sozlesmesi">
-                                                <div className="bhbhbg middleft" style={{ padding: 12, borderRadius: 8 }}>
-                                                    <div style={{ fontSize: 16, fontWeight: 500 }}>Mesafeli Satış Sözleşmesi</div>
+                                                    <div style={{ fontSize: 16, fontWeight: 500 }}>Mesafeli Satış (Kiralama) Sözleşmesi</div>
                                                 </div>
                                             </Link>
                                             <Link href="/odeme-yontemleri">

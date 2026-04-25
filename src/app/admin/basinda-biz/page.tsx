@@ -5,6 +5,27 @@ import { supabase } from "@/lib/supabase";
 import { Plus, Edit, Trash2, Search, X, Check, Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
 
+function parseVideoUrls(raw: string): string[] {
+    if (!raw || raw.trim() === "") return [""];
+    const trimmed = raw.trim();
+    // New format: ||| separator
+    if (trimmed.includes("|||")) {
+        const parts = trimmed.split("|||").map(v => v.trim()).filter(Boolean);
+        return parts.length > 0 ? parts : [""];
+    }
+    // Legacy format: JSON array
+    if (trimmed.startsWith("[")) {
+        try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) {
+                const filtered = parsed.map((v: unknown) => String(v).trim()).filter(Boolean);
+                if (filtered.length > 0) return filtered;
+            }
+        } catch {}
+    }
+    return [trimmed];
+}
+
 interface PressMention {
     id: string;
     title: string;
@@ -39,9 +60,13 @@ export default function BasindaBizAdminPage() {
         is_featured: false
     });
     
+    // Multi-video list state (each item is a URL string)
+    const [videoList, setVideoList] = useState<string[]>([""]);
+    // Index of video being uploaded via file picker
+    const [uploadingVideoIdx, setUploadingVideoIdx] = useState<number | null>(null);
+
     // File upload state
     const [uploadingImage, setUploadingImage] = useState(false);
-    const [uploadingVideo, setUploadingVideo] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const videoInputRef = useRef<HTMLInputElement>(null);
 
@@ -84,6 +109,7 @@ export default function BasindaBizAdminPage() {
                 published_date: mention.published_date || new Date().toISOString().split("T")[0],
                 is_featured: mention.is_featured || false
             });
+            setVideoList(parseVideoUrls(mention.video_url));
         } else {
             setEditId(null);
             setFormData({
@@ -96,6 +122,7 @@ export default function BasindaBizAdminPage() {
                 published_date: new Date().toISOString().split("T")[0],
                 is_featured: false
             });
+            setVideoList([""]);
         }
         setModalOpen(true);
     };
@@ -109,25 +136,25 @@ export default function BasindaBizAdminPage() {
         setSaving(true);
         
         try {
-            // Artık birden fazla ana sayfada gösterilen haber desteklendiği için, diğerlerini false yapmıyoruz.
+            // Build video_url value from videoList
+            const nonEmptyVideos = videoList.filter(v => v.trim() !== "");
+            // Use ||| as separator for multiple videos (avoids JSON parsing issues)
+            const videoUrlValue = nonEmptyVideos.length === 0
+                ? ""
+                : nonEmptyVideos.join("|||");
+
+            const saveData = { ...formData, video_url: videoUrlValue };
 
             if (editId) {
-                // Update
                 const { error } = await supabase
                     .from("press_mentions")
-                    .update({
-                        ...formData,
-                        updated_at: new Date().toISOString()
-                    })
+                    .update({ ...saveData, updated_at: new Date().toISOString() })
                     .eq("id", editId);
-
                 if (error) throw error;
             } else {
-                // Insert
                 const { error } = await supabase
                     .from("press_mentions")
-                    .insert([formData]);
-
+                    .insert([saveData]);
                 if (error) throw error;
             }
             
@@ -193,35 +220,55 @@ export default function BasindaBizAdminPage() {
         }
     };
 
-    const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>, idx: number) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        setUploadingVideo(true);
+        setUploadingVideoIdx(idx);
         try {
             const fileExt = file.name.split('.').pop();
             const fileName = `press_video_${Date.now()}.${fileExt}`;
             const filePath = `press-videos/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
-                .from('images') // fallback to same bucket if videos bucket not setup
+                .from('images')
                 .upload(filePath, file, { cacheControl: '3600', upsert: false });
 
             if (uploadError) throw uploadError;
 
-            // Get public URL
             const { data: urlData } = supabase.storage
                 .from('images')
                 .getPublicUrl(filePath);
 
-            setFormData(prev => ({ ...prev, video_url: urlData.publicUrl }));
+            setVideoList(prev => {
+                const updated = [...prev];
+                updated[idx] = urlData.publicUrl;
+                return updated;
+            });
         } catch (error) {
             console.error("Video yükleme hatası:", error);
             alert("Video yüklenirken hata oluştu. Dosya boyutu limitlere takılmış olabilir.");
         } finally {
-            setUploadingVideo(false);
+            setUploadingVideoIdx(null);
             if (videoInputRef.current) videoInputRef.current.value = '';
         }
+    };
+
+    const addVideoSlot = () => setVideoList(prev => [...prev, ""]);
+
+    const removeVideoSlot = (idx: number) => {
+        setVideoList(prev => {
+            const updated = prev.filter((_, i) => i !== idx);
+            return updated.length === 0 ? [""] : updated;
+        });
+    };
+
+    const updateVideoUrl = (idx: number, value: string) => {
+        setVideoList(prev => {
+            const updated = [...prev];
+            updated[idx] = value;
+            return updated;
+        });
     };
 
     return (
@@ -386,7 +433,14 @@ export default function BasindaBizAdminPage() {
                                             type="date" 
                                             value={formData.published_date} 
                                             onChange={e => setFormData({...formData, published_date: e.target.value})} 
-                                            style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: 8, outline: "none" }} 
+                                            onClick={(e) => {
+                                                try { e.currentTarget.showPicker(); } catch (err) {}
+                                            }}
+                                            onFocus={(e) => {
+                                                try { e.currentTarget.showPicker(); } catch (err) {}
+                                            }}
+                                            onKeyDown={(e) => e.preventDefault()}
+                                            style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: 8, outline: "none", cursor: "pointer" }} 
                                         />
                                     </div>
 
@@ -463,42 +517,69 @@ export default function BasindaBizAdminPage() {
                                     </div>
 
                                     <div style={{ gridColumn: "span 2" }}>
-                                        <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 6 }}>
-                                            Video <span style={{ fontWeight: 400, color: "#94a3b8", fontSize: 12 }}>(isteğe bağlı — Bilgisayardan seçin veya link yapıştırın)</span>
-                                        </label>
-                                        <div style={{ display: "flex", gap: 16, alignItems: "flex-start", flexDirection: "column" }}>
-                                            <div style={{ display: "flex", alignItems: "center", gap: 12, width: "100%" }}>
-                                                <input 
-                                                    type="file" 
-                                                    accept="video/*" 
-                                                    style={{ display: "none" }} 
-                                                    onChange={handleVideoUpload}
-                                                    ref={videoInputRef}
-                                                />
-                                                <button 
-                                                    type="button"
-                                                    disabled={uploadingVideo}
-                                                    onClick={() => videoInputRef.current?.click()}
-                                                    style={{ padding: "8px 16px", background: "#f8fafc", border: "1px dashed #cbd5e1", borderRadius: 8, color: "#475569", cursor: uploadingVideo ? "not-allowed" : "pointer", fontSize: 13, minWidth: 150 }}
-                                                >
-                                                    {uploadingVideo ? "Yükleniyor..." : "Video Yükle (.mp4 vs)"}
-                                                </button>
-                                                
-                                                <div style={{ flex: 1 }}>
-                                                    <input
-                                                        type="url"
-                                                        value={formData.video_url}
-                                                        onChange={e => setFormData({...formData, video_url: e.target.value})}
-                                                        placeholder="https://... video URL'si veya YouTube linki"
-                                                        style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: 8, outline: "none", fontSize: 13 }}
-                                                    />
+                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                                            <label style={{ fontSize: 13, fontWeight: 600, color: "#475569" }}>
+                                                Videolar <span style={{ fontWeight: 400, color: "#94a3b8", fontSize: 12 }}>(isteğe bağlı — birden fazla ekleyebilirsiniz)</span>
+                                            </label>
+                                            <button
+                                                type="button"
+                                                onClick={addVideoSlot}
+                                                style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", background: "#ecfdf5", border: "1px solid #6ee7b7", borderRadius: 6, color: "#059669", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                                            >
+                                                <Plus size={13} /> Video Ekle
+                                            </button>
+                                        </div>
+
+                                        <input
+                                            type="file"
+                                            accept="video/*"
+                                            style={{ display: "none" }}
+                                            onChange={(e) => uploadingVideoIdx !== null && handleVideoUpload(e, uploadingVideoIdx)}
+                                            ref={videoInputRef}
+                                        />
+
+                                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                                            {videoList.map((vUrl, idx) => (
+                                                <div key={idx} style={{ display: "flex", flexDirection: "column", gap: 6, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
+                                                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                                        <span style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8", minWidth: 20 }}>#{idx + 1}</span>
+                                                        <button
+                                                            type="button"
+                                                            disabled={uploadingVideoIdx === idx}
+                                                            onClick={() => { setUploadingVideoIdx(idx); setTimeout(() => videoInputRef.current?.click(), 0); }}
+                                                            style={{ padding: "6px 12px", background: "#fff", border: "1px dashed #cbd5e1", borderRadius: 6, color: "#475569", cursor: uploadingVideoIdx === idx ? "not-allowed" : "pointer", fontSize: 12, whiteSpace: "nowrap" }}
+                                                        >
+                                                            {uploadingVideoIdx === idx ? "Yükleniyor..." : "Dosyadan Yükle"}
+                                                        </button>
+                                                        <input
+                                                            type="text"
+                                                            value={vUrl}
+                                                            onChange={e => updateVideoUrl(idx, e.target.value)}
+                                                            placeholder="https://... veya YouTube linki"
+                                                            style={{ flex: 1, padding: "8px 10px", border: "1px solid #cbd5e1", borderRadius: 6, outline: "none", fontSize: 13 }}
+                                                        />
+                                                        {videoList.length > 1 && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removeVideoSlot(idx)}
+                                                                style={{ padding: 6, background: "#fef2f2", border: "none", borderRadius: 6, color: "#ef4444", cursor: "pointer", display: "flex" }}
+                                                                title="Bu videoyu kaldır"
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    {vUrl && vUrl.match(/\.(mp4|webm)/i) && (
+                                                        <video src={vUrl} controls style={{ width: "100%", maxHeight: 160, borderRadius: 6, background: "#000" }} />
+                                                    )}
+                                                    {vUrl && (vUrl.includes("youtube.com") || vUrl.includes("youtu.be")) && (
+                                                        <div style={{ fontSize: 11, color: "#0cbc87", display: "flex", alignItems: "center", gap: 4 }}>
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M23 7s-.3-2-1.2-2.8c-1.1-1.2-2.4-1.2-3-1.3C16.1 3 12 3 12 3s-4.1 0-6.8.9c-.6.1-1.9.1-3 1.3C1.3 6 1 8 1 8S.7 10.1.7 12v1.9C.7 15.9 1 18 1 18s.3 2 1.2 2.8c1.1 1.2 2.6 1.1 3.3 1.2C7.6 22 12 22 12 22s4.1 0 6.8-.9c.6-.1 1.9-.2 3-1.3.9-.8 1.2-2.8 1.2-2.8s.3-2.1.3-4.1V12c0-2-.3-5-.3-5z"/><polygon points="9.5 15.5 15.5 12 9.5 8.5 9.5 15.5" fill="white"/></svg>
+                                                            YouTube linki algılandı — modalda oynatılacak
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            </div>
-                                            {(formData.video_url && formData.video_url.match(/\.(mp4|webm)/i)) && (
-                                                <div style={{ width: "100%", maxWidth: 320, borderRadius: 8, overflow: "hidden", border: "1px solid #e2e8f0", background: "#000" }}>
-                                                    <video src={formData.video_url} controls style={{ width: "100%", height: "auto", maxHeight: 180 }} />
-                                                </div>
-                                            )}
+                                            ))}
                                         </div>
                                     </div>
 

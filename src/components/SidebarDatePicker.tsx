@@ -1,12 +1,15 @@
 "use client";
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 
+/* ─── Turkish Month / Day Names ─── */
 const MONTH_NAMES_TR = [
-    "OCAK", "ŞUBAT", "MART", "NİSAN", "MAYIS", "HAZİRAN",
-    "TEMMUZ", "AĞUSTOS", "EYLÜL", "EKİM", "KASIM", "ARALIK"
+    "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+    "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
 ];
-const DAY_HEADERS = ["PT", "SA", "ÇA", "PE", "CU", "CT", "PZ"];
 
+const DAY_HEADERS = ["Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pz"];
+
+/* ─── Helpers ─── */
 function toDateStr(d: Date): string {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -23,6 +26,7 @@ function getDaysInMonth(year: number, month: number): number {
     return new Date(year, month + 1, 0).getDate();
 }
 
+// Monday = 0, Sunday = 6
 function getStartDayOfMonth(year: number, month: number): number {
     const d = new Date(year, month, 1).getDay();
     return d === 0 ? 6 : d - 1;
@@ -32,82 +36,93 @@ function isBetween(dateStr: string, start: string, end: string): boolean {
     return dateStr >= start && dateStr <= end;
 }
 
+interface PriceRange {
+    startDate: string;
+    endDate: string;
+    price: number;
+}
+
+interface Reservation {
+    startDate: string;
+    endDate: string;
+    status: "reserved" | "option";
+}
+
+interface DisabledReason {
+    startDate: string;
+    endDate: string;
+    reason: string;
+}
+
+interface SidebarDatePickerProps {
+    checkInDate: string;
+    checkOutDate: string;
+    onDateChange: (checkIn: string | null, checkOut: string | null) => void;
+    priceRanges: PriceRange[];
+    reservations: Reservation[];
+    disabledReasons?: DisabledReason[];
+    minNights?: number;
+    formatPrice: (price: number) => string;
+}
+
 export default function SidebarDatePicker({
     checkInDate,
     checkOutDate,
-    onDateSelect,
+    onDateChange,
     priceRanges,
     reservations,
-    disabledReasons,
-    formatPriceFn,
-    minNights = 1
-}: {
-    checkInDate: string;
-    checkOutDate: string;
-    onDateSelect: (ci: string, co: string) => void;
-    priceRanges: any[];
-    reservations: any[];
-    disabledReasons: any[];
-    formatPriceFn: (p: number) => string;
-    minNights?: number;
-}) {
+    disabledReasons = [],
+    minNights = 1,
+    formatPrice
+}: SidebarDatePickerProps) {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
-    
-    const [viewYear, setViewYear] = useState(() => {
-        if (checkInDate) return parseDate(checkInDate).getFullYear();
-        return new Date().getFullYear();
-    });
-    const [viewMonth, setViewMonth] = useState(() => {
-        if (checkInDate) return parseDate(checkInDate).getMonth();
-        return new Date().getMonth();
-    });
 
-    // Close when clicking outside
+    const [viewYear, setViewYear] = useState(new Date().getFullYear());
+    const [viewMonth, setViewMonth] = useState(new Date().getMonth());
+
+    const [minNightsWarning, setMinNightsWarning] = useState<string | null>(null);
+    const [blockedWarning, setBlockedWarning] = useState<string | null>(null);
+
+    // Initial sync
     useEffect(() => {
-        function handleClickOutside(e: MouseEvent) {
+        if (checkInDate && !isOpen) {
+            const d = parseDate(checkInDate);
+            setViewYear(d.getFullYear());
+            setViewMonth(d.getMonth());
+        }
+    }, [checkInDate, isOpen]);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
                 setIsOpen(false);
             }
-        }
+        };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     const goPrev = () => {
         setViewMonth((m) => {
-            if (m === 0) {
-                setViewYear((y) => y - 1);
-                return 11;
-            }
+            if (m === 0) { setViewYear((y) => y - 1); return 11; }
             return m - 1;
         });
     };
 
     const goNext = () => {
         setViewMonth((m) => {
-            if (m === 11) {
-                setViewYear((y) => y + 1);
-                return 0;
-            }
+            if (m === 11) { setViewYear((y) => y + 1); return 0; }
             return m + 1;
         });
     };
 
-    // Derived states and lookups
     const getPrice = useCallback((dateStr: string): number | null => {
         for (const pr of priceRanges) {
             if (isBetween(dateStr, pr.startDate, pr.endDate)) return pr.price;
         }
         return null;
     }, [priceRanges]);
-
-    const getReservationStatus = useCallback((dateStr: string): "reserved" | "option" | null => {
-        for (const res of reservations) {
-            if (isBetween(dateStr, res.startDate, res.endDate)) return res.status;
-        }
-        return null;
-    }, [reservations]);
 
     const getDisabledReason = useCallback((dateStr: string): string | null => {
         for (const dr of disabledReasons) {
@@ -116,167 +131,216 @@ export default function SidebarDatePicker({
         return null;
     }, [disabledReasons]);
 
+    const getReservationStatus = useCallback((dateStr: string): "reserved" | "option" | null => {
+        for (const res of reservations) {
+            if (isBetween(dateStr, res.startDate, res.endDate)) return res.status;
+        }
+        return null;
+    }, [reservations]);
+
+    const isSelected = useCallback((dateStr: string): boolean => {
+        if (!checkInDate) return false;
+        if (!checkOutDate) return dateStr === checkInDate;
+        return isBetween(dateStr, checkInDate, checkOutDate);
+    }, [checkInDate, checkOutDate]);
+
     const isPast = useCallback((dateStr: string): boolean => {
-        const today = toDateStr(new Date());
-        return dateStr < today;
+        return dateStr < toDateStr(new Date());
     }, []);
 
-    const handleDayClick = (dateStr: string) => {
+    const handleDayClick = useCallback((dateStr: string) => {
         if (isPast(dateStr)) return;
-        if (getDisabledReason(dateStr) || getReservationStatus(dateStr)) {
-            alert("Bu tarih rezerve edilmiştir veya kapalıdır.");
+
+        const disabledReason = getDisabledReason(dateStr);
+        if (disabledReason) {
+            setBlockedWarning(disabledReason);
+            setMinNightsWarning(null);
             return;
         }
-        if (getPrice(dateStr) === null) return;
+
+        const status = getReservationStatus(dateStr);
+        if (status === "reserved" || status === "option") {
+            setBlockedWarning("Bu tarih rezerve edilmiştir.");
+            setMinNightsWarning(null);
+            return;
+        }
+
+        const price = getPrice(dateStr);
+        if (price === null) return;
+
+        setMinNightsWarning(null);
+        setBlockedWarning(null);
 
         if (!checkInDate || (checkInDate && checkOutDate)) {
-            // Start new selection
-            onDateSelect(dateStr, "");
+            onDateChange(dateStr, null);
         } else {
-            // Set check-out
             if (dateStr <= checkInDate) {
-                onDateSelect(dateStr, "");
+                onDateChange(dateStr, null);
             } else {
                 const startD = parseDate(checkInDate);
                 const endD = parseDate(dateStr);
                 const nightCount = Math.round((endD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24));
                 if (nightCount < minNights) {
-                    alert(`Minimum rezervasyon süresi ${minNights} gecedir.`);
+                    setMinNightsWarning(`Minimum rezervasyon süresi ${minNights} gecedir. Seçtiğiniz tarih aralığı ${nightCount} gece.`);
                     return;
                 }
 
-                // Check for blocked dates in range
                 let hasBlocked = false;
                 const cursor = new Date(startD);
                 while (cursor <= endD) {
                     const cs = toDateStr(cursor);
                     const s = getReservationStatus(cs);
-                    if (s || getPrice(cs) === null || getDisabledReason(cs)) {
+                    if (s === "reserved" || s === "option" || getPrice(cs) === null) {
                         hasBlocked = true;
                         break;
                     }
                     cursor.setDate(cursor.getDate() + 1);
                 }
-
                 if (hasBlocked) {
-                    onDateSelect(dateStr, "");
+                    onDateChange(dateStr, null);
                 } else {
-                    onDateSelect(checkInDate, dateStr);
-                    setIsOpen(false); // Close on complete selection
+                    onDateChange(checkInDate, dateStr);
+                    setIsOpen(false); // Close when check-out is selected
                 }
             }
         }
-    };
+    }, [checkInDate, checkOutDate, isPast, getReservationStatus, getPrice, getDisabledReason, minNights, onDateChange]);
 
-    // Render calendar grid
     const daysInMonth = getDaysInMonth(viewYear, viewMonth);
     const startDay = getStartDayOfMonth(viewYear, viewMonth);
+
     const cells: (number | null)[] = [];
     for (let i = 0; i < startDay; i++) cells.push(null);
     for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
-    const isSelected = (dateStr: string) => {
-        if (!checkInDate) return false;
-        if (!checkOutDate) return dateStr === checkInDate;
-        return isBetween(dateStr, checkInDate, checkOutDate);
-    };
-
-    const formatDateInput = (dateStr: string) => {
-        if (!dateStr) return "";
-        const d = parseDate(dateStr);
-        return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth()+1).padStart(2, '0')}.${d.getFullYear()}`;
+    const formatDisplayDate = (d: string) => {
+        if (!d) return "";
+        return new Date(d).toLocaleDateString("tr-TR", { day: "numeric", month: "short", year: "numeric" });
     };
 
     return (
-        <div className="sidebar-date-picker-wrapper" ref={containerRef} style={{ position: 'relative' }}>
-            <div 
-                className="sidebar-date-inputs" 
-                style={{ display: 'flex', gap: '16px', cursor: 'pointer' }}
-                onClick={() => setIsOpen(!isOpen)}
-            >
-                <div style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: '4px', padding: '12px 16px', background: '#fff', fontSize: '14px', color: checkInDate ? '#333' : '#94a3b8' }}>
-                    {checkInDate ? formatDateInput(checkInDate) : "Giriş Tarihi"}
+        <div ref={containerRef} style={{ position: "relative", width: "100%" }}>
+            {/* Input boxes */}
+            <div style={{ display: "flex", gap: "12px", width: "100%" }}>
+                <div 
+                    onClick={() => setIsOpen(true)}
+                    style={{ 
+                        flex: 1, height: "46px", display: "flex", alignItems: "center", justifyContent: "center",
+                        border: "1px solid #cbd5e1", borderRadius: "8px", background: "#fff", cursor: "pointer",
+                        color: checkInDate ? "#1e293b" : "#94a3b8", fontSize: "14px", fontWeight: 500
+                    }}
+                >
+                    {checkInDate ? formatDisplayDate(checkInDate) : "Giriş Tarihi"}
                 </div>
-                <div style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: '4px', padding: '12px 16px', background: '#fff', fontSize: '14px', color: checkOutDate ? '#333' : '#94a3b8' }}>
-                    {checkOutDate ? formatDateInput(checkOutDate) : "Çıkış Tarihi"}
+                <div 
+                    onClick={() => setIsOpen(true)}
+                    style={{ 
+                        flex: 1, height: "46px", display: "flex", alignItems: "center", justifyContent: "center",
+                        border: "1px solid #cbd5e1", borderRadius: "8px", background: "#fff", cursor: "pointer",
+                        color: checkOutDate ? "#1e293b" : "#94a3b8", fontSize: "14px", fontWeight: 500
+                    }}
+                >
+                    {checkOutDate ? formatDisplayDate(checkOutDate) : "Çıkış Tarihi"}
                 </div>
             </div>
 
+            {/* Popup */}
             {isOpen && (
-                <div style={{ 
-                    position: 'absolute', 
-                    top: '100%', 
-                    left: 0, 
-                    right: 0, 
-                    marginTop: '8px', 
-                    background: '#fff', 
-                    borderRadius: '8px', 
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)', 
-                    border: '1px solid #e2e8f0', 
-                    zIndex: 100,
-                    padding: '20px'
+                <div style={{
+                    position: "absolute", top: "100%", left: 0, right: 0, marginTop: "8px",
+                    background: "#fff", border: "1px solid #e2e8f0", borderRadius: "12px",
+                    boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)",
+                    zIndex: 50, padding: "20px"
                 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                        <div onClick={(e) => { e.stopPropagation(); goPrev(); }} style={{ cursor: 'pointer', color: '#64748b', padding: '0 8px', fontWeight: 'bold' }}>{'<'}</div>
-                        <div style={{ fontWeight: 600, color: '#94a3b8', fontSize: '14px', letterSpacing: '0.5px' }}>{MONTH_NAMES_TR[viewMonth]} {viewYear}</div>
-                        <div onClick={(e) => { e.stopPropagation(); goNext(); }} style={{ cursor: 'pointer', color: '#64748b', padding: '0 8px', fontWeight: 'bold' }}>{'>'}</div>
+                    {/* Header */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+                        <button onClick={goPrev} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: "#64748b", padding: "4px 8px" }}>‹</button>
+                        <div style={{ fontSize: "15px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>
+                            {MONTH_NAMES_TR[viewMonth]} {viewYear}
+                        </div>
+                        <button onClick={goNext} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: "#64748b", padding: "4px 8px" }}>›</button>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '8px' }}>
+                    {/* Day Headers */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px", marginBottom: "8px" }}>
                         {DAY_HEADERS.map(dh => (
-                            <div key={dh} style={{ textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#94a3b8' }}>{dh}</div>
+                            <div key={dh} style={{ textAlign: "center", fontSize: "12px", fontWeight: 700, color: "#cbd5e1" }}>
+                                {dh.toUpperCase()}
+                            </div>
                         ))}
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+                    {/* Grid */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px" }}>
                         {cells.map((day, idx) => {
                             if (day === null) return <div key={`empty-${idx}`} />;
-                            const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                             
+                            const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                             const price = getPrice(dateStr);
                             const resStatus = getReservationStatus(dateStr);
+                            const selected = isSelected(dateStr);
                             const past = isPast(dateStr);
-                            const disabled = getDisabledReason(dateStr);
+                            const checkIn = checkInDate === dateStr;
+                            const checkOut = checkOutDate === dateStr;
+
+                            const clickable = !past && resStatus !== "reserved" && price !== null;
                             const noPrice = price === null && !past && !resStatus;
 
-                            const isSel = isSelected(dateStr);
-                            const isCi = dateStr === checkInDate;
-                            const isCo = dateStr === checkOutDate;
+                            let bg = "transparent";
+                            let color = "#1e293b";
+                            let priceColor = "#94a3b8";
+                            let borderRadius = "8px";
 
-                            let bgColor = 'transparent';
-                            let textColor = '#333';
-                            if (isSel) bgColor = '#f1f5f9';
-                            if (isCi || isCo) bgColor = '#f8fafc'; // light gray for start/end in the mock?
-                            // Actually, let's use the primary blue color for selection
-                            if (isSel) bgColor = '#e0f2fe';
-                            if (isCi || isCo) { bgColor = '#0ea5e9'; textColor = '#fff'; }
-                            if (past || resStatus || disabled) textColor = '#cbd5e1';
+                            if (past || noPrice) {
+                                color = "#cbd5e1";
+                                priceColor = "#cbd5e1";
+                            } else if (resStatus === "reserved") {
+                                bg = "#fee2e2";
+                                color = "#ef4444";
+                                priceColor = "#fca5a5";
+                            } else if (resStatus === "option") {
+                                bg = "#ffedd5";
+                                color = "#f97316";
+                                priceColor = "#fdba74";
+                            } else if (selected) {
+                                bg = "#3b82f6";
+                                color = "#fff";
+                                priceColor = "rgba(255,255,255,0.8)";
+                                if (checkIn && !checkOutDate) borderRadius = "8px";
+                                else if (checkIn) borderRadius = "8px 0 0 8px";
+                                else if (checkOut) borderRadius = "0 8px 8px 0";
+                                else borderRadius = "0";
+                            }
 
                             return (
-                                <div 
+                                <div
                                     key={dateStr}
-                                    onClick={() => handleDayClick(dateStr)}
+                                    onClick={clickable ? () => handleDayClick(dateStr) : undefined}
                                     style={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        height: '48px',
-                                        borderRadius: (isCi || isCo) ? '50%' : '8px',
-                                        background: bgColor,
-                                        color: textColor,
-                                        cursor: (past || resStatus || disabled || noPrice) ? 'not-allowed' : 'pointer',
-                                        opacity: noPrice ? 0.5 : 1
+                                        background: bg, borderRadius, padding: "8px 0", textAlign: "center",
+                                        cursor: clickable ? "pointer" : "default", transition: "all 0.15s ease"
                                     }}
                                 >
-                                    <div style={{ fontSize: '14px', fontWeight: 600 }}>{day}</div>
-                                    <div style={{ fontSize: '10px', color: (isCi || isCo) ? '#e0f2fe' : (past || resStatus || disabled ? '#cbd5e1' : '#94a3b8') }}>
-                                        {price !== null ? formatPriceFn(price) : '–'}
+                                    <div style={{ fontSize: "14px", fontWeight: 700, color }}>{day}</div>
+                                    <div style={{ fontSize: "10px", fontWeight: 500, color: priceColor, marginTop: "2px" }}>
+                                        {price !== null ? formatPrice(price) : "–"}
                                     </div>
                                 </div>
                             );
                         })}
                     </div>
+
+                    {/* Warnings */}
+                    {blockedWarning && (
+                        <div style={{ marginTop: "12px", padding: "8px", background: "#fef2f2", color: "#ef4444", fontSize: "12px", borderRadius: "6px", textAlign: "center" }}>
+                            {blockedWarning}
+                        </div>
+                    )}
+                    {minNightsWarning && (
+                        <div style={{ marginTop: "12px", padding: "8px", background: "#fffbeb", color: "#d97706", fontSize: "12px", borderRadius: "6px", textAlign: "center" }}>
+                            {minNightsWarning}
+                        </div>
+                    )}
                 </div>
             )}
         </div>
