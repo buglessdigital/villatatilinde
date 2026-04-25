@@ -38,10 +38,15 @@ function parseVideoUrls(raw: string): string[] {
     return [trimmed];
 }
 
+function isYoutubeUrl(url: string): boolean {
+    return url.includes("youtube.com") || url.includes("youtu.be");
+}
+
 function getYoutubeId(videoUrl: string): string | null {
     if (!videoUrl) return null;
+    const trimmed = videoUrl.trim();
     try {
-        const url = new URL(videoUrl);
+        const url = new URL(trimmed);
         if (url.hostname.includes("youtube.com")) {
             if (url.searchParams.get("v")) return url.searchParams.get("v");
             const pathMatch = url.pathname.match(/\/(?:embed|shorts|live|v)\/([^/?&\s]+)/);
@@ -51,17 +56,23 @@ function getYoutubeId(videoUrl: string): string | null {
             return url.pathname.slice(1).split("?")[0] || null;
         }
     } catch {
-        // fallback regex for malformed URLs
-        const m = videoUrl.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([^&?/\s]{11})/);
+        const m = trimmed.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([^&?/\s]+)/);
         if (m) return m[1];
     }
     return null;
 }
 
 function getEmbedUrl(videoUrl: string): string {
-    const ytId = getYoutubeId(videoUrl);
+    const trimmed = videoUrl.trim();
+    const ytId = getYoutubeId(trimmed);
     if (ytId) return `https://www.youtube.com/embed/${ytId}?autoplay=1`;
-    return videoUrl;
+    if (isYoutubeUrl(trimmed)) {
+        try {
+            const url = new URL(trimmed);
+            return `https://www.youtube.com/embed/${url.pathname.split("/").pop()}?autoplay=1`;
+        } catch {}
+    }
+    return trimmed;
 }
 
 function isDirectVideo(url: string): boolean {
@@ -74,9 +85,10 @@ function isVideoUrl(url: string): boolean {
 }
 
 // Returns the list of video URLs for a mention.
-// Falls back to m.url if video_url is empty and url looks like a video.
+// Filters out non-video entries (e.g. accidentally saved image/PDF URLs)
+// and falls back to m.url when video_url has no usable video.
 function getVideosForMention(m: { video_url: string; url: string }): string[] {
-    const fromVideoUrl = parseVideoUrls(m.video_url);
+    const fromVideoUrl = parseVideoUrls(m.video_url).filter(isVideoUrl);
     if (fromVideoUrl.length > 0) return fromVideoUrl;
     if (m.url && isVideoUrl(m.url)) return [m.url];
     return [];
@@ -545,10 +557,11 @@ export default function BasindaBizSection() {
                                 </>
                             )}
                             {(() => {
-                                const currentUrl = currentVideos[videoModal.videoIndex] || "";
-                                return getYoutubeId(currentUrl) ? (
+                                const currentUrl = (currentVideos[videoModal.videoIndex] || "").trim();
+                                return isYoutubeUrl(currentUrl) ? (
                                     <iframe
                                         src={getEmbedUrl(currentUrl)}
+                                        title={videoModal.mention.title}
                                         style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                         allowFullScreen
