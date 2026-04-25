@@ -7,6 +7,7 @@ import { formatDistance } from "@/data/mockVillas";
 import type { Villa, PriceBlock, Review } from "@/data/mockVillas";
 import { getVillaDetailBySlug } from "@/lib/queries";
 import ReservationCalendar from "@/components/ReservationCalendar";
+import SidebarDatePicker from "@/components/SidebarDatePicker";
 import ReservationBottomSheet from "@/components/ReservationBottomSheet";
 import { useCurrency } from "@/context/CurrencyContext";
 import { supabase } from "@/lib/supabase";
@@ -635,17 +636,12 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                         <div className="vd-info-value">: {villa.minRes} Gün</div>
                                     </div>
                                     <div className="vd-info-item">
-                                        <div className="vd-info-label">İptal Politikası</div>
-                                        <Link href="/iptal-iade-politikalari" className="vd-info-value" style={{ textDecoration: 'none', color: 'inherit' }}>
+                                        <div className="vd-info-label">Mesafeli Satış (Kiralama) Sözleşmesi</div>
+                                        <Link href="/politika/mesafeli-satis-kiralama-sozlesmesi" className="vd-info-value" style={{ textDecoration: 'none', color: 'inherit' }}>
                                             : Detaylar <img src="/images/iconlink.svg" alt="link" style={{ marginLeft: 6, height: 20 }} />
                                         </Link>
                                     </div>
-                                    <div className="vd-info-item">
-                                        <div className="vd-info-label">Mesafeli Satış Sözleşmesi</div>
-                                        <Link href="/mesafeli-satis-sozlesmesi" className="vd-info-value" style={{ textDecoration: 'none', color: 'inherit' }}>
-                                            : Detaylar <img src="/images/iconlink.svg" alt="link" style={{ marginLeft: 6, height: 20 }} />
-                                        </Link>
-                                    </div>
+
                                     <div className="vd-info-item">
                                         <div className="vd-info-label">Giriş Saati</div>
                                         <div className="vd-info-value">: {villa.checkIn}</div>
@@ -683,24 +679,21 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                     </button>
                                 )}
                             </div>
-                            <div className="vd-res-dates">
-                                <div className="vd-res-date-input">
-                                    <input
-                                        type="date"
-                                        value={checkInDate}
-                                        onChange={(e) => setCheckInDate(e.target.value)}
-                                        placeholder="Giriş Tarihi"
-                                    />
-                                </div>
-                                <div className="vd-res-date-input">
-                                    <input
-                                        type="date"
-                                        value={checkOutDate}
-                                        onChange={(e) => setCheckOutDate(e.target.value)}
-                                        placeholder="Çıkış Tarihi"
-                                    />
-                                </div>
-                            </div>
+                            <SidebarDatePicker
+                                checkInDate={checkInDate}
+                                checkOutDate={checkOutDate}
+                                onDateSelect={(ci, co) => {
+                                    setCheckInDate(ci);
+                                    setCheckOutDate(co);
+                                    if (ci && co) setShowBottomSheet(true);
+                                    else setShowBottomSheet(false);
+                                }}
+                                priceRanges={villa.calendarPrices}
+                                reservations={[...villa.calendarReservations, ...dbReservations]}
+                                disabledReasons={disabledDateReasons}
+                                formatPriceFn={formatVillaPrice}
+                                minNights={villa.minRes}
+                            />
 
                             {(!checkInDate || !checkOutDate || nightCount <= 0) ? (
                                 <>
