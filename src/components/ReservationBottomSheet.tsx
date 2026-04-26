@@ -7,6 +7,7 @@ interface CalendarPriceRange {
     startDate: string;
     endDate: string;
     price: number;
+    currency?: string;
 }
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
     checkInTime: string;    // e.g. "16:00"
     checkOutTime: string;   // e.g. "10:00"
     currency?: string;
+    villaCurrency?: string;
     villaSlug: string;
     commissionPct?: number;
     onClose: () => void;
@@ -50,10 +52,6 @@ function toDateStr(d: Date): string {
     return `${y}-${m}-${day}`;
 }
 
-function formatTR(n: number): string {
-    return Math.round(n).toLocaleString("tr-TR", { maximumFractionDigits: 0 });
-}
-
 /* ─── Component ─── */
 export default function ReservationBottomSheet({
     checkIn,
@@ -63,11 +61,15 @@ export default function ReservationBottomSheet({
     checkInTime,
     checkOutTime,
     currency = "₺",
+    villaCurrency,
     villaSlug,
     commissionPct = 20,
     onClose,
 }: Props) {
-    const { convertPrice } = useCurrency();
+    const { formatVillaCurrencyPrice } = useCurrency();
+
+    const fmt = (amount: number, src?: string) =>
+        formatVillaCurrencyPrice(amount, src || villaCurrency || "TRY");
     // Build array of dates from checkIn to checkOut (exclusive of checkout for pricing)
     const dateList = useMemo(() => {
         const result: { dateStr: string; day: number; monthShort: string }[] = [];
@@ -85,15 +87,17 @@ export default function ReservationBottomSheet({
         return result;
     }, [checkIn, checkOut]);
 
-    // Get price for a date
-    const getPrice = (dateStr: string): number | null => {
+    // Get price info for a date
+    const getPriceInfo = (dateStr: string): { price: number; currency?: string } | null => {
         for (const pr of priceRanges) {
             if (isBetween(dateStr, pr.startDate, pr.endDate)) {
-                return pr.price;
+                return { price: pr.price, currency: pr.currency };
             }
         }
         return null;
     };
+
+    const getPrice = (dateStr: string): number | null => getPriceInfo(dateStr)?.price ?? null;
 
     // Calculate totals
     const { nightCount, totalPrice, hasUnpricedDays } = useMemo(() => {
@@ -123,12 +127,6 @@ export default function ReservationBottomSheet({
 
     const advancePayment = Math.round(totalPrice * (commissionPct / 100));
     const remainingPayment = totalPrice - advancePayment;
-
-    // Convert all amounts
-    const convertedTotal = convertPrice(totalPrice);
-    const convertedAdvance = convertPrice(advancePayment);
-    const convertedRemaining = convertPrice(remainingPayment);
-    const convertedDeposit = convertPrice(deposit);
 
     // Parse dates for display
     const checkInDate = parseDate(checkIn);
@@ -169,7 +167,7 @@ export default function ReservationBottomSheet({
                 <div className="rbs-date-strip-wrapper">
                     <div className="rbs-date-strip">
                         {dateList.map((d, i) => {
-                            const price = getPrice(d.dateStr);
+                            const priceInfo = getPriceInfo(d.dateStr);
                             const isFirst = i === 0;
                             const isLast = i === dateList.length - 1;
                             return (
@@ -180,7 +178,7 @@ export default function ReservationBottomSheet({
                                     <span className="rbs-strip-month">{d.monthShort}</span>
                                     <span className="rbs-strip-num">{d.day}</span>
                                     <span className="rbs-strip-price">
-                                        {!isLast ? (price !== null ? `${currency}${formatTR(convertPrice(price))}` : "–") : `${currency}0`}
+                                        {!isLast ? (priceInfo !== null ? fmt(priceInfo.price, priceInfo.currency) : "–") : fmt(0)}
                                     </span>
                                 </div>
                             );
@@ -196,7 +194,7 @@ export default function ReservationBottomSheet({
                     </div>
                     <div className="rbs-summary-row rbs-summary-total">
                         <span className="rbs-summary-label"><strong>Toplam Tutar</strong></span>
-                        <span className="rbs-summary-value"><strong>{currency}{formatTR(convertedTotal)}</strong></span>
+                        <span className="rbs-summary-value"><strong>{fmt(totalPrice)}</strong></span>
                     </div>
                 </div>
 
@@ -205,7 +203,7 @@ export default function ReservationBottomSheet({
                     <span className="rbs-payment-section-title">Gereken Ön Ödeme</span>
                     <div className="rbs-summary-row">
                         <span className="rbs-summary-label">%{commissionPct} Ön Ödeme</span>
-                        <span className="rbs-summary-value">{currency}{formatTR(convertedAdvance)}</span>
+                        <span className="rbs-summary-value">{fmt(advancePayment)}</span>
                     </div>
                 </div>
 
@@ -214,13 +212,13 @@ export default function ReservationBottomSheet({
                     <span className="rbs-payment-section-title">Girişte Ödenmesi Gereken</span>
                     <div className="rbs-summary-row">
                         <span className="rbs-summary-label">%{100 - commissionPct} Kalan Ödeme</span>
-                        <span className="rbs-summary-value">{currency}{formatTR(convertedRemaining)}</span>
+                        <span className="rbs-summary-value">{fmt(remainingPayment)}</span>
                     </div>
                     <div className="rbs-summary-row">
                         <span className="rbs-summary-label">
                             Depozito <span style={{ display: "inline-block", width: 14, height: 14, borderRadius: 7, background: "#e0e6ed", color: "#8e9db5", fontSize: 10, textAlign: "center", lineHeight: "14px", margin: "0 4px" }}>?</span> <span className="rbs-deposit-note">(toplam tutara dahil değildir)</span>
                         </span>
-                        <span className="rbs-summary-value">{currency}{formatTR(convertedDeposit)}</span>
+                        <span className="rbs-summary-value">{fmt(deposit)}</span>
                     </div>
                 </div>
 

@@ -160,27 +160,22 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
     const reservationRef = useRef<HTMLDivElement>(null);
 
     // Currency context
-    const { formatPrice, currency: activeCurrency, convertPrice, rates } = useCurrency();
+    const { formatPrice, currency: activeCurrency, rates } = useCurrency();
 
     // Villa's own currency-aware price formatter
-    // Fiyatlar DB'de villa.currency cinsinden saklanıyor (GBP, TRY, EUR vb.)
-    // Bu fonksiyon doğru birimi gösterir ve kullanıcının seçtiği dövize çevirir
-    const formatVillaPrice = (amount: number): string => {
+    const formatVillaPrice = (amount: number, sourceCurrency?: string): string => {
         if (!villa) return formatPrice(amount);
-        const villaCurrency = (villa.currency || "TRY").toUpperCase();
+        const src = (sourceCurrency || villa.currency || "TRY").toUpperCase();
         const SYMBOLS: Record<string, string> = { TRY: "₺", GBP: "£", EUR: "€", USD: "$", RUB: "₽" };
 
-        // Kullanıcı hangi dövizi seçmiş?
         const targetCode = activeCurrency.code;
 
-        if (villaCurrency === targetCode) {
-            // Aynı birim → sembol + sayı, dönüşüm yok
-            const sym = SYMBOLS[villaCurrency] || villaCurrency + " ";
+        if (src === targetCode) {
+            const sym = SYMBOLS[src] || src + " ";
             return `${sym}${Math.round(amount).toLocaleString("tr-TR", { maximumFractionDigits: 0 })}`;
         }
 
-        // Farklı birim → önce TRY'ye çevir, sonra hedef dövize
-        const toTRY = villaCurrency === "TRY" ? amount : amount / (rates[villaCurrency] || 1);
+        const toTRY = src === "TRY" ? amount : amount / (rates[src] || 1);
         const converted = targetCode === "TRY" ? toTRY : Math.round(toTRY * (rates[targetCode] || 1));
         return `${activeCurrency.symbol}${converted.toLocaleString("tr-TR", { maximumFractionDigits: 0 })}`;
     };
@@ -286,7 +281,8 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                     calendarPrices: detail.price_periods.map(p => ({
                         startDate: p.start_date,
                         endDate: p.end_date,
-                        price: p.nightly_price
+                        price: p.nightly_price,
+                        currency: p.currency || "TRY",
                     })),
                     calendarReservations: detail.disabled_dates.map(d => ({
                         startDate: d.start_date,
@@ -620,13 +616,29 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                 <h2 className="vd-section-title poppins">Önemli Bilgiler</h2>
                                 <div className="vd-info-items">
                                     <div className="vd-info-item">
-                                        <div className="vd-info-label">Depozito</div>
+                                        <div className="vd-info-label" style={{ display: "flex", alignItems: "center" }}>
+                                            Depozito
+                                            <span className="vd-res-tooltip-wrapper" tabIndex={0} onClick={(e) => toggleTooltip("info-deposit", e)}>
+                                                <span style={{ display: "inline-flex", width: 16, height: 16, borderRadius: 8, background: "#e0e6ed", color: "#8e9db5", fontSize: 10, alignItems: "center", justifyContent: "center", marginLeft: 4, fontWeight: 700, cursor: "help" }}>?</span>
+                                                <span className="vd-res-tooltip-content" style={{ display: activeTooltip === "info-deposit" ? "block" : undefined }}>
+                                                    Bu villada depozito ücreti {formatVillaPrice(villa.deposit)}&apos;dir, bu ücret villa girişinde nakit olarak alınır ve çıkış kontrolü sonrasında nakit olarak iade edilir.
+                                                </span>
+                                            </span>
+                                        </div>
                                         <div className="vd-info-value">
                                             : {formatVillaPrice(villa.deposit)}
                                         </div>
                                     </div>
                                     <div className="vd-info-item">
-                                        <div className="vd-info-label">Temizlik <span className="vd-info-small">( {villa.minResCleaning} gün ve altı için )</span></div>
+                                        <div className="vd-info-label" style={{ display: "flex", alignItems: "center" }}>
+                                            Temizlik <span className="vd-info-small" style={{ marginLeft: 4 }}>( {villa.minResCleaning} gün ve altı için )</span>
+                                            <span className="vd-res-tooltip-wrapper" tabIndex={0} onClick={(e) => toggleTooltip("info-cleaning", e)}>
+                                                <span style={{ display: "inline-flex", width: 16, height: 16, borderRadius: 8, background: "#e0e6ed", color: "#8e9db5", fontSize: 10, alignItems: "center", justifyContent: "center", marginLeft: 4, fontWeight: 700, cursor: "help" }}>?</span>
+                                                <span className="vd-res-tooltip-content" style={{ display: activeTooltip === "info-cleaning" ? "block" : undefined }}>
+                                                    Bu villada temizlik ücreti {villa.minResCleaning} gün ve altındaki konaklamalar için {formatVillaPrice(villa.cleaning)}&apos;dir.
+                                                </span>
+                                            </span>
+                                        </div>
                                         <div className="vd-info-value">
                                             : {formatVillaPrice(villa.cleaning)}
                                         </div>
@@ -686,7 +698,6 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                     onDateChange={(inDate, outDate) => {
                                         setCheckInDate(inDate || "");
                                         setCheckOutDate(outDate || "");
-                                        if (inDate && outDate) setShowBottomSheet(true);
                                     }}
                                     priceRanges={villa.calendarPrices}
                                     reservations={villa.calendarReservations}
@@ -724,6 +735,13 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                             <div className="vd-res-pricing-row" style={{ fontWeight: 500 }}>
                                                 <span style={{ display: "flex", alignItems: "center" }}>
                                                     Temizlik
+                                                    <span className="vd-res-tooltip-wrapper" tabIndex={0}>
+                                                        <span style={{ display: "inline-flex", width: 16, height: 16, borderRadius: 8, background: "#e0e6ed", color: "#8e9db5", fontSize: 10, alignItems: "center", justifyContent: "center", marginLeft: 4, fontWeight: 700, cursor: "help" }}>?</span>
+                                                        <span className="vd-res-tooltip-content">
+                                                            Bu villada temizlik ücreti {villa.minResCleaning} gün ve altındaki konaklamalar için {formatVillaPrice(villa.cleaning)}&apos;dir.
+                                                        </span>
+                                                    </span>
+                                                    <span style={{ fontSize: 12, color: "#64748b", fontWeight: 400, marginLeft: 4 }}>(toplam tutara dahildir)</span>
                                                 </span>
                                                 <span>{formatVillaPrice(cleaningFeeTotal)}</span>
                                             </div>
@@ -748,6 +766,12 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                     <div className="vd-res-pricing-row" style={{ fontWeight: 500 }}>
                                         <span style={{ display: "flex", alignItems: "center" }}>
                                             Depozito
+                                            <span className="vd-res-tooltip-wrapper" tabIndex={0}>
+                                                <span style={{ display: "inline-flex", width: 16, height: 16, borderRadius: 8, background: "#e0e6ed", color: "#8e9db5", fontSize: 10, alignItems: "center", justifyContent: "center", marginLeft: 4, fontWeight: 700, cursor: "help" }}>?</span>
+                                                <span className="vd-res-tooltip-content">
+                                                    Bu villada depozito ücreti {formatVillaPrice(villa.deposit)}&apos;dir, bu ücret villa girişinde nakit olarak alınır ve çıkış kontrolü sonrasında nakit olarak iade edilir.
+                                                </span>
+                                            </span>
                                             <span style={{ fontSize: 12, color: "#64748b", fontWeight: 400, marginLeft: 4 }}>(toplam tutara dahil değildir)</span>
                                         </span>
                                         <span>{formatVillaPrice(villa.deposit)}</span>
@@ -919,6 +943,7 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                         priceRanges={villa.calendarPrices}
                         reservations={[...villa.calendarReservations, ...dbReservations]}
                         currency={activeCurrency.symbol}
+                        villaCurrency={villa.currency}
                         onDateSelect={handleCalendarDateSelect}
                         clearDatesRef={clearCalendarRef}
                         minNights={villa.minRes}
@@ -1214,6 +1239,7 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                     checkInTime={villa.checkIn}
                     checkOutTime={villa.checkOut}
                     currency={activeCurrency.symbol}
+                    villaCurrency={villa.currency}
                     villaSlug={villa.slug}
                     commissionPct={villa.commissionRate || 20}
                     onClose={handleBottomSheetClose}
@@ -1236,14 +1262,21 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                     <div style={{ width: '50%', padding: '16px 8px', fontWeight: 600 }}>Geçerli olduğu süre</div>
                                 </div>
                                 {villa.priceBlocks
-                                    .filter(pb => pb.discount > 0)
-                                    .map((pb, i) => (
-                                        <div key={i} className="vd-modal-table-row">
-                                            <div style={{ width: '30%', padding: '16px 8px', fontWeight: 600, borderRight: '1px solid #dfdfe3' }}>Özel İndirim</div>
-                                            <div style={{ width: '20%', padding: '16px 8px', fontWeight: 500, borderRight: '1px solid #dfdfe3' }}>{pb.discount}%</div>
-                                            <div style={{ width: '50%', padding: '16px 8px', fontWeight: 500 }}>{pb.period}</div>
-                                        </div>
-                                    ))
+                                    .filter(pb => pb.discount > 0 || pb.originalPrice)
+                                    .map((pb, i) => {
+                                        const effectiveDiscount = pb.discount > 0
+                                            ? pb.discount
+                                            : pb.originalPrice
+                                                ? Math.round((1 - pb.nightlyPrice / pb.originalPrice) * 100)
+                                                : 0;
+                                        return (
+                                            <div key={i} className="vd-modal-table-row">
+                                                <div style={{ width: '30%', padding: '16px 8px', fontWeight: 600, borderRight: '1px solid #dfdfe3' }}>Özel İndirim</div>
+                                                <div style={{ width: '20%', padding: '16px 8px', fontWeight: 500, borderRight: '1px solid #dfdfe3' }}>{effectiveDiscount}%</div>
+                                                <div style={{ width: '50%', padding: '16px 8px', fontWeight: 500 }}>{pb.period}</div>
+                                            </div>
+                                        );
+                                    })
                                 }
                             </div>
                         </div>
@@ -1295,12 +1328,22 @@ function PriceBlockCard({ block, weekly, formatPriceFn }: { block: PriceBlock; w
     const originalPrice = block.originalPrice
         ? weekly ? block.originalPrice * 7 : block.originalPrice
         : null;
+    const discountPct = originalPrice
+        ? Math.round((1 - price / originalPrice) * 100)
+        : 0;
 
     return (
         <div className="vd-price-block">
-            <div className="vd-pb-period">{block.period}.</div>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 4 }}>
+                <div className="vd-pb-period">{block.period}.</div>
+                {originalPrice && discountPct > 0 && (
+                    <span style={{ background: "#e83e8c", color: "#fff", fontSize: 10, fontWeight: 700, borderRadius: 5, padding: "2px 6px", whiteSpace: "nowrap", flexShrink: 0 }}>
+                        %{discountPct} İndirim
+                    </span>
+                )}
+            </div>
             <div className="vd-pb-original">
-                {block.discount > 0 && originalPrice ? (
+                {originalPrice ? (
                     <span className="vd-pb-strikethrough">{formatPriceFn(Math.round(originalPrice))}</span>
                 ) : null}
             </div>

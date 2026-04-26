@@ -130,7 +130,6 @@ export default function IndirimliVillalarPage() {
                     villa_images(url, sort_order)
                 `)
                 .eq("is_published", true)
-                .eq("has_active_discount", true)
                 .order("sort_order", { ascending: true });
 
             if (!error && data) {
@@ -156,18 +155,25 @@ export default function IndirimliVillalarPage() {
                         features: (v.villa_features || []).map((vf: any) => vf.feature?.label_tr).filter(Boolean),
                         destination_slug: v.destination?.slug || "",
                         price_periods: (v.villa_price_periods || [])
-                            .filter((pp: any) => pp.discount_pct > 0 && new Date(pp.end_date) > new Date())
-                            .map((pp: any) => ({
-                                label: pp.label,
-                                discount_pct: pp.discount_pct,
-                                nightly_price: pp.nightly_price,
-                                original_price: pp.original_price || pp.nightly_price,
-                                start_date: pp.start_date,
-                                end_date: pp.end_date,
-                            })),
+                            .filter((pp: any) => (pp.discount_pct > 0 || (pp.original_price && pp.original_price > pp.nightly_price)) && new Date(pp.end_date) > new Date())
+                            .map((pp: any) => {
+                                const effectiveDiscount = pp.discount_pct > 0
+                                    ? pp.discount_pct
+                                    : pp.original_price
+                                        ? Math.round((1 - pp.nightly_price / pp.original_price) * 100)
+                                        : 0;
+                                return {
+                                    label: pp.label,
+                                    discount_pct: effectiveDiscount,
+                                    nightly_price: pp.nightly_price,
+                                    original_price: pp.original_price || pp.nightly_price,
+                                    start_date: pp.start_date,
+                                    end_date: pp.end_date,
+                                };
+                            }),
                     };
                 });
-                setVillas(mapped);
+                setVillas(mapped.filter(v => v.price_periods && v.price_periods.length > 0));
             }
             setLoading(false);
         }
@@ -686,15 +692,23 @@ export default function IndirimliVillalarPage() {
                                                             }}
                                                             className="middleft"
                                                         >
-                                                            <div
-                                                                style={{
-                                                                    background: "#eeeeeeaa",
-                                                                    color: "#888",
-                                                                    borderRadius: 8,
-                                                                    padding: "4px 12px",
-                                                                }}
-                                                            >
-                                                                {formatPrice(pp.nightly_price || 0)}
+                                                            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+                                                                {pp.original_price && pp.original_price > pp.nightly_price && (
+                                                                    <span style={{ textDecoration: "line-through", color: "#bbb", fontSize: 12, lineHeight: 1.2 }}>
+                                                                        {formatPrice(pp.original_price)}
+                                                                    </span>
+                                                                )}
+                                                                <div
+                                                                    style={{
+                                                                        background: "#eeeeeeaa",
+                                                                        color: "#555",
+                                                                        borderRadius: 8,
+                                                                        padding: "4px 12px",
+                                                                        fontWeight: 600,
+                                                                    }}
+                                                                >
+                                                                    {formatPrice(pp.nightly_price || 0)}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>

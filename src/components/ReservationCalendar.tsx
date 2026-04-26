@@ -8,6 +8,7 @@ export interface CalendarPriceRange {
     startDate: string; // "YYYY-MM-DD"
     endDate: string;   // "YYYY-MM-DD"
     price: number;
+    currency?: string;
 }
 
 export interface CalendarReservation {
@@ -27,6 +28,7 @@ interface Props {
     reservations: CalendarReservation[];
     disabledReasons?: CalendarDisabledReason[];
     currency?: string;
+    villaCurrency?: string;
     onDateSelect?: (checkIn: string | null, checkOut: string | null) => void;
     clearDatesRef?: MutableRefObject<(() => void) | null>;
     minNights?: number;
@@ -73,6 +75,7 @@ export default function ReservationCalendar({
     reservations,
     disabledReasons = [],
     currency = "₺",
+    villaCurrency,
     onDateSelect,
     clearDatesRef,
     minNights = 1,
@@ -105,17 +108,23 @@ export default function ReservationCalendar({
         return result;
     }, [monthCount, isMobile, currentSlide]);
 
-    // Price lookup
-    const getPrice = useCallback(
-        (dateStr: string): number | null => {
+    // Price lookup — returns { price, currency } or null
+    const getPriceInfo = useCallback(
+        (dateStr: string): { price: number; currency: string } | null => {
             for (const pr of priceRanges) {
                 if (isBetween(dateStr, pr.startDate, pr.endDate)) {
-                    return pr.price;
+                    return { price: pr.price, currency: pr.currency || villaCurrency || "TRY" };
                 }
             }
             return null;
         },
-        [priceRanges]
+        [priceRanges, villaCurrency]
+    );
+
+    // Backward-compat: price-only lookup (used for blocking logic)
+    const getPrice = useCallback(
+        (dateStr: string): number | null => getPriceInfo(dateStr)?.price ?? null,
+        [getPriceInfo]
     );
 
     // Disabled reason lookup
@@ -304,13 +313,12 @@ export default function ReservationCalendar({
     }, []);
 
     // Currency conversion
-    const { convertPrice } = useCurrency();
+    const { formatVillaCurrencyPrice } = useCurrency();
 
-    // Format price for display
-    const formatPrice = useCallback((price: number): string => {
-        const converted = convertPrice(price);
-        return `${currency}${Math.round(converted).toLocaleString("tr-TR", { maximumFractionDigits: 0 })}`;
-    }, [currency, convertPrice]);
+    // Format price for display — uses the price period's own currency
+    const formatPrice = useCallback((price: number, priceCurrency?: string): string => {
+        return formatVillaCurrencyPrice(price, priceCurrency || villaCurrency);
+    }, [formatVillaCurrencyPrice, villaCurrency]);
 
     return (
         <section className="vd-calendar-section" id="parsedyCal">
@@ -414,6 +422,7 @@ export default function ReservationCalendar({
                         key={`${year}-${month}`}
                         year={year}
                         month={month}
+                        getPriceInfo={getPriceInfo}
                         getPrice={getPrice}
                         getReservationStatus={getReservationStatus}
                         getReservationPosition={getReservationPosition}
@@ -446,6 +455,7 @@ export default function ReservationCalendar({
 interface MonthGridProps {
     year: number;
     month: number;
+    getPriceInfo: (dateStr: string) => { price: number; currency: string } | null;
     getPrice: (dateStr: string) => number | null;
     getReservationStatus: (dateStr: string) => "reserved" | "option" | null;
     getReservationPosition: (dateStr: string) => "start" | "end" | "mid" | "both" | null;
@@ -456,12 +466,13 @@ interface MonthGridProps {
     isCheckOut: (dateStr: string) => boolean;
     isPast: (dateStr: string) => boolean;
     onDayClick: (dateStr: string) => void;
-    formatPrice: (price: number) => string;
+    formatPrice: (price: number, priceCurrency?: string) => string;
 }
 
 function MonthGrid({
     year,
     month,
+    getPriceInfo,
     getPrice,
     getReservationStatus,
     getReservationPosition,
@@ -499,7 +510,8 @@ function MonthGrid({
                     }
 
                     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                    const price = getPrice(dateStr);
+                    const priceInfo = getPriceInfo(dateStr);
+                    const price = priceInfo?.price ?? null;
                     const resStatus = getReservationStatus(dateStr);
                     const resPosition = getReservationPosition(dateStr);
                     const selected = isSelected(dateStr);
@@ -542,7 +554,7 @@ function MonthGrid({
                         >
                             <div className="vd-cal-day-num">{day}</div>
                             <div className="vd-cal-day-price">
-                                {price !== null ? formatPrice(price) : "–"}
+                                {priceInfo !== null ? formatPrice(priceInfo.price, priceInfo.currency) : "–"}
                             </div>
                         </div>
                     );

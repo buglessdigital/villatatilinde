@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import MobileFilterModal from "./MobileFilterModal";
+import { supabase } from "@/lib/supabase";
 
 /* ─── Helpers ─── */
 const MONTH_NAMES_TR = [
@@ -37,26 +38,6 @@ function fmtShort(d: Date) {
     return `${d.getDate()} ${MONTH_NAMES_TR[d.getMonth()]}`;
 }
 
-/* ─── Location Options ─── */
-const LOCATION_OPTIONS = [
-    { label: "Tüm Konumlar", value: "", isBold: true },
-    { label: "Kalkan - Hepsi", value: "kalkan-hepsi", isBold: true },
-    { label: "Kalkan Merkez", value: "kalkan-merkez", isBold: false },
-    { label: "Kalkan / Kalamar", value: "kalkan-kalamar", isBold: false },
-    { label: "Kalkan / Kömürlük", value: "kalkan-komurluk", isBold: false },
-    { label: "Kalkan / Kışla", value: "kalkan-kisla", isBold: false },
-    { label: "Kalkan / Ortaalan", value: "kalkan-ortaalan", isBold: false },
-    { label: "Kalkan / Kızıltaş", value: "kalkan-kiziltas", isBold: false },
-    { label: "Kalkan / Kaputaş", value: "kalkan-kaputas", isBold: false },
-    { label: "Kalkan / Patara", value: "kalkan-patara", isBold: false },
-    { label: "Kalkan / Ordu", value: "kalkan-ordu", isBold: false },
-    { label: "Kalkan / Ulugöl", value: "kalkan-ulugol", isBold: false },
-    { label: "Kalkan / Kördere", value: "kalkan-kordere", isBold: false },
-    { label: "Kalkan / İslamlar", value: "kalkan-islamlar", isBold: false },
-    { label: "Kaş Merkez", value: "kas-merkez", isBold: false },
-    { label: "Fethiye", value: "fethiye", isBold: false },
-    { label: "Belek", value: "belek", isBold: false },
-];
 
 /* ─── Villa Type Options ─── */
 const VILLA_TYPE_OPTIONS = [
@@ -142,6 +123,23 @@ export default function MobileSearchBar() {
     const router = useRouter();
 
     /* State */
+    const [locationOptions, setLocationOptions] = useState<{ label: string; value: string; isBold: boolean }[]>([
+        { label: "Tüm Konumlar", value: "", isBold: true },
+    ]);
+
+    useEffect(() => {
+        supabase.from("destinations").select("name, filter_param").eq("is_active", true).order("sort_order")
+            .then(({ data }) => {
+                if (data) {
+                    const locs = data.map(d => ({ value: d.filter_param, label: d.name, isBold: false }));
+                    const hasKalkan = locs.some(l => l.value.startsWith("kalkan-"));
+                    const result = [{ label: "Tüm Konumlar", value: "", isBold: true }];
+                    if (hasKalkan) result.push({ label: "Kalkan - Hepsi", value: "kalkan-hepsi", isBold: true });
+                    setLocationOptions([...result, ...locs]);
+                }
+            });
+    }, []);
+
     const [villaName, setVillaName] = useState("");
     const [selectedBolge, setSelectedBolge] = useState("");
     const [selectedVillaType, setSelectedVillaType] = useState("");
@@ -199,7 +197,7 @@ export default function MobileSearchBar() {
 
     /* Labels */
     const bolgeLabel = selectedBolge
-        ? (LOCATION_OPTIONS.find(o => o.value === selectedBolge)?.label ?? "")
+        ? (locationOptions.find(o => o.value === selectedBolge)?.label ?? "")
         : "";
     const villaTypeLabel = selectedVillaType
         ? (VILLA_TYPE_OPTIONS.find(o => o.value === selectedVillaType)?.label ?? "")
@@ -298,7 +296,7 @@ export default function MobileSearchBar() {
                 />
                 {openPanel === "bolge" && (
                     <DropdownPanel>
-                        {LOCATION_OPTIONS.map((loc) => (
+                        {locationOptions.map((loc) => (
                             <div
                                 key={loc.value}
                                 onClick={() => { setSelectedBolge(loc.value); setAndScrollPanel("villaType"); }}

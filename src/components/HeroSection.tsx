@@ -84,13 +84,18 @@ export default function HeroSection({ bgImage, title, subtitle, textColor }: Her
 
                         {/* Right - Para İade Garantisi Card */}
                         <div style={{ marginLeft: "auto", width: 250 }}>
-                            <div
+                            <Link
+                                href="/politika/mesafeli-satis-kiralama-sozlesmesi"
                                 style={{
                                     position: "relative",
                                     padding: 8,
                                     background: "#fff",
                                     borderRadius: 16,
                                     width: "100%",
+                                    display: "block",
+                                    textDecoration: "none",
+                                    color: "inherit",
+                                    cursor: "pointer",
                                 }}
                             >
                                 <img
@@ -127,7 +132,7 @@ export default function HeroSection({ bgImage, title, subtitle, textColor }: Her
                                                 lineHeight: 1.2,
                                             }}
                                         >
-                                            <Link href="/mesafeli-satis-sozlesmesi" style={{ textDecoration: "underline", color: "inherit" }}>Mesafeli Satış Sözleşmesi</Link> Koşulları Kapsamında{" "}
+                                            <span style={{ textDecoration: "underline" }}>Mesafeli Satış Sözleşmesi</span> Koşulları Kapsamında{" "}
                                             <img
                                                 className="bhs"
                                                 src="/images/question.svg"
@@ -146,7 +151,7 @@ export default function HeroSection({ bgImage, title, subtitle, textColor }: Her
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </Link>
                         </div>
                     </div>
 
@@ -163,7 +168,8 @@ export default function HeroSection({ bgImage, title, subtitle, textColor }: Her
             <div className="paddingMobile no1024">
                 {/* Para İade Garantisi - Mobile */}
                 <div style={{ marginLeft: "auto" }}>
-                    <div
+                    <Link
+                        href="/politika/mesafeli-satis-kiralama-sozlesmesi"
                         className="middleft"
                         style={{
                             position: "relative",
@@ -171,6 +177,9 @@ export default function HeroSection({ bgImage, title, subtitle, textColor }: Her
                             background: "#fff",
                             borderRadius: 16,
                             width: "100%",
+                            textDecoration: "none",
+                            color: "inherit",
+                            cursor: "pointer",
                         }}
                     >
                         <img
@@ -205,7 +214,7 @@ export default function HeroSection({ bgImage, title, subtitle, textColor }: Her
                                         lineHeight: 1.2,
                                     }}
                                 >
-                                    <Link href="/mesafeli-satis-sozlesmesi" style={{ textDecoration: "underline", color: "inherit" }}>Mesafeli Satış Sözleşmesi</Link> Koşulları Kapsamında{" "}
+                                    <span style={{ textDecoration: "underline" }}>Mesafeli Satış Sözleşmesi</span> Koşulları Kapsamında{" "}
                                     <img
                                         className="bhs"
                                         src="/images/question.svg"
@@ -224,7 +233,7 @@ export default function HeroSection({ bgImage, title, subtitle, textColor }: Her
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </Link>
                 </div>
             </div>
         </>

@@ -2223,6 +2223,7 @@ font {
   padding: 6px;
   margin-top: -6px;
   margin-bottom: -6px;
+  outline: none;
 }
 
 .vd-res-tooltip-wrapper img {
@@ -2251,20 +2252,25 @@ font {
 
 @media (max-width: 768px) {
   .vd-res-tooltip-content {
-    left: auto;
-    right: -10px;
-    transform: none;
-    width: 240px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: min(240px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
   }
-  
+
+  /* Pricing row tooltips: anchor to left edge of wrapper, clamp to viewport */
   .vd-res-pricing-row .vd-res-tooltip-content {
-    left: -10px;
+    left: 0;
     right: auto;
     transform: none;
+    width: min(240px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
   }
 }
 
-.vd-res-tooltip-wrapper:hover .vd-res-tooltip-content {
+.vd-res-tooltip-wrapper:hover .vd-res-tooltip-content,
+.vd-res-tooltip-wrapper:focus-within .vd-res-tooltip-content {
   display: block;
 }
 

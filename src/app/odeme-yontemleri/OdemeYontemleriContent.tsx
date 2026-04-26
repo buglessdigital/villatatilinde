@@ -250,7 +250,7 @@ export default function OdemeYontemleriContent() {
                                         fontSize: "1rem",
                                     }}
                                 >
-                                    <Link href="/mesafeli-satis-sozlesmesi">
+                                    <Link href="/politika/mesafeli-satis-kiralama-sozlesmesi">
                                         <div
                                             className="middleft bhs"
                                             style={{

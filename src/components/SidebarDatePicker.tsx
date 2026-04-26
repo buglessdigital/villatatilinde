@@ -40,6 +40,7 @@ interface PriceRange {
     startDate: string;
     endDate: string;
     price: number;
+    currency?: string;
 }
 
 interface Reservation {
@@ -62,7 +63,7 @@ interface SidebarDatePickerProps {
     reservations: Reservation[];
     disabledReasons?: DisabledReason[];
     minNights?: number;
-    formatPrice: (price: number) => string;
+    formatPrice: (price: number, currency?: string) => string;
 }
 
 export default function SidebarDatePicker({
@@ -117,12 +118,16 @@ export default function SidebarDatePicker({
         });
     };
 
-    const getPrice = useCallback((dateStr: string): number | null => {
+    const getPriceInfo = useCallback((dateStr: string): { price: number; currency?: string } | null => {
         for (const pr of priceRanges) {
-            if (isBetween(dateStr, pr.startDate, pr.endDate)) return pr.price;
+            if (isBetween(dateStr, pr.startDate, pr.endDate)) return { price: pr.price, currency: pr.currency };
         }
         return null;
     }, [priceRanges]);
+
+    const getPrice = useCallback((dateStr: string): number | null => {
+        return getPriceInfo(dateStr)?.price ?? null;
+    }, [getPriceInfo]);
 
     const getDisabledReason = useCallback((dateStr: string): string | null => {
         for (const dr of disabledReasons) {
@@ -298,7 +303,8 @@ export default function SidebarDatePicker({
                             if (day === null) return <div key={`empty-${idx}`} style={{ width: "calc(100% / 7)", flexShrink: 0 }} />;
                             
                             const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                            const price = getPrice(dateStr);
+                            const priceInfo = getPriceInfo(dateStr);
+                            const price = priceInfo?.price ?? null;
                             const resStatus = getReservationStatus(dateStr);
                             const resPos = getReservationPosition(dateStr);
                             const dualInfo = resPos === "both" ? getReservationDualInfo(dateStr) : null;
@@ -354,7 +360,7 @@ export default function SidebarDatePicker({
                                 >
                                     <div style={{ fontSize: "14px", fontWeight: 700, color }}>{day}</div>
                                     <div style={{ fontSize: "10px", fontWeight: 500, color: priceColor, marginTop: "2px" }}>
-                                        {price !== null ? formatPrice(price) : "–"}
+                                        {priceInfo !== null ? formatPrice(priceInfo.price, priceInfo.currency) : "–"}
                                     </div>
                                 </div>
                             );

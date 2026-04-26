@@ -6,6 +6,7 @@ import { use } from "react";
 import { getVillaDetailBySlug } from "@/lib/queries";
 import type { VillaDetail } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
+import { useCurrency } from "@/context/CurrencyContext";
 
 /* ─── Helpers ─── */
 function parseDate(s: string): Date {
@@ -224,6 +225,11 @@ export default function ReservationPage({ params }: { params: Promise<{ slug: st
         contractKvkk: false,
     });
 
+    const { formatVillaCurrencyPrice } = useCurrency();
+    const villaCurr = villa?.currency || "TRY";
+    const fmt = (amount: number, src?: string) =>
+        formatVillaCurrencyPrice(amount, src || villaCurr);
+
     const [sending, setSending] = useState(false);
     const [sent, setSent] = useState(false);
     const [error, setError] = useState("");
@@ -249,6 +255,28 @@ export default function ReservationPage({ params }: { params: Promise<{ slug: st
         discount_amount: number;
         discount_type: "percentage" | "fixed";
     } | null>(null);
+
+    const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+            const target = e.target as HTMLElement;
+            if (!target.closest('.vd-res-tooltip-wrapper')) {
+                setActiveTooltip(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('touchstart', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('touchstart', handleClickOutside);
+        };
+    }, []);
+
+    const toggleTooltip = (id: string, e: React.MouseEvent) => {
+        e.preventDefault();
+        setActiveTooltip(prev => (prev === id ? null : id));
+    };
 
     // Calculate pricing
     const { nightCount, accommodationPrice, cleaningFee, couponDiscount, totalPrice, advancePayment, remainingPayment, hasUnpricedDays } = useMemo(() => {
@@ -300,15 +328,17 @@ export default function ReservationPage({ params }: { params: Promise<{ slug: st
         if (!checkIn || !checkOut) return [];
         const start = parseDate(checkIn);
         const end = parseDate(checkOut);
-        const dates: { day: number; dayName: string; price: number | null }[] = [];
+        const dates: { day: number; dayName: string; price: number | null; currency?: string }[] = [];
         const cursor = new Date(start);
         while (cursor <= end) {
             const ds = toDateStr(cursor);
             let price: number | null = null;
+            let priceCurrency: string | undefined;
             if (villa) {
                 for (const pr of villa.price_periods) {
                     if (isBetween(ds, pr.start_date, pr.end_date)) {
                         price = pr.nightly_price;
+                        priceCurrency = pr.currency || undefined;
                         break;
                     }
                 }
@@ -317,6 +347,7 @@ export default function ReservationPage({ params }: { params: Promise<{ slug: st
                 day: cursor.getDate(),
                 dayName: DAY_SHORT_TR[cursor.getDay()],
                 price,
+                currency: priceCurrency,
             });
             cursor.setDate(cursor.getDate() + 1);
         }
@@ -787,7 +818,7 @@ export default function ReservationPage({ params }: { params: Promise<{ slug: st
                                     >
                                         <div className="rez-date-day-name">{d.dayName}</div>
                                         <div className="rez-date-day-num">{d.day}</div>
-                                        <div className="rez-date-price">{d.price !== null ? `₺${formatTR(d.price)}` : "–"}</div>
+                                        <div className="rez-date-price">{d.price !== null ? fmt(d.price, d.currency) : "–"}</div>
                                     </div>
                                 ))}
                             </div>
@@ -803,12 +834,24 @@ export default function ReservationPage({ params }: { params: Promise<{ slug: st
                             </div>
                             <div className="rez-pricing-row">
                                 <span>Konaklama Ücreti</span>
-                                <span className="rez-pricing-val">₺{formatTR(accommodationPrice)}</span>
+                                <span className="rez-pricing-val">{fmt(accommodationPrice)}</span>
                             </div>
                             {cleaningFee > 0 && (
                                 <div className="rez-pricing-row">
-                                    <span>Temizlik Ücreti</span>
-                                    <span className="rez-pricing-val">₺{formatTR(cleaningFee)}</span>
+                                    <span style={{ display: "flex", alignItems: "center" }}>
+                                        Temizlik Ücreti
+                                        <span
+                                            className="vd-res-tooltip-wrapper"
+                                            tabIndex={0}
+                                            onClick={(e) => toggleTooltip("cleaning", e)}
+                                        >
+                                            <span style={{ display: "inline-flex", width: 16, height: 16, borderRadius: 8, background: "#e0e6ed", color: "#8e9db5", fontSize: 10, alignItems: "center", justifyContent: "center", marginLeft: 4, fontWeight: 700, cursor: "help" }}>?</span>
+                                            <span className="vd-res-tooltip-content" style={{ display: activeTooltip === "cleaning" ? "block" : undefined }}>
+                                                Bu villada temizlik ücreti {villa.cleaning_fee_min_nights} gün ve altındaki konaklamalar için {fmt(villa.cleaning_fee)}&apos;dir.
+                                            </span>
+                                        </span>
+                                    </span>
+                                    <span className="rez-pricing-val">{fmt(cleaningFee)}</span>
                                 </div>
                             )}
                             {couponDiscount > 0 && (
@@ -817,12 +860,12 @@ export default function ReservationPage({ params }: { params: Promise<{ slug: st
                                         Kupon İndirimi
                                         <span className="rez-coupon-badge">{appliedCoupon?.code}</span>
                                     </span>
-                                    <span className="rez-pricing-val rez-pricing-discount-val">-₺{formatTR(couponDiscount)}</span>
+                                    <span className="rez-pricing-val rez-pricing-discount-val">-{fmt(couponDiscount)}</span>
                                 </div>
                             )}
                             <div className="rez-pricing-row rez-pricing-total">
                                 <span>Toplam Tutar</span>
-                                <span className="rez-pricing-val-bold">₺{formatTR(totalPrice)}</span>
+                                <span className="rez-pricing-val-bold">{fmt(totalPrice)}</span>
                             </div>
                         </div>
 
@@ -831,7 +874,7 @@ export default function ReservationPage({ params }: { params: Promise<{ slug: st
                             <div className="rez-advance-label">Gereken Ön Ödeme</div>
                             <div className="rez-pricing-row">
                                 <span className="rez-advance-pct">%{(villa.commission_pct ?? 20)} Ön Ödeme</span>
-                                <span className="rez-pricing-val">₺{formatTR(advancePayment)}</span>
+                                <span className="rez-pricing-val">{fmt(advancePayment)}</span>
                             </div>
                         </div>
 
@@ -840,13 +883,24 @@ export default function ReservationPage({ params }: { params: Promise<{ slug: st
                             <div className="rez-remaining-label">Girişte Ödenmesi Gereken</div>
                             <div className="rez-pricing-row">
                                 <span className="rez-advance-pct">%{100 - (villa.commission_pct ?? 20)} Kalan Ödeme</span>
-                                <span className="rez-pricing-val">₺{formatTR(remainingPayment)}</span>
+                                <span className="rez-pricing-val">{fmt(remainingPayment)}</span>
                             </div>
                             <div className="rez-pricing-row">
-                                <span className="rez-deposit-label">
-                                    Depozito 🛈 <span className="rez-deposit-sub">(toplam tutara dahil değildir)</span>
+                                <span className="rez-deposit-label" style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 4 }}>
+                                    Depozito
+                                    <span
+                                        className="vd-res-tooltip-wrapper"
+                                        tabIndex={0}
+                                        onClick={(e) => toggleTooltip("deposit", e)}
+                                    >
+                                        <span style={{ display: "inline-flex", width: 16, height: 16, borderRadius: 8, background: "#e0e6ed", color: "#8e9db5", fontSize: 10, alignItems: "center", justifyContent: "center", marginLeft: 4, fontWeight: 700, cursor: "help" }}>?</span>
+                                        <span className="vd-res-tooltip-content" style={{ display: activeTooltip === "deposit" ? "block" : undefined }}>
+                                            Bu villada depozito ücreti {fmt(depositAmount)}&apos;dir, bu ücret villa girişinde nakit olarak alınır ve çıkış kontrolü sonrasında nakit olarak iade edilir.
+                                        </span>
+                                    </span>
+                                    <span className="rez-deposit-sub">(toplam tutara dahil değildir)</span>
                                 </span>
-                                <span className="rez-pricing-val">₺{formatTR(depositAmount)}</span>
+                                <span className="rez-pricing-val">{fmt(depositAmount)}</span>
                             </div>
                         </div>
 

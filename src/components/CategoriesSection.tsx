@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { getCategories } from "@/lib/queries";
+import { supabase } from "@/lib/supabase";
 import type { DbCategory } from "@/lib/types";
 
 interface CategoryView {
@@ -21,7 +22,22 @@ export default function CategoriesSection() {
     useEffect(() => {
         async function load() {
             try {
-                const data = await getCategories();
+                const [data, promoRes] = await Promise.all([
+                    getCategories(),
+                    supabase
+                        .from("villas")
+                        .select("id", { count: "exact", head: true })
+                        .eq("is_published", true)
+                        .eq("is_promotional", true),
+                ]);
+                const promoCount = promoRes.count ?? 0;
+                const promoCategory: CategoryView = {
+                    label: "Promosyonlu Villalar",
+                    image: "/images/discount.png",
+                    badgeCount: `${promoCount} Villa`,
+                    href: "/promosyonlar/kategori/villa",
+                    isDiscount: true,
+                };
                 const mapped: CategoryView[] = data.map((c: DbCategory) => ({
                     label: c.name,
                     image: c.image_url || "/images/discount.png",
@@ -31,7 +47,7 @@ export default function CategoriesSection() {
                         : `/villa-kategorileri`,
                     isDiscount: c.slug === "firsatlar" || c.slug === "indirimli-villalar",
                 }));
-                setCategories(mapped);
+                setCategories([promoCategory, ...mapped]);
             } catch (err) {
                 console.error("Kategoriler yüklenemedi:", err);
             }

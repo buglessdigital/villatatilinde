@@ -65,6 +65,7 @@ interface PromotionalVilla {
     cover_image_url: string;
     location_label: string;
     min_price: number;
+    currency?: string;
     max_guests: number;
     bedrooms: number;
     bathrooms: number;
@@ -83,7 +84,7 @@ export default async function KategoriPage({ params }: Props) {
     if (config.isVilla) {
         const { data: villas } = await supabase
             .from("villas")
-            .select("id, name, slug, cover_image_url, location_label, min_price, max_guests, bedrooms, bathrooms, promotion_discount_text, promotion_description, villa_images(url, sort_order)")
+            .select("id, name, slug, cover_image_url, location_label, min_price, currency, max_guests, bedrooms, bathrooms, promotion_discount_text, promotion_description, villa_images(url, sort_order)")
             .eq("is_published", true)
             .eq("is_promotional", true)
             .order("sort_order", { ascending: true });
@@ -147,6 +148,7 @@ export default async function KategoriPage({ params }: Props) {
                                 features: (premiumFeaturesMap[villa.id] || []).slice(0, 4),
                                 nightlyPrice: rawPrice,
                                 totalPrice: rawPrice * 5,
+                                currency: villa.currency || "TRY",
                                 dateRange: "5 Gece",
                                 beds: villa.bedrooms,
                                 guests: villa.max_guests,

@@ -102,6 +102,7 @@ export interface DbVillaPricePeriod {
     discount_pct: number;
     min_nights: number;
     sort_order: number;
+    currency: string;
 }
 
 // ─── Villa Disabled Date ───

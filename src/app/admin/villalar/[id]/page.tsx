@@ -83,6 +83,7 @@ interface PricePeriod {
     discount_pct: number;
     min_nights: number;
     sort_order: number;
+    currency?: string;
 }
 
 interface DisabledDate {
@@ -415,6 +416,18 @@ export default function VillaEditPage() {
             setError("Dönem adı, tarihler ve gecelik fiyat zorunludur.");
             return;
         }
+        // Kapalı tarihlerle çakışma kontrolü
+        const newStart = new Date(newPeriod.start_date);
+        const newEnd = new Date(newPeriod.end_date);
+        const overlapsDisabled = disabledDates.some(d => {
+            const dStart = new Date(d.start_date);
+            const dEnd = new Date(d.end_date);
+            return newStart <= dEnd && newEnd >= dStart;
+        });
+        if (overlapsDisabled) {
+            setError("Seçilen tarih aralığı kapatılmış günlerle çakışıyor. Fiyat dönemi eklenemez.");
+            return;
+        }
         setAddingPeriod(true);
         setError("");
 
@@ -438,6 +451,7 @@ export default function VillaEditPage() {
                 discount_pct: discountPct,
                 min_nights: newPeriod.min_nights,
                 sort_order: pricePeriods.length,
+                currency: form.currency || "TRY",
             };
             setPricePeriods(prev => [...prev, localPeriod]);
             setNewPeriod(emptyPeriod);
@@ -452,6 +466,7 @@ export default function VillaEditPage() {
                 original_price: originalPrice,
                 discount_pct: discountPct,
                 min_nights: newPeriod.min_nights,
+                currency: form.currency || "TRY",
                 sort_order: pricePeriods.length,
             });
 
@@ -627,6 +642,7 @@ export default function VillaEditPage() {
                         nightly_price: p.nightly_price,
                         min_nights: p.min_nights,
                         sort_order: i,
+                        currency: p.currency || form.currency || "TRY",
                     }));
                     await supabase.from("villa_price_periods").insert(periodInserts);
                     // Recalculate min_price
@@ -1256,11 +1272,18 @@ export default function VillaEditPage() {
                                         label: autoLabel || p.label,
                                     }));
                                 }}
-                                existingPeriods={pricePeriods.map(p => ({
-                                    start_date: p.start_date,
-                                    end_date: p.end_date,
-                                    label: p.label,
-                                }))}
+                                existingPeriods={[
+                                    ...pricePeriods.map(p => ({
+                                        start_date: p.start_date,
+                                        end_date: p.end_date,
+                                        label: p.label,
+                                    })),
+                                    ...disabledDates.map(d => ({
+                                        start_date: d.start_date,
+                                        end_date: d.end_date,
+                                        label: `🚫 ${d.notes || d.reason || "Kapalı"}`,
+                                    })),
+                                ]}
                             />
                         </div>
 

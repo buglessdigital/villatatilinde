@@ -5,7 +5,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { getAllVillasForSearch, getUnavailableVillaIds } from "@/lib/queries";
-import type { VillaDetail, DbFeature, DbVillaPricePeriod } from "@/lib/types";
+import type { VillaDetail, DbFeature, DbVillaPricePeriod, DbCategory } from "@/lib/types";
 import { filterAndSortByCapacity } from "@/lib/capacityFilter";
 import SearchFilterBar from "@/components/SearchFilterBar";
 import styles from "./sonuclar.module.css";
@@ -62,9 +62,11 @@ function mapVillaDetail(v: VillaDetail): Villa {
             minNights: pp.min_nights,
             originalPrice: pp.original_price || undefined,
         })),
-        features: (v.features || [])
-            .filter((f: DbFeature) => f.group_type === 'premium')
-            .map((f: DbFeature) => f.key || f.label_tr),
+        features: [
+            ...(v.features || []).filter((f: DbFeature) => f.group_type === 'premium').map((f: DbFeature) => f.key || f.label_tr),
+            ...(v.features || []).filter((f: DbFeature) => f.group_type !== 'premium').map((f: DbFeature) => f.key || f.label_tr),
+            ...(v.categories || []).map((c: DbCategory) => c.filter_param).filter(Boolean),
+        ],
         score: v.avg_rating || 0,
     };
 }
