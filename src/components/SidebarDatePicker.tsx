@@ -175,36 +175,64 @@ export default function SidebarDatePicker({
         return dateStr < toDateStr(new Date());
     }, []);
 
+    const isBlockedEndDate = useCallback((dateStr: string): boolean => {
+        if (reservations.some(r => r.endDate === dateStr)) return true;
+        if (disabledReasons.some(dr => dr.endDate === dateStr)) return true;
+        return false;
+    }, [reservations, disabledReasons]);
+
+    const isBlockedStartDate = useCallback((dateStr: string): boolean => {
+        if (reservations.some(r => r.startDate === dateStr)) return true;
+        if (disabledReasons.some(dr => dr.startDate === dateStr)) return true;
+        return false;
+    }, [reservations, disabledReasons]);
+
     const handleDayClick = useCallback((dateStr: string) => {
         if (isPast(dateStr)) return;
 
+        const settingCheckIn = !checkInDate || (checkInDate && checkOutDate != null);
+        const endDate = isBlockedEndDate(dateStr);
+        const startDate = isBlockedStartDate(dateStr);
+
         const disabledReason = getDisabledReason(dateStr);
         if (disabledReason) {
-            setBlockedWarning(disabledReason);
-            setMinNightsWarning(null);
-            return;
+            if (settingCheckIn && endDate) {
+                // check-in olarak izin ver
+            } else if (!settingCheckIn && startDate) {
+                // check-out olarak izin ver
+            } else {
+                setBlockedWarning(disabledReason);
+                setMinNightsWarning(null);
+                return;
+            }
         }
 
         const status = getReservationStatus(dateStr);
         if (status === "reserved" || status === "option") {
-            setBlockedWarning("Bu tarih rezerve edilmiştir.");
-            setMinNightsWarning(null);
-            return;
+            if (settingCheckIn && endDate) {
+                // check-in olarak izin ver
+            } else if (!settingCheckIn && startDate) {
+                // check-out olarak izin ver
+            } else {
+                setBlockedWarning("Bu tarih rezerve edilmiştir.");
+                setMinNightsWarning(null);
+                return;
+            }
         }
 
         const price = getPrice(dateStr);
-        if (price === null) return;
+        if (price === null && !endDate) return;
 
         setMinNightsWarning(null);
         setBlockedWarning(null);
 
-        if (!checkInDate || (checkInDate && checkOutDate)) {
+        if (settingCheckIn) {
             onDateChange(dateStr, null);
         } else {
-            if (dateStr <= checkInDate) {
+            if (dateStr <= checkInDate!) {
                 onDateChange(dateStr, null);
             } else {
-                const startD = parseDate(checkInDate);
+                const startD = parseDate(checkInDate!);
                 const endD = parseDate(dateStr);
                 const nightCount = Math.round((endD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24));
                 if (nightCount < minNights) {
@@ -214,7 +242,8 @@ export default function SidebarDatePicker({
 
                 let hasBlocked = false;
                 const cursor = new Date(startD);
-                while (cursor <= endD) {
+                cursor.setDate(cursor.getDate() + 1); // check-in gününü atla
+                while (cursor < endD) { // check-out gününü atla
                     const cs = toDateStr(cursor);
                     const s = getReservationStatus(cs);
                     if (s === "reserved" || s === "option" || getPrice(cs) === null) {
@@ -226,12 +255,12 @@ export default function SidebarDatePicker({
                 if (hasBlocked) {
                     onDateChange(dateStr, null);
                 } else {
-                    onDateChange(checkInDate, dateStr);
-                    setIsOpen(false); // Close when check-out is selected
+                    onDateChange(checkInDate!, dateStr);
+                    setIsOpen(false);
                 }
             }
         }
-    }, [checkInDate, checkOutDate, isPast, getReservationStatus, getPrice, getDisabledReason, minNights, onDateChange]);
+    }, [checkInDate, checkOutDate, isPast, getReservationStatus, getPrice, getDisabledReason, isBlockedEndDate, isBlockedStartDate, minNights, onDateChange]);
 
     const daysInMonth = getDaysInMonth(viewYear, viewMonth);
     const startDay = getStartDayOfMonth(viewYear, viewMonth);
@@ -313,7 +342,8 @@ export default function SidebarDatePicker({
                             const checkIn = checkInDate === dateStr;
                             const checkOut = checkOutDate === dateStr;
 
-                            const clickable = !past && resPos !== "both" && resStatus !== "reserved" && price !== null;
+                            const clickable = !past && resPos !== "both" && price !== null &&
+                                (resStatus === null || resPos === "end" || resPos === "start");
                             const noPrice = price === null && !past && !resStatus;
 
                             let bg = "transparent";

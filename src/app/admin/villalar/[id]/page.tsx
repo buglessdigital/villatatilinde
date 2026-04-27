@@ -186,6 +186,8 @@ export default function VillaEditPage() {
     const [disabledDates, setDisabledDates] = useState<DisabledDate[]>([]);
     const [newDisabled, setNewDisabled] = useState({ start_date: "", end_date: "", notes: "" });
     const [addingDisabled, setAddingDisabled] = useState(false);
+    const [selectedDisabledPeriod, setSelectedDisabledPeriod] = useState<{ id?: string; start_date: string; end_date: string; label: string } | null>(null);
+    const [disabledCalendarKey, setDisabledCalendarKey] = useState(0);
 
     // Kategoriler ve Hizmetler
     const [allCategories, setAllCategories] = useState<{ id: string; name: string }[]>([]);
@@ -401,14 +403,15 @@ export default function VillaEditPage() {
     }
 
     async function deleteDisabledDate(id: string) {
-        // isNew modunda sadece local state'ten kaldır
         if (isNew || id.startsWith("temp-")) {
             setDisabledDates(prev => prev.filter(d => d.id !== id));
             return;
         }
-        if (!confirm("Bu tarih kapatılmasını silmek istediğinizden emin misiniz?")) return;
         await supabase.from("villa_disabled_dates").delete().eq("id", id);
         setDisabledDates(prev => prev.filter(d => d.id !== id));
+        setDisabledCalendarKey(k => k + 1);
+        setNewDisabled({ start_date: "", end_date: "", notes: "" });
+        setSuccess("Tarih kapatma kaldırıldı.");
     }
 
     async function addPricePeriod() {
@@ -1277,11 +1280,13 @@ export default function VillaEditPage() {
                                         start_date: p.start_date,
                                         end_date: p.end_date,
                                         label: p.label,
+                                        periodType: "price" as const,
                                     })),
                                     ...disabledDates.map(d => ({
                                         start_date: d.start_date,
                                         end_date: d.end_date,
-                                        label: `🚫 ${d.notes || d.reason || "Kapalı"}`,
+                                        label: d.notes || d.reason || "Kapalı",
+                                        periodType: "blocked" as const,
                                     })),
                                 ]}
                             />
@@ -1428,15 +1433,68 @@ export default function VillaEditPage() {
                             Kapatılacak Tarih Aralığı *
                         </div>
                         <AdminCalendarPicker
+                            key={disabledCalendarKey}
                             startDate={newDisabled.start_date}
                             endDate={newDisabled.end_date}
                             variant="blocked"
-                            onChange={(start, end) => setNewDisabled(p => ({ ...p, start_date: start, end_date: end }))}
+                            onChange={(start, end) => {
+                                setSelectedDisabledPeriod(null);
+                                setNewDisabled(p => ({ ...p, start_date: start, end_date: end }));
+                            }}
                             existingPeriods={[
-                                ...pricePeriods.map(p => ({ start_date: p.start_date, end_date: p.end_date, label: p.label })),
-                                ...disabledDates.map(d => ({ start_date: d.start_date, end_date: d.end_date, label: d.notes || d.reason || "Kapalı" })),
+                                ...disabledDates.map(d => ({ id: d.id, start_date: d.start_date, end_date: d.end_date, label: d.notes || d.reason || "Kapalı", periodType: "blocked" as const })),
                             ]}
+                            onExistingPeriodClick={(period) => {
+                                setSelectedDisabledPeriod(period);
+                                setNewDisabled({ start_date: "", end_date: "", notes: "" });
+                            }}
                         />
+
+                        {/* Seçilen kapalı dönem için silme butonu */}
+                        {selectedDisabledPeriod && (
+                            <div style={{
+                                marginTop: 12, padding: "12px 16px",
+                                background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 10,
+                                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+                            }}>
+                                <div>
+                                    <span style={{ fontWeight: 700, color: "#991b1b", fontSize: 13 }}>
+                                        🚫 {selectedDisabledPeriod.start_date} → {selectedDisabledPeriod.end_date}
+                                    </span>
+                                    {selectedDisabledPeriod.label && selectedDisabledPeriod.label !== "Kapalı" && (
+                                        <span style={{ color: "#b91c1c", fontSize: 12, marginLeft: 8 }}>
+                                            ({selectedDisabledPeriod.label})
+                                        </span>
+                                    )}
+                                </div>
+                                <div style={{ display: "flex", gap: 8 }}>
+                                    <button
+                                        onClick={() => setSelectedDisabledPeriod(null)}
+                                        style={{
+                                            padding: "7px 14px", borderRadius: 7, border: "1px solid #e2e8f0",
+                                            background: "#fff", color: "#64748b", fontSize: 12, cursor: "pointer", fontWeight: 600,
+                                        }}
+                                    >
+                                        Vazgeç
+                                    </button>
+                                    <button
+                                        onClick={async () => {
+                                            if (selectedDisabledPeriod.id) {
+                                                await deleteDisabledDate(selectedDisabledPeriod.id);
+                                            }
+                                            setSelectedDisabledPeriod(null);
+                                        }}
+                                        style={{
+                                            padding: "7px 14px", borderRadius: 7, border: "none",
+                                            background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                                            color: "#fff", fontSize: 12, cursor: "pointer", fontWeight: 700,
+                                        }}
+                                    >
+                                        🗑 Kapatmayı Kaldır
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Sebep ve Kaydet */}

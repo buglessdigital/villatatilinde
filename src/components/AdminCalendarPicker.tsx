@@ -59,9 +59,11 @@ function parseYMD(s: string): Date | null {
 }
 
 export interface ExistingPeriod {
+    id?: string;
     start_date: string;
     end_date: string;
     label: string;
+    periodType?: "price" | "blocked";
 }
 
 /* ─── MonthGrid ─── */
@@ -77,9 +79,10 @@ interface MonthGridProps {
     variant?: "price" | "blocked";
     onDayClick: (d: Date) => void;
     onDayHover: (d: Date) => void;
+    onExistingPeriodClick?: (period: ExistingPeriod) => void;
 }
 
-function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existingPeriods, selColor, variant = "price", onDayClick, onDayHover }: MonthGridProps) {
+function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existingPeriods, selColor, variant = "price", onDayClick, onDayHover, onExistingPeriodClick }: MonthGridProps) {
     const totalDays = daysInMonth(year, month);
     const firstOffset = getMondayBasedDay(year, month, 1);
 
@@ -95,15 +98,18 @@ function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existing
         rows.push(week);
     }
 
-    // blocked modunda tüm mevcut tarihler tek kırmızıyla gösterilir
-    const BLOCKED_COLOR = { bg: "#fee2e2", text: "#991b1b", border: "#fca5a5" };
+    const BLOCKED_COLOR = { bg: "#ef4444", text: "#ffffff", border: "#dc2626" };
+    const PRICE_SOLID_COLOR = { bg: "#f97316", text: "#ffffff", border: "#ea580c" };
 
     const parsedPeriods = useMemo(() =>
         existingPeriods.map((p, i) => ({
+            id: p.id,
             start: parseYMD(p.start_date)!,
             end: parseYMD(p.end_date)!,
             label: p.label,
             colorIdx: i % PERIOD_COLORS.length,
+            periodType: p.periodType,
+            original: p,
         })).filter(p => p.start && p.end),
         [existingPeriods]
     );
@@ -140,7 +146,26 @@ function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existing
                                 isMiddle = inRange && !isStart && !(isEnd || isHoverEnd);
                             }
 
-                            // Tüm eşleşen dönemleri bul
+                            const getColor = (p: typeof parsedPeriods[0]) => {
+                                if (p.periodType === "blocked") return BLOCKED_COLOR;
+                                if (p.periodType === "price") return PRICE_SOLID_COLOR;
+                                return variant === "blocked" ? BLOCKED_COLOR : PERIOD_COLORS[p.colorIdx];
+                            };
+
+                            // Blocked ve price dönemlerini ayrı ayrı tespit et
+                            const isInBlocked = (p: typeof parsedPeriods[0]) => p.periodType === "blocked" || (variant === "blocked" && !p.periodType);
+                            const blockedEndingHere = parsedPeriods.filter(p => isInBlocked(p) && isSameDay(cellDate, p.end));
+                            const blockedStartingHere = parsedPeriods.filter(p => isInBlocked(p) && isSameDay(cellDate, p.start));
+                            const blockedMiddleHere = parsedPeriods.filter(p => isInBlocked(p) && isBetween(cellDate, p.start, p.end) && !isSameDay(cellDate, p.start) && !isSameDay(cellDate, p.end));
+
+                            const priceEndingHere = parsedPeriods.filter(p => !isInBlocked(p) && isSameDay(cellDate, p.end));
+                            const priceStartingHere = parsedPeriods.filter(p => !isInBlocked(p) && isSameDay(cellDate, p.start));
+                            const priceMiddleHere = parsedPeriods.filter(p => !isInBlocked(p) && isBetween(cellDate, p.start, p.end) && !isSameDay(cellDate, p.start) && !isSameDay(cellDate, p.end));
+
+                            const inBlockedPeriod = blockedEndingHere.length > 0 || blockedStartingHere.length > 0 || blockedMiddleHere.length > 0;
+                            const inPricePeriod = priceEndingHere.length > 0 || priceStartingHere.length > 0 || priceMiddleHere.length > 0;
+
+                            // Eski kod için geriye dönük uyumluluk (variant="price" ve periodType yok)
                             const periodsEndingHere = parsedPeriods.filter(p => isSameDay(cellDate, p.end));
                             const periodsStartingHere = parsedPeriods.filter(p => isSameDay(cellDate, p.start));
                             const periodsContainingMiddle = parsedPeriods.filter(p =>
@@ -148,14 +173,12 @@ function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existing
                                 !isSameDay(cellDate, p.start) && !isSameDay(cellDate, p.end)
                             );
 
-                            const isBothEndAndStart = periodsEndingHere.length > 0 && periodsStartingHere.length > 0;
-                            const isPeriodStart = periodsStartingHere.length > 0 && !isBothEndAndStart && periodsContainingMiddle.length === 0;
-                            const isPeriodEnd = periodsEndingHere.length > 0 && !isBothEndAndStart && periodsContainingMiddle.length === 0;
+                            // İki fiyat dönemi buluşuyor mu (blocked hariç)?
+                            const isPriceBothEndAndStart = priceEndingHere.length > 0 && priceStartingHere.length > 0;
+                            const isPeriodStart = periodsStartingHere.length > 0 && periodsContainingMiddle.length === 0 && !periodsEndingHere.length;
+                            const isPeriodEnd = periodsEndingHere.length > 0 && periodsContainingMiddle.length === 0 && !periodsStartingHere.length;
                             const isPeriodMiddle = periodsContainingMiddle.length > 0;
-
                             const matchedPeriod = periodsEndingHere[0] || periodsStartingHere[0] || periodsContainingMiddle[0] || null;
-                            const getColor = (p: typeof parsedPeriods[0]) =>
-                                variant === "blocked" ? BLOCKED_COLOR : PERIOD_COLORS[p.colorIdx];
                             const periodColor = matchedPeriod ? getColor(matchedPeriod) : null;
 
                             let outerBg = "transparent";
@@ -166,68 +189,82 @@ function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existing
 
                             if (inRange) {
                                 if (isStart && periodsEndingHere.length > 0) {
-                                    // Seçim başlangıcı + mevcut dönem bitişi: sol üst = dönem rengi, sağ alt = seçim rengi
                                     const endColor = getColor(periodsEndingHere[0]);
                                     outerBg = `linear-gradient(to top left, ${selColor} calc(50% - 1.5px), #fff calc(50% - 1.5px), #fff calc(50% + 1.5px), ${endColor.bg} calc(50% + 1.5px))`;
-                                    color = "#1e293b";
-                                    fw = 700;
+                                    color = "#1e293b"; fw = 700;
                                 } else if (isStart) {
                                     outerBg = `linear-gradient(to top left, ${selColor} 50%, transparent 50%)`;
-                                    color = "#fff";
-                                    fw = 700;
+                                    color = "#fff"; fw = 700;
                                 } else if ((isEnd || isHoverEnd) && periodsStartingHere.length > 0) {
-                                    // Seçim bitişi + mevcut dönem başlangıcı: sol üst = seçim rengi, sağ alt = dönem rengi
                                     const startColor = getColor(periodsStartingHere[0]);
                                     outerBg = `linear-gradient(to top left, ${startColor.bg} calc(50% - 1.5px), #fff calc(50% - 1.5px), #fff calc(50% + 1.5px), ${selColor} calc(50% + 1.5px))`;
-                                    color = "#1e293b";
-                                    fw = 700;
+                                    color = "#1e293b"; fw = 700;
                                 } else if (isEnd || isHoverEnd) {
                                     outerBg = `linear-gradient(to bottom right, ${selColor} 50%, transparent 50%)`;
-                                    color = "#fff";
-                                    fw = 700;
+                                    color = "#fff"; fw = 700;
                                 } else if (isMiddle && periodsEndingHere.length > 0) {
-                                    // Orta gün ama mevcut dönem bitiyor: sol üst = dönem rengi, sağ alt = seçim
                                     const endColor = getColor(periodsEndingHere[0]);
                                     outerBg = `linear-gradient(to top left, ${selColor} calc(50% - 1.5px), #fff calc(50% - 1.5px), #fff calc(50% + 1.5px), ${endColor.bg} calc(50% + 1.5px))`;
-                                    color = "#1e293b";
-                                    fw = 700;
+                                    color = "#1e293b"; fw = 700;
                                 } else if (isMiddle && periodsStartingHere.length > 0) {
-                                    // Orta gün ama mevcut dönem başlıyor: sol üst = seçim, sağ alt = dönem rengi
                                     const startColor = getColor(periodsStartingHere[0]);
                                     outerBg = `linear-gradient(to top left, ${startColor.bg} calc(50% - 1.5px), #fff calc(50% - 1.5px), #fff calc(50% + 1.5px), ${selColor} calc(50% + 1.5px))`;
-                                    color = "#1e293b";
-                                    fw = 700;
+                                    color = "#1e293b"; fw = 700;
                                 } else if (isMiddle) {
-                                    outerBg = selColor;
-                                    color = "#fff";
-                                    fw = 700;
-                                    innerRadius = "0";
+                                    outerBg = selColor; color = "#fff"; fw = 700; innerRadius = "0";
                                 }
-                            } else if (isBothEndAndStart) {
-                                // İki dönem buluşuyor: sol üst = bitiş rengi, sağ alt = başlangıç rengi, beyaz köşegen çizgisi
-                                const endColor = getColor(periodsEndingHere[0]);
-                                const startColor = getColor(periodsStartingHere[0]);
-                                outerBg = `linear-gradient(to top left, ${startColor.bg} calc(50% - 1.5px), #fff calc(50% - 1.5px), #fff calc(50% + 1.5px), ${endColor.bg} calc(50% + 1.5px))`;
-                                color = endColor.text;
-                                fw = 700;
-                                innerRadius = "0";
-                            } else if (matchedPeriod) {
+                            } else if (inBlockedPeriod) {
+                                const bc = BLOCKED_COLOR;
+                                fw = 700; color = bc.text;
+                                if (blockedMiddleHere.length > 0) {
+                                    // Orta gün — tam dolu kırmızı
+                                    outerBg = bc.bg; innerRadius = "0";
+                                } else if (blockedStartingHere.length > 0 && blockedEndingHere.length > 0) {
+                                    // Tek günlük kapatma
+                                    outerBg = bc.bg; innerRadius = "6px";
+                                } else if (blockedStartingHere.length > 0) {
+                                    // Başlangıç günü: sol yarı fiyat rengi (varsa), sağ yarı kırmızı
+                                    const leftColor = inPricePeriod ? PRICE_SOLID_COLOR.bg : "transparent";
+                                    outerBg = `linear-gradient(to bottom right, ${leftColor} 50%, ${bc.bg} 50%)`;
+                                    innerRadius = "50%";
+                                } else if (blockedEndingHere.length > 0) {
+                                    // Bitiş günü: sol yarı kırmızı, sağ yarı fiyat rengi (varsa)
+                                    const rightColor = inPricePeriod ? PRICE_SOLID_COLOR.bg : "transparent";
+                                    outerBg = `linear-gradient(to top left, ${rightColor} 50%, ${bc.bg} 50%)`;
+                                    innerRadius = "50%";
+                                }
+                            } else if (inPricePeriod) {
+                                // Sadece fiyat dönemi
+                                const pc = PRICE_SOLID_COLOR;
+                                fw = 700; color = pc.text;
+                                if (isPriceBothEndAndStart) {
+                                    // İki fiyat dönemi buluşuyor
+                                    const endColor = getColor(priceEndingHere[0]);
+                                    const startColor = getColor(priceStartingHere[0]);
+                                    outerBg = `linear-gradient(to top left, ${startColor.bg} calc(50% - 1.5px), #fff calc(50% - 1.5px), #fff calc(50% + 1.5px), ${endColor.bg} calc(50% + 1.5px))`;
+                                    color = endColor.text; innerRadius = "0";
+                                } else if (priceMiddleHere.length > 0) {
+                                    outerBg = pc.bg; innerRadius = "0";
+                                } else if (priceStartingHere.length > 0) {
+                                    outerBg = `linear-gradient(to bottom right, transparent 50%, ${pc.bg} 50%)`;
+                                    innerRadius = "50%";
+                                } else if (priceEndingHere.length > 0) {
+                                    outerBg = `linear-gradient(to top left, transparent 50%, ${pc.bg} 50%)`;
+                                    innerRadius = "50%";
+                                }
+                            } else if (matchedPeriod && !inBlockedPeriod && !inPricePeriod) {
+                                // variant="price" ve periodType yok (eski davranış)
                                 if (isPeriodMiddle) {
-                                    outerBg = periodColor!.bg;
-                                    color = periodColor!.text;
-                                    innerRadius = "0";
+                                    outerBg = periodColor!.bg; color = periodColor!.text; innerRadius = "0";
                                 } else if (isPeriodStart) {
-                                    outerBg = `linear-gradient(to top left, ${periodColor!.bg} 50%, transparent 50%)`;
+                                    outerBg = `linear-gradient(to bottom right, transparent 50%, ${periodColor!.bg} 50%)`;
                                     color = periodColor!.text;
                                 } else if (isPeriodEnd) {
-                                    outerBg = `linear-gradient(to bottom right, ${periodColor!.bg} 50%, transparent 50%)`;
+                                    outerBg = `linear-gradient(to top left, transparent 50%, ${periodColor!.bg} 50%)`;
                                     color = periodColor!.text;
                                 }
                             } else if (isToday) {
-                                innerBg = "#f0f9ff";
-                                color = "#0284c7";
-                                fw = 700;
-                                innerRadius = "50%";
+                                innerBg = "#f0f9ff"; color = "#0284c7"; fw = 700; innerRadius = "50%";
                             }
 
                             const title = matchedPeriod && !isStart && !isEnd ? matchedPeriod.label : undefined;
@@ -235,13 +272,21 @@ function MonthGrid({ year, month, today, startDate, endDate, hoverDate, existing
                             return (
                                 <td key={ci} style={{ padding: 0 }}>
                                     <div
-                                        onClick={() => !isPast && onDayClick(cellDate)}
+                                        onClick={() => {
+                                            if (isPast) return;
+                                            const clickedBlocked = blockedMiddleHere[0] || blockedStartingHere[0] || blockedEndingHere[0];
+                                            if (clickedBlocked && onExistingPeriodClick) {
+                                                onExistingPeriodClick(clickedBlocked.original);
+                                            } else {
+                                                onDayClick(cellDate);
+                                            }
+                                        }}
                                         onMouseEnter={() => !isPast && onDayHover(cellDate)}
                                         title={title}
                                         style={{
                                             display: "flex", alignItems: "center", justifyContent: "center",
                                             height: 32, fontSize: 12, fontWeight: fw,
-                                            color: (isMiddle || isPeriodMiddle || isBothEndAndStart) ? color : undefined,
+                                            color: (isMiddle || isPeriodMiddle || inBlockedPeriod || inPricePeriod) ? color : undefined,
                                             background: outerBg,
                                             cursor: isPast ? "default" : "pointer",
                                         }}
@@ -276,6 +321,7 @@ interface AdminCalendarPickerProps {
     existingPeriods?: ExistingPeriod[];
     /** "price" = mavi (varsayılan) | "blocked" = kırmızı */
     variant?: "price" | "blocked";
+    onExistingPeriodClick?: (period: ExistingPeriod) => void;
 }
 
 const THEMES = {
@@ -307,6 +353,7 @@ export default function AdminCalendarPicker({
     onChange,
     existingPeriods = [],
     variant = "price",
+    onExistingPeriodClick,
 }: AdminCalendarPickerProps) {
     const theme = THEMES[variant];
 
@@ -482,7 +529,7 @@ export default function AdminCalendarPicker({
                         existingPeriods={existingPeriods}
                         selColor={theme.selColor}
                         variant={variant}
-                        onDayClick={handleDayClick} onDayHover={handleDayHover}
+                        onDayClick={handleDayClick} onDayHover={handleDayHover} onExistingPeriodClick={onExistingPeriodClick}
                     />
                 </div>
 
@@ -507,7 +554,7 @@ export default function AdminCalendarPicker({
                         existingPeriods={existingPeriods}
                         selColor={theme.selColor}
                         variant={variant}
-                        onDayClick={handleDayClick} onDayHover={handleDayHover}
+                        onDayClick={handleDayClick} onDayHover={handleDayHover} onExistingPeriodClick={onExistingPeriodClick}
                     />
                 </div>
             </div>

@@ -209,51 +209,74 @@ export default function ReservationCalendar({
         return dateStr < today;
     }, []);
 
+    // Bir tarihin rezervasyon/kapalı dönem bitiş günü olup olmadığı
+    const isBlockedEndDate = useCallback((dateStr: string): boolean => {
+        if (reservations.some(r => r.endDate === dateStr)) return true;
+        if (disabledReasons.some(dr => dr.endDate === dateStr)) return true;
+        return false;
+    }, [reservations, disabledReasons]);
+
+    // Bir tarihin rezervasyon/kapalı dönem başlangıç günü olup olmadığı
+    const isBlockedStartDate = useCallback((dateStr: string): boolean => {
+        if (reservations.some(r => r.startDate === dateStr)) return true;
+        if (disabledReasons.some(dr => dr.startDate === dateStr)) return true;
+        return false;
+    }, [reservations, disabledReasons]);
+
     // Handle day click
     const handleDayClick = useCallback(
         (dateStr: string) => {
-            // Don't select past dates
             if (isPast(dateStr)) return;
 
-            // If clicking a disabled/blocked date, show reason warning
+            const settingCheckIn = !selectedCheckIn || (selectedCheckIn && selectedCheckOut != null);
+            const endDate = isBlockedEndDate(dateStr);
+            const startDate = isBlockedStartDate(dateStr);
+
+            // Bitiş günü → sadece check-in olarak seçilebilir
+            // Başlangıç günü → sadece check-out olarak seçilebilir
             const disabledReason = getDisabledReason(dateStr);
             if (disabledReason) {
-                setBlockedWarning(disabledReason);
-                setMinNightsWarning(null);
-                return;
+                if (settingCheckIn && endDate) {
+                    // check-in olarak izin ver, devam et
+                } else if (!settingCheckIn && startDate) {
+                    // check-out olarak izin ver, devam et
+                } else {
+                    setBlockedWarning(disabledReason);
+                    setMinNightsWarning(null);
+                    return;
+                }
             }
 
-            // Don't select reserved or optioned dates
             const status = getReservationStatus(dateStr);
             if (status === "reserved" || status === "option") {
-                setBlockedWarning("Bu tarih rezerve edilmiştir.");
-                setMinNightsWarning(null);
-                return;
+                if (settingCheckIn && endDate) {
+                    // check-in olarak izin ver
+                } else if (!settingCheckIn && startDate) {
+                    // check-out olarak izin ver
+                } else {
+                    setBlockedWarning("Bu tarih rezerve edilmiştir.");
+                    setMinNightsWarning(null);
+                    return;
+                }
             }
 
-            // Don't select dates without a price
             const price = getPrice(dateStr);
-            if (price === null) return;
+            if (price === null && !endDate) return;
 
-            // Clear any previous warning
             setMinNightsWarning(null);
             setBlockedWarning(null);
 
-            if (!selectedCheckIn || (selectedCheckIn && selectedCheckOut)) {
-                // Start new selection
+            if (settingCheckIn) {
                 setSelectedCheckIn(dateStr);
                 setSelectedCheckOut(null);
                 onDateSelect?.(dateStr, null);
             } else {
-                // Set check-out
-                if (dateStr <= selectedCheckIn) {
-                    // If clicked date is before check-in, reset
+                if (dateStr <= selectedCheckIn!) {
                     setSelectedCheckIn(dateStr);
                     setSelectedCheckOut(null);
                     onDateSelect?.(dateStr, null);
                 } else {
-                    // Check night count for minNights validation
-                    const startD = parseDate(selectedCheckIn);
+                    const startD = parseDate(selectedCheckIn!);
                     const endD = parseDate(dateStr);
                     const nightCount = Math.round((endD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24));
                     if (nightCount < minNights) {
@@ -261,36 +284,31 @@ export default function ReservationCalendar({
                         return;
                     }
 
-                    // Check if range contains reserved dates or unpriced dates
+                    // Aralık kontrolü: check-in ve check-out günleri hariç (o günler yarım gün olabilir)
                     let hasBlocked = false;
                     const cursor = new Date(startD);
-                    while (cursor <= endD) {
+                    cursor.setDate(cursor.getDate() + 1); // check-in gününü atla
+                    while (cursor < endD) { // check-out gününü atla
                         const cs = toDateStr(cursor);
                         const s = getReservationStatus(cs);
-                        if (s === "reserved" || s === "option") {
-                            hasBlocked = true;
-                            break;
-                        }
+                        if (s === "reserved" || s === "option") { hasBlocked = true; break; }
                         const dayPrice = getPrice(cs);
-                        if (dayPrice === null) {
-                            hasBlocked = true;
-                            break;
-                        }
+                        if (dayPrice === null) { hasBlocked = true; break; }
                         cursor.setDate(cursor.getDate() + 1);
                     }
+
                     if (hasBlocked) {
-                        // Reset to clicked date
                         setSelectedCheckIn(dateStr);
                         setSelectedCheckOut(null);
                         onDateSelect?.(dateStr, null);
                     } else {
                         setSelectedCheckOut(dateStr);
-                        onDateSelect?.(selectedCheckIn, dateStr);
+                        onDateSelect?.(selectedCheckIn!, dateStr);
                     }
                 }
             }
         },
-        [selectedCheckIn, selectedCheckOut, isPast, getReservationStatus, getPrice, onDateSelect, minNights]
+        [selectedCheckIn, selectedCheckOut, isPast, getReservationStatus, getPrice, getDisabledReason, isBlockedEndDate, isBlockedStartDate, onDateSelect, minNights]
     );
 
     const clearDates = useCallback(() => {
@@ -538,7 +556,9 @@ function MonthGrid({
                     if (checkIn) cellClass += " vd-cal-checkin";
                     if (checkOut) cellClass += " vd-cal-checkout";
 
-                    const clickable = !past && resStatus !== "reserved" && resPosition !== "both" && price !== null;
+                    // Bitiş günü check-in için tıklanabilir; başlangıç günü check-out için tıklanabilir
+                    const clickable = !past && price !== null && resPosition !== "both" &&
+                        (resStatus === null || resPosition === "end" || resPosition === "start");
                     const noPrice = price === null && !past && !resStatus;
 
                     const dualBg = dualInfo

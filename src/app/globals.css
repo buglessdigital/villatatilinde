@@ -3429,6 +3429,60 @@ font {
   z-index: 1;
 }
 
+/* Bitiş günü + check-in: sol kırmızı, sağ mavi */
+.vd-cal-res-end.vd-cal-checkin {
+  background: linear-gradient(135deg, red 50%, #3880ff 50%) !important;
+}
+.vd-cal-res-end.vd-cal-checkin .vd-cal-day-num {
+  color: #fff;
+  font-weight: 800;
+  position: relative;
+  z-index: 1;
+}
+.vd-cal-res-end.vd-cal-checkin .vd-cal-day-price {
+  color: rgba(255, 255, 255, 0.85);
+  position: relative;
+  z-index: 1;
+}
+
+/* Başlangıç günü + check-out: sol mavi, sağ kırmızı */
+.vd-cal-res-start.vd-cal-checkout {
+  background: linear-gradient(-45deg, red 50%, #3880ff 50%) !important;
+}
+.vd-cal-res-start.vd-cal-checkout .vd-cal-day-num {
+  color: #fff;
+  font-weight: 800;
+  position: relative;
+  z-index: 1;
+}
+.vd-cal-res-start.vd-cal-checkout .vd-cal-day-price {
+  color: rgba(255, 255, 255, 0.85);
+  position: relative;
+  z-index: 1;
+}
+
+/* Opsiyon bitiş günü + check-in */
+.vd-cal-opt-end.vd-cal-checkin {
+  background: linear-gradient(135deg, orange 50%, #3880ff 50%) !important;
+}
+.vd-cal-opt-end.vd-cal-checkin .vd-cal-day-num {
+  color: #fff;
+  font-weight: 800;
+  position: relative;
+  z-index: 1;
+}
+
+/* Opsiyon başlangıç günü + check-out */
+.vd-cal-opt-start.vd-cal-checkout {
+  background: linear-gradient(-45deg, orange 50%, #3880ff 50%) !important;
+}
+.vd-cal-opt-start.vd-cal-checkout .vd-cal-day-num {
+  color: #fff;
+  font-weight: 800;
+  position: relative;
+  z-index: 1;
+}
+
 /* Hover for clickable cells */
 .vd-cal-cell:not(.vd-cal-past):not(.vd-cal-res-start):not(.vd-cal-res-mid):not(.vd-cal-res-end):not(.vd-cal-cell-empty):hover {
   background: rgba(56, 128, 255, 0.06);
