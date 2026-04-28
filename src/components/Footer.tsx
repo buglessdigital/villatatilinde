@@ -77,15 +77,17 @@ export default function Footer() {
                                 />
                             </div>
                             <div style={{ marginTop: 4 }}>
-                                <img
-                                    src="/images/praedium-emlak.png"
-                                    alt="Praedium Emlak"
-                                    style={{
-                                        width: 250,
-                                        height: "auto",
-                                        mixBlendMode: "lighten",
-                                    }}
-                                />
+                                <a href="https://praediumemlak.com" target="_blank" rel="noopener noreferrer">
+                                    <img
+                                        src="/images/praedium-emlak.png"
+                                        alt="Praedium Emlak"
+                                        style={{
+                                            width: 250,
+                                            height: "auto",
+                                            mixBlendMode: "lighten",
+                                        }}
+                                    />
+                                </a>
                             </div>
                         </div>
                         <div style={{ marginTop: 24, marginBottom: 20 }}>
@@ -371,7 +373,9 @@ export default function Footer() {
                         <img src="/images/vtlo.png" alt="Villa Tatilinde" style={{ height: 62, width: "auto", margin: "0 auto" }} />
                     </Link>
                     <img src="/images/prl2.png" alt="Praedium Group" style={{ width: 220, height: "auto", margin: "8px auto 0", display: "block", mixBlendMode: "lighten" }} />
-                    <img src="/images/praedium-emlak.png" alt="Praedium Emlak" style={{ width: 220, height: "auto", margin: "8px auto 0", display: "block", mixBlendMode: "lighten" }} />
+                    <a href="https://praediumemlak.com" target="_blank" rel="noopener noreferrer">
+                        <img src="/images/praedium-emlak.png" alt="Praedium Emlak" style={{ width: 220, height: "auto", margin: "8px auto 0", display: "block", mixBlendMode: "lighten" }} />
+                    </a>
 
                     <div style={{ marginTop: 24, display: "flex", flexDirection: "column", alignItems: "center" }}>
                         <div style={{ color: "#fff", fontSize: 15, fontWeight: 500, marginBottom: 12 }}>İyzico ile güvenli ödeme</div>

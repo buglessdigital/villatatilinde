@@ -248,7 +248,7 @@ export default function MobileBestPriceBanner() {
                     >
                         {/* Header */}
                         <div style={{ position: "relative", textAlign: "center", marginBottom: 24 }}>
-                            <div style={{ width: 44, height: 5, background: "#ccc", borderRadius: 6, margin: "0 auto 20px" }} />
+                            <div onClick={closeModal} style={{ width: 44, height: 5, background: "#ccc", borderRadius: 6, margin: "0 auto 20px", cursor: "pointer" }} />
                             <img src="/images/vtlo.png" alt="Logo" style={{ height: 44, objectFit: "contain", marginBottom: 4 }} />
                             <div style={{ fontSize: 13, color: "#666", fontWeight: activeModal === 0 ? 500 : 400 }}>
                                 Praedium Group {activeModal === 0 && "Güvencesi İle"}
@@ -348,7 +348,7 @@ export default function MobileBestPriceBanner() {
                                 </div>
                                 <div style={{ fontSize: 15, color: "#333", marginBottom: 12, display: "flex", gap: 6 }}>
                                     <span>•</span>
-                                    <Link href="/mesafeli-satis-sozlesmesi" style={{ color: "inherit", textDecoration: "none" }}>
+                                    <Link href="/mesafeli-satis-sozlesmesi" onClick={closeModal} style={{ color: "inherit", textDecoration: "none" }}>
                                         Mesafeli Satış Sözleşmesi görüntülemek için tıklayın
                                         <span style={{ display: "inline-block", background: "#ddd", borderRadius: "50%", width: 16, height: 16, textAlign: "center", lineHeight: "16px", fontSize: 11, fontWeight: "bold", marginLeft: 6 }}>?</span>
                                     </Link>

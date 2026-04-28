@@ -194,6 +194,7 @@ export interface VillaCard {
     beds: number;
     max_discount_pct: number;
     has_active_discount: boolean;
+    promotion_discount_text?: string;
     is_exclusive: boolean;
     bathrooms: number;
     features: string[];  // feature label_tr array

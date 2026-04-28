@@ -95,7 +95,7 @@ export async function getVillaDetailBySlug(slug: string): Promise<VillaDetail | 
 export async function getFeaturedVillas(limit = 8): Promise<VillaCard[]> {
     const { data: villas, error } = await supabase
         .from('villas')
-        .select('id, slug, name, cover_image_url, location_label, min_price, currency, max_guests, bedrooms, beds, bathrooms, max_discount_pct, has_active_discount, is_exclusive')
+        .select('id, slug, name, cover_image_url, location_label, min_price, currency, max_guests, bedrooms, beds, bathrooms, max_discount_pct, has_active_discount, is_exclusive, promotion_discount_text')
         .eq('is_published', true)
         .order('sort_order')
         .limit(limit);
@@ -145,7 +145,7 @@ export async function getFeaturedVillas(limit = 8): Promise<VillaCard[]> {
 export async function getRecentVillas(limit = 6): Promise<VillaCard[]> {
     const { data: villas, error } = await supabase
         .from('villas')
-        .select('id, slug, name, cover_image_url, location_label, min_price, currency, max_guests, bedrooms, beds, bathrooms, max_discount_pct, has_active_discount, is_exclusive, avg_rating')
+        .select('id, slug, name, cover_image_url, location_label, min_price, currency, max_guests, bedrooms, beds, bathrooms, max_discount_pct, has_active_discount, is_exclusive, avg_rating, promotion_discount_text')
         .eq('is_published', true)
         .order('created_at', { ascending: false })
         .limit(limit);
@@ -186,54 +186,44 @@ export async function getRecentVillas(limit = 6): Promise<VillaCard[]> {
 export async function getAllVillasForSearch(): Promise<VillaDetail[]> {
     const { data: villas, error } = await supabase
         .from('villas')
-        .select('*')
+        .select(`
+            *,
+            villa_features(feature_id, features(*)),
+            villa_categories(category_id, categories(*)),
+            villa_price_periods(*),
+            villa_images(*)
+        `)
         .eq('is_published', true)
         .order('sort_order');
 
     if (error || !villas) return [];
 
-    const results: VillaDetail[] = await Promise.all(
-        villas.map(async (villa) => {
-            const [featuresRes, categoriesRes, pricesRes, imagesRes] = await Promise.all([
-                supabase
-                    .from('villa_features')
-                    .select('feature_id, features(*)')
-                    .eq('villa_id', villa.id),
-                supabase
-                    .from('villa_categories')
-                    .select('category_id, categories(*)')
-                    .eq('villa_id', villa.id),
-                supabase
-                    .from('villa_price_periods')
-                    .select('*')
-                    .eq('villa_id', villa.id)
-                    .order('start_date'),
-                supabase
-                    .from('villa_images')
-                    .select('*')
-                    .eq('villa_id', villa.id)
-                    .order('sort_order')
-                    .limit(5),
-            ]);
+    const results: VillaDetail[] = villas.map((villa: any) => {
+        const features: DbFeature[] = (villa.villa_features || [])
+            .map((vf: any) => vf.features as DbFeature)
+            .filter(Boolean);
 
-            const features: DbFeature[] = (featuresRes.data || [])
-                .map((vf: Record<string, unknown>) => vf.features as DbFeature)
-                .filter(Boolean);
-            const categories: DbCategory[] = (categoriesRes.data || [])
-                .map((vc: Record<string, unknown>) => vc.categories as DbCategory)
-                .filter(Boolean);
+        const categories: DbCategory[] = (villa.villa_categories || [])
+            .map((vc: any) => vc.categories as DbCategory)
+            .filter(Boolean);
 
-            return {
-                ...villa,
-                images: (imagesRes.data || []) as DbVillaImage[],
-                features,
-                categories,
-                price_periods: (pricesRes.data || []) as DbVillaPricePeriod[],
-                disabled_dates: [],
-                reviews: [],
-            } as VillaDetail;
-        })
-    );
+        const price_periods: DbVillaPricePeriod[] = (villa.villa_price_periods || [])
+            .sort((a: any, b: any) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+
+        const images: DbVillaImage[] = (villa.villa_images || [])
+            .sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
+            .slice(0, 5);
+
+        return {
+            ...villa,
+            images,
+            features,
+            categories,
+            price_periods,
+            disabled_dates: [],
+            reviews: [],
+        } as VillaDetail;
+    });
 
     return results;
 }

@@ -484,6 +484,9 @@ function SonuclarInner() {
     const sortParam = searchParams.get("sort");
     const initialSort = sortParam || "order";
 
+    const pageParam = searchParams.get("page");
+    const initialPage = pageParam ? parseInt(pageParam) || 1 : 1;
+
     /* Compute hero title based on params (like the Vue reference) */
     const isResulted = initialFeatures.length > 0 || initialLocations.length > 0;
     let heroTitle = "Tüm Villalar";
@@ -508,8 +511,17 @@ function SonuclarInner() {
     const [showMoreLoc, setShowMoreLoc] = useState(false);
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
     const [slideIndices, setSlideIndices] = useState<Record<string, number>>({});
-    const [currentPage, setCurrentPage] = useState(1);
+    const currentPage = initialPage;
     const ITEMS_PER_PAGE = 18;
+
+    const goToPage = useCallback((page: number) => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (page <= 1) params.delete("page");
+        else params.set("page", String(page));
+        const qs = params.toString();
+        router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+        window.scrollTo({ top: 300, behavior: "smooth" });
+    }, [pathname, router, searchParams]);
 
     const isSyncingFromUrl = useRef(false);
 
@@ -590,10 +602,18 @@ function SonuclarInner() {
         }
     }, [selectedFeatures, selectedLocations, selectedPriceRanges, people, searchTerm, minScore, sortBy, pathname, router, searchParams]);
 
-    /* Reset page to 1 when filters change */
+    /* Filtre değişince URL'deki page parametresini sil (sayfa 1'e dön) */
+    const prevFiltersRef = useRef<string>("");
     useEffect(() => {
-        setCurrentPage(1);
-    }, [selectedFeatures, selectedLocations, selectedPriceRanges, people, searchTerm, minScore, sortBy]);
+        const key = [selectedFeatures.join(","), selectedLocations.join(","), selectedPriceRanges.join(","), people, searchTerm, minScore, sortBy].join("|");
+        if (prevFiltersRef.current && prevFiltersRef.current !== key) {
+            const params = new URLSearchParams(searchParams.toString());
+            params.delete("page");
+            const qs = params.toString();
+            router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+        }
+        prevFiltersRef.current = key;
+    }, [selectedFeatures, selectedLocations, selectedPriceRanges, people, searchTerm, minScore, sortBy, pathname, router, searchParams]);
 
     /* Toggles */
     const toggleFeature = useCallback((f: string) => {
@@ -613,11 +633,27 @@ function SonuclarInner() {
     const [loadingVillas, setLoadingVillas] = useState(true);
     const [unavailableIds, setUnavailableIds] = useState<Set<string>>(new Set());
 
+    const VILLAS_CACHE_KEY = "vt-villas-cache";
+    const VILLAS_CACHE_TTL = 5 * 60 * 1000; // 5 dakika
+
     useEffect(() => {
         async function load() {
             try {
+                const cached = sessionStorage.getItem(VILLAS_CACHE_KEY);
+                if (cached) {
+                    const { data, ts } = JSON.parse(cached);
+                    if (Date.now() - ts < VILLAS_CACHE_TTL) {
+                        setAllVillas(data);
+                        setLoadingVillas(false);
+                        return;
+                    }
+                }
+            } catch {}
+            try {
                 const data = await getAllVillasForSearch();
-                setAllVillas(data.map(mapVillaDetail));
+                const mapped = data.map(mapVillaDetail);
+                setAllVillas(mapped);
+                try { sessionStorage.setItem(VILLAS_CACHE_KEY, JSON.stringify({ data: mapped, ts: Date.now() })); } catch {}
             } catch (err) {
                 console.error('Villalar yüklenemedi:', err);
             } finally {
@@ -626,6 +662,26 @@ function SonuclarInner() {
         }
         load();
     }, []);
+
+    // Scroll pozisyonunu kaydet
+    useEffect(() => {
+        const handleScroll = () => {
+            sessionStorage.setItem("vt-sonuclar-scroll", window.scrollY.toString());
+        };
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
+    // Veri yüklenince (ve doğru sayfa render olduktan sonra) scroll pozisyonunu geri yükle
+    useEffect(() => {
+        if (!loadingVillas) {
+            const saved = sessionStorage.getItem("vt-sonuclar-scroll");
+            if (saved) {
+                // İki RAF: önce sayfa DOM'a yazılsın, sonra scroll
+                requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, parseInt(saved))));
+            }
+        }
+    }, [loadingVillas]);
 
     useEffect(() => {
         if (!checkInParam || !checkOutParam) {
@@ -1133,10 +1189,8 @@ function SonuclarInner() {
                                         marginBottom: "16px"
                                     }}>
                                         <button
-                                            onClick={() => {
-                                                setCurrentPage(p => Math.max(1, p - 1));
-                                                window.scrollTo({ top: 300, behavior: 'smooth' });
-                                            }}
+                                            onClick={() => goToPage(Math.max(1, currentPage - 1))}
+
                                             disabled={currentPage === 1}
                                             style={{
                                                 padding: "10px 20px",
@@ -1157,10 +1211,8 @@ function SonuclarInner() {
                                         </div>
                                         
                                         <button
-                                            onClick={() => {
-                                                setCurrentPage(p => Math.min(totalPages, p + 1));
-                                                window.scrollTo({ top: 300, behavior: 'smooth' });
-                                            }}
+                                            onClick={() => goToPage(Math.min(totalPages, currentPage + 1))}
+
                                             disabled={currentPage === totalPages}
                                             style={{
                                                 padding: "10px 20px",

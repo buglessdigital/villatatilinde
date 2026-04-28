@@ -23,9 +23,13 @@ function mapVillaToView(v: VillaCardType): VillaView {
         guests: v.max_guests,
         bathrooms: v.bathrooms || 0,
         maxDiscount: v.max_discount_pct || 0,
+        promotionDiscountText: v.promotion_discount_text,
         cheapestVilla: true,
     };
 }
+
+const FEATURED_CACHE_KEY = "vt-featured-cache";
+const FEATURED_CACHE_TTL = 5 * 60 * 1000;
 
 /* ─── Featured Villas Section ─── */
 export default function FeaturedVillasSection() {
@@ -35,8 +39,21 @@ export default function FeaturedVillasSection() {
     useEffect(() => {
         async function load() {
             try {
+                const cached = sessionStorage.getItem(FEATURED_CACHE_KEY);
+                if (cached) {
+                    const { data, ts } = JSON.parse(cached);
+                    if (Date.now() - ts < FEATURED_CACHE_TTL) {
+                        setVillas(data);
+                        setLoading(false);
+                        return;
+                    }
+                }
+            } catch {}
+            try {
                 const data = await getFeaturedVillas();
-                setVillas(data.map(mapVillaToView));
+                const mapped = data.map(mapVillaToView);
+                setVillas(mapped);
+                try { sessionStorage.setItem(FEATURED_CACHE_KEY, JSON.stringify({ data: mapped, ts: Date.now() })); } catch {}
             } catch (err) {
                 console.error('Öne çıkan villalar yüklenemedi:', err);
             } finally {
@@ -45,6 +62,25 @@ export default function FeaturedVillasSection() {
         }
         load();
     }, []);
+
+    // Scroll pozisyonunu kaydet (ana sayfa)
+    useEffect(() => {
+        const handleScroll = () => {
+            sessionStorage.setItem("vt-home-scroll", window.scrollY.toString());
+        };
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
+    // Veri yüklenince scroll pozisyonunu geri yükle
+    useEffect(() => {
+        if (!loading) {
+            const saved = sessionStorage.getItem("vt-home-scroll");
+            if (saved) {
+                requestAnimationFrame(() => window.scrollTo(0, parseInt(saved)));
+            }
+        }
+    }, [loading]);
 
     return (
         <div className="mainVillasCont">

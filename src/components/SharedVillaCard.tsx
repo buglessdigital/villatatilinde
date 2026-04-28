@@ -4,6 +4,25 @@ import React, { useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useCurrency } from "@/context/CurrencyContext";
 
+const FEATURE_LABELS: Record<string, string> = {
+    privatePool: "Özel Havuz", infinityPool: "Sonsuzluk Havuzu",
+    isolatedPoolVillas: "Muhafazakar Havuz", indoorPool: "Kapalı Havuz",
+    heatedPool: "Isıtmalı Havuz", kidPoolVillas: "Çocuk Havuzu",
+    jacuzziVillas: "Jakuzi", gymRoom: "Spor Odası", sauna: "Sauna",
+    hamam: "Hamam", cinemaRoom: "Sinema Odası", winterGarden: "Kış Bahçesi",
+    tennisTable: "Masa Tenisi", poolTable: "Bilardo Masası",
+    kitchen: "Mutfak", enSuite: "Ebeveyn Banyosu", balcony: "Balkon",
+    gardenLounge: "Bahçe Mobilyası", sunbedUmbrella: "Şezlong",
+    airConditioning: "Klima", wifi: "WiFi", smartTv: "Akıllı TV",
+    fridge: "Buzdolabı", washingMac: "Çamaşır Mak.", dryingMac: "Kurutma Mak.",
+    dishWasher: "Bulaşık Mak.", oven: "Fırın", iron: "Ütü",
+    floorHeating: "Yerden Isıtma", honeyMoon: "Balayı Villası",
+    affordableVillas: "Ekonomik", ultraLux: "Ultra Lüks",
+    centralVillas: "Merkezi Konum", seaview: "Deniz Manzarası",
+    beachVillas: "Denize Yakın", natureview: "Doğa Manzarası",
+    isolatedVillas: "Muhafazakar", childPool: "Çocuk Havuzu",
+};
+
 export interface VillaView {
     slug: string;
     name: string;
@@ -130,7 +149,7 @@ export default function SharedVillaCard({ villa, className }: { villa: VillaView
                             fontSize: 14,
                         }}
                     >
-                        %{villa.maxDiscount} e varan indirim
+                        %{villa.maxDiscount}'e varan indirim
                     </div>
                 ) : villa.promotionDiscountText ? (
                     <div
@@ -239,7 +258,7 @@ export default function SharedVillaCard({ villa, className }: { villa: VillaView
                             <div className="oneLine dm-sans mainVillaBubbleFeatures">
                                 <div className="oneLine dm-sans">
                                     {villa.features.map((f, i) => (
-                                        <span key={i}>• {f} &nbsp; </span>
+                                        <span key={i}>• {FEATURE_LABELS[f] ?? f} &nbsp; </span>
                                     ))}
                                 </div>
                             </div>

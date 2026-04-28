@@ -402,7 +402,6 @@ export default function Navbar() {
                                     { href: "/garantili-villa-kiralama", label: "Garantili Kiralama" },
                                     { href: "/mesafeli-satis-sozlesmesi", label: "Mesafeli Satış Sözleşmesi" },
                                     { href: "/odeme-yontemleri", label: "Ödeme Yöntemleri" },
-                                    { href: "/politika/mesafeli-satis-kiralama-sozlesmesi", label: "Mesafeli Satış Sözleşmesi" },
                                 ].map((item) => (
                                     <div key={item.href} className="middleft">
                                         <Link href={item.href} onClick={() => setMobileMenuOpen(false)} style={{ padding: "9px 0" }}>

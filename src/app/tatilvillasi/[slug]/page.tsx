@@ -379,7 +379,8 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
             cursor.setDate(cursor.getDate() + 1);
         }
 
-        const cleaning = nights <= (villa.minResCleaning || 0) ? (villa.cleaning || 0) : 0;
+        const minCleaningNights = villa.minResCleaning || 0;
+        const cleaning = (villa.cleaning || 0) > 0 && (minCleaningNights === 0 || nights <= minCleaningNights) ? (villa.cleaning || 0) : 0;
         const total = accommodation + cleaning;
         const commissionPct = villa.commissionRate || 20;
         const advance = Math.round(total * (commissionPct / 100)); // Dynamic advance payment based on commission rate
@@ -726,26 +727,25 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                 </div>
                             ) : (
                                 <div style={{ marginTop: 24 }}>
-                                    {cleaningFeeTotal > 0 && (
-                                        <>
-                                            <div className="vd-res-pricing-row" style={{ fontWeight: 500 }}>
-                                                <span>Konaklama Ücreti</span>
-                                                <span>{formatVillaPrice(accommodationPrice)}</span>
-                                            </div>
-                                            <div className="vd-res-pricing-row" style={{ fontWeight: 500 }}>
-                                                <span style={{ display: "flex", alignItems: "center" }}>
-                                                    Temizlik
-                                                    <span className="vd-res-tooltip-wrapper" tabIndex={0}>
-                                                        <span style={{ display: "inline-flex", width: 16, height: 16, borderRadius: 8, background: "#e0e6ed", color: "#8e9db5", fontSize: 10, alignItems: "center", justifyContent: "center", marginLeft: 4, fontWeight: 700, cursor: "help" }}>?</span>
-                                                        <span className="vd-res-tooltip-content">
-                                                            Bu villada temizlik ücreti {villa.minResCleaning} gün ve altındaki konaklamalar için {formatVillaPrice(villa.cleaning)}&apos;dir.
-                                                        </span>
+                                    <div className="vd-res-pricing-row" style={{ fontWeight: 500 }}>
+                                        <span>Konaklama Ücreti</span>
+                                        <span>{formatVillaPrice(accommodationPrice)}</span>
+                                    </div>
+                                    {(villa.cleaning || 0) > 0 && (
+                                        <div className="vd-res-pricing-row" style={{ fontWeight: 500 }}>
+                                            <span style={{ display: "flex", alignItems: "center" }}>
+                                                Temizlik
+                                                <span className="vd-res-tooltip-wrapper" tabIndex={0} onClick={(e) => toggleTooltip("sidebar-cleaning", e)}>
+                                                    <span style={{ display: "inline-flex", width: 16, height: 16, borderRadius: 8, background: "#e0e6ed", color: "#8e9db5", fontSize: 10, alignItems: "center", justifyContent: "center", marginLeft: 4, fontWeight: 700, cursor: "help" }}>?</span>
+                                                    <span className="vd-res-tooltip-content" style={{ display: activeTooltip === "sidebar-cleaning" ? "block" : undefined }}>
+                                                        Bu villada temizlik ücreti {villa.minResCleaning} gün ve altındaki konaklamalar için {formatVillaPrice(villa.cleaning)}&apos;dir.
                                                     </span>
-                                                    <span style={{ fontSize: 12, color: "#64748b", fontWeight: 400, marginLeft: 4 }}>(toplam tutara dahildir)</span>
                                                 </span>
-                                                <span>{formatVillaPrice(cleaningFeeTotal)}</span>
-                                            </div>
-                                        </>
+                                                {cleaningFeeTotal === 0 && <span style={{ fontSize: 12, color: "#64748b", fontWeight: 400, marginLeft: 4 }}>(bu konaklama süresine dahil değil)</span>}
+                                                {cleaningFeeTotal > 0 && <span style={{ fontSize: 12, color: "#64748b", fontWeight: 400, marginLeft: 4 }}>(toplam tutara dahildir)</span>}
+                                            </span>
+                                            <span>{cleaningFeeTotal > 0 ? formatVillaPrice(cleaningFeeTotal) : "–"}</span>
+                                        </div>
                                     )}
 
                                     <div className="vd-res-pricing-row" style={{ fontSize: 16, borderBottom: "1px solid #e2e8f0", paddingBottom: 12, marginBottom: 16 }}>
