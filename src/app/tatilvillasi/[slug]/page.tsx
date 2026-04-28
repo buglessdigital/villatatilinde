@@ -632,11 +632,11 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                     </div>
                                     <div className="vd-info-item">
                                         <div className="vd-info-label" style={{ display: "flex", alignItems: "center" }}>
-                                            Temizlik <span className="vd-info-small" style={{ marginLeft: 4 }}>( {villa.minResCleaning} gün ve altı için )</span>
+                                            Temizlik <span className="vd-info-small" style={{ marginLeft: 4 }}>( {villa.minResCleaning} gün altı için )</span>
                                             <span className="vd-res-tooltip-wrapper" tabIndex={0} onClick={(e) => toggleTooltip("info-cleaning", e)}>
                                                 <span style={{ display: "inline-flex", width: 16, height: 16, borderRadius: 8, background: "#e0e6ed", color: "#8e9db5", fontSize: 10, alignItems: "center", justifyContent: "center", marginLeft: 4, fontWeight: 700, cursor: "help" }}>?</span>
                                                 <span className="vd-res-tooltip-content" style={{ display: activeTooltip === "info-cleaning" ? "block" : undefined }}>
-                                                    Bu villada temizlik ücreti {villa.minResCleaning} gün ve altındaki konaklamalar için {formatVillaPrice(villa.cleaning)}&apos;dir.
+                                                    Bu villada temizlik ücreti {villa.minResCleaning} gün altındaki konaklamalar için {formatVillaPrice(villa.cleaning)}&apos;dir.
                                                 </span>
                                             </span>
                                         </div>
@@ -738,7 +738,7 @@ export default function VillaDetailPage({ params }: { params: Promise<{ slug: st
                                                 <span className="vd-res-tooltip-wrapper" tabIndex={0} onClick={(e) => toggleTooltip("sidebar-cleaning", e)}>
                                                     <span style={{ display: "inline-flex", width: 16, height: 16, borderRadius: 8, background: "#e0e6ed", color: "#8e9db5", fontSize: 10, alignItems: "center", justifyContent: "center", marginLeft: 4, fontWeight: 700, cursor: "help" }}>?</span>
                                                     <span className="vd-res-tooltip-content" style={{ display: activeTooltip === "sidebar-cleaning" ? "block" : undefined }}>
-                                                        Bu villada temizlik ücreti {villa.minResCleaning} gün ve altındaki konaklamalar için {formatVillaPrice(villa.cleaning)}&apos;dir.
+                                                        Bu villada temizlik ücreti {villa.minResCleaning} gün altındaki konaklamalar için {formatVillaPrice(villa.cleaning)}&apos;dir.
                                                     </span>
                                                 </span>
                                                 {cleaningFeeTotal === 0 && <span style={{ fontSize: 12, color: "#64748b", fontWeight: 400, marginLeft: 4 }}>(bu konaklama süresine dahil değil)</span>}

@@ -847,7 +847,7 @@ export default function ReservationPage({ params }: { params: Promise<{ slug: st
                                         >
                                             <span style={{ display: "inline-flex", width: 16, height: 16, borderRadius: 8, background: "#e0e6ed", color: "#8e9db5", fontSize: 10, alignItems: "center", justifyContent: "center", marginLeft: 4, fontWeight: 700, cursor: "help" }}>?</span>
                                             <span className="vd-res-tooltip-content" style={{ display: activeTooltip === "cleaning" ? "block" : undefined }}>
-                                                Bu villada temizlik ücreti {villa.cleaning_fee_min_nights} gün ve altındaki konaklamalar için {fmt(villa.cleaning_fee)}&apos;dir.
+                                                Bu villada temizlik ücreti {villa.cleaning_fee_min_nights} gün altındaki konaklamalar için {fmt(villa.cleaning_fee)}&apos;dir.
                                             </span>
                                         </span>
                                     </span>

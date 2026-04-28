@@ -395,6 +395,11 @@ export default function Navbar() {
                                         </Link>
                                     </div>
                                 ))}
+                                <div className="middleft">
+                                    <a href="https://praediumemlak.com" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenuOpen(false)} style={{ padding: "9px 0", display: "block" }}>
+                                        <span style={{ color: "blue" }}>&bull;</span> Praedium Emlak
+                                    </a>
+                                </div>
                             </div>
                             <div style={{ minWidth: 150, width: "50%" }}>
                                 {[
